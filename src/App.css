@@ -1,0 +1,53 @@
+/* src/App.css */
+
+
+/* This file contains APP-SPECIFIC STYLES */
+
+
+/* It's imported in App.jsx */
+
+.app-container {
+    min-height: 100vh;
+    width: 100%;
+}
+
+
+/* Smooth scroll behavior */
+
+html {
+    scroll-behavior: smooth;
+}
+
+
+/* Link styles */
+
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+
+/* Button reset */
+
+button {
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+
+/* Input reset */
+
+input,
+textarea {
+    font-family: inherit;
+}
+
+
+/* Focus visible for accessibility */
+
+*:focus-visible {
+    outline: 2px solid #10b981;
+    outline-offset: 2px;
+}
