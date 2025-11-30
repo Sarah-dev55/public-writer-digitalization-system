@@ -1,14 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Calendar, Clock, X } from 'lucide-react';
 
-// ==================== FILE 1: components/forms/BookAppointment.jsx ====================
-
 const Book_model = ({ isOpen, onClose }) => {
-  const [currentDate, setCurrentDate] = useState(new Date(2025, 10, 1)); // November 2025
+  const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(null);
   const [appointmentType, setAppointmentType] = useState('');
   const [selectedTimeSlot, setSelectedTimeSlot] = useState('');
   const [additionalNotes, setAdditionalNotes] = useState('');
+  const [noWorkDays, setNoWorkDays] = useState([]);
+  const [notAvailableDates, setNotAvailableDates] = useState([]);
+  const [bookedSlots, setBookedSlots] = useState([]);
 
   // Appointment types
   const appointmentTypes = [
@@ -17,30 +18,93 @@ const Book_model = ({ isOpen, onClose }) => {
     { value: 'follow-up', label: 'Follow-up (20 minutes)' },
   ];
 
-  // Available dates (21 and 27 are available)
-  const availableDates = [21, 27];
+  // Helper to format date as YYYY-MM-DD
+  const formatDate = (d) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
-  // Time slots based on selected date
-  const getTimeSlots = (date) => {
-    if (!date) return [];
-    return [
-      '09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM',
-      '02:00 PM', '03:00 PM', '04:00 PM', '05:00 PM'
-    ];
-  };
+  // Fetch no-work-days from backend
+  useEffect(() => {
+    let mounted = true;
+    async function fetchNoWorkDays() {
+      try {
+        // Replace with your actual API call
+        // const res = await api.get('/noworkdays');
+        // if (mounted) setNoWorkDays(res.data || []);
+        
+        // Demo data matching your API format (dates as YYYY-MM-DD strings)
+        if (mounted) {
+          setNoWorkDays([
+            { date: '2025-12-01', isRecurring: false, reason: 'Holiday' },
+            { date: '2025-12-15', isRecurring: false, reason: 'Office closed' },
+            { date: '2025-12-25', isRecurring: false, reason: 'Christmas' },
+          ]);
+        }
+      } catch (err) {
+        console.error('Failed to load noWorkDays', err);
+        if (mounted) setNoWorkDays([]);
+      }
+    }
+    fetchNoWorkDays();
+    return () => { mounted = false; };
+  }, []);
 
-  // Calendar functions
-  const getDaysInMonth = (date) => {
-    const year = date.getFullYear();
-    const month = date.getMonth();
-    return new Date(year, month + 1, 0).getDate();
-  };
+  // Fetch booked slots when date is selected
+  useEffect(() => {
+    if (!selectedDate) return;
+    
+    async function fetchBookedSlots() {
+      try {
+        const formattedDate = formatDate(selectedDate);
+        // Simulated API call - replace with your actual API
+        const res = await api.get(`/appointments/date/${formattedDate}`);
+        const slots = res.data.map(apt => apt.timeSlot);
+        setBookedSlots(slots);
+        
+        // Demo data
+        setBookedSlots(['09:00 AM', '02:00 PM']);
+      } catch (err) {
+        console.error('Failed to load booked slots', err);
+        setBookedSlots([]);
+      }
+    }
+    fetchBookedSlots();
+  }, [selectedDate]);
 
-  const getFirstDayOfMonth = (date) => {
-    const year = date.getFullYear();
-    const month = date.getMonth();
-    return new Date(year, month, 1).getDay();
-  };
+  // Recompute blocked dates when month or noWorkDays change
+  useEffect(() => {
+    const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Reset time for accurate comparison
+    const blocked = [];
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      const d = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+      d.setHours(0, 0, 0, 0); // Reset time for accurate comparison
+      const dateStr = formatDate(d);
+
+      // Block past dates (dates before today)
+      if (d < today) {
+        blocked.push(day);
+        continue;
+      }
+
+      // Check if this date exists in noWorkDays array
+      // Since your API returns dates as "YYYY-MM-DD" strings, we just check if the date matches
+      const isBlocked = noWorkDays.some(nw => nw.date === dateStr);
+
+      if (isBlocked) {
+        blocked.push(day);
+      }
+    }
+
+    setNotAvailableDates(blocked);
+  }, [currentDate, noWorkDays]);
+
+  // Time slots
+  const getTimeSlots = () => [
+    '09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM',
+    '02:00 PM', '03:00 PM', '04:00 PM', '05:00 PM'
+  ];
 
   const previousMonth = () => {
     setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
@@ -50,7 +114,7 @@ const Book_model = ({ isOpen, onClose }) => {
     setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
   };
 
-  const formatDate = (date) => {
+  const formatDateDisplay = (date) => {
     if (!date) return '';
     const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -58,7 +122,8 @@ const Book_model = ({ isOpen, onClose }) => {
   };
 
   const selectDate = (day) => {
-    if (availableDates.includes(day)) {
+    // Only allow selection if the date is NOT in the notAvailableDates array
+    if (!notAvailableDates.includes(day)) {
       const newDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
       setSelectedDate(newDate);
       setAppointmentType('');
@@ -74,20 +139,37 @@ const Book_model = ({ isOpen, onClose }) => {
            currentDate.getFullYear() === today.getFullYear();
   };
 
-  const handleConfirm = () => {
-    alert('Appointment confirmed!');
-    onClose();
-    // Reset form
-    setSelectedDate(null);
-    setAppointmentType('');
-    setSelectedTimeSlot('');
-    setAdditionalNotes('');
+  const handleConfirm = async () => {
+    if (!selectedDate || !selectedTimeSlot || !appointmentType) return;
+
+    const payload = {
+      date: formatDate(selectedDate),
+      timeSlot: selectedTimeSlot,
+      notes: additionalNotes,
+      appointmentType,
+      userId: '692cb332a4ba90e0b2dcb02f'
+    };
+
+    try {
+      // Replace with your actual API call
+      // const result = await createAppointment(payload);
+      console.log('Booking appointment:', payload);
+      alert('Appointment booked successfully!');
+      setSelectedDate(null);
+      setAppointmentType('');
+      setSelectedTimeSlot('');
+      setAdditionalNotes('');
+      onClose();
+    } catch (error) {
+      const msg = error.message;
+      alert('Error booking appointment: ' + msg);
+    }
   };
 
   // Generate calendar days
   const renderCalendar = () => {
-    const daysInMonth = getDaysInMonth(currentDate);
-    const firstDay = getFirstDayOfMonth(currentDate);
+    const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
+    const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay();
     const days = [];
 
     // Empty cells for days before month starts
@@ -97,7 +179,7 @@ const Book_model = ({ isOpen, onClose }) => {
 
     // Days of the month
     for (let day = 1; day <= daysInMonth; day++) {
-      const isAvailable = availableDates.includes(day);
+      const isAvailable = !notAvailableDates.includes(day);
       const isSelected = selectedDate && selectedDate.getDate() === day && 
                          selectedDate.getMonth() === currentDate.getMonth();
       const isTodayDate = isToday(day);
@@ -110,7 +192,7 @@ const Book_model = ({ isOpen, onClose }) => {
           className={`h-10 w-full rounded-lg flex items-center justify-center text-sm font-medium transition-colors
             ${isSelected ? 'bg-emerald-700 text-white' : ''}
             ${!isSelected && isAvailable ? 'hover:bg-emerald-50 text-gray-700' : ''}
-            ${!isAvailable ? 'text-gray-300 cursor-not-allowed' : 'cursor-pointer'}
+            ${!isAvailable ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'cursor-pointer'}
             ${isTodayDate && !isSelected ? 'border-2 border-gray-900' : ''}
           `}
         >
@@ -124,11 +206,10 @@ const Book_model = ({ isOpen, onClose }) => {
 
   const showSummary = selectedDate && appointmentType && selectedTimeSlot;
 
-  // Don't render anything if modal is not open
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[2000] p-4">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-5xl overflow-hidden relative max-h-[90vh]">
         {/* Close Button */}
         <button
@@ -200,7 +281,7 @@ const Book_model = ({ isOpen, onClose }) => {
                     Selected Date
                   </label>
                   <div className="text-lg font-semibold text-gray-900">
-                    {formatDate(selectedDate)}
+                    {formatDateDisplay(selectedDate)}
                   </div>
                 </div>
 
@@ -230,21 +311,28 @@ const Book_model = ({ isOpen, onClose }) => {
                       Available Time Slots
                     </label>
                     <div className="grid grid-cols-2 gap-3">
-                      {getTimeSlots(selectedDate).map(time => (
-                        <button
-                          key={time}
-                          onClick={() => setSelectedTimeSlot(time)}
-                          className={`px-4 py-3 rounded-lg border flex items-center justify-center gap-2 transition-colors
-                            ${selectedTimeSlot === time 
-                              ? 'bg-emerald-700 text-white border-emerald-700' 
-                              : 'bg-white border-gray-300 hover:border-emerald-500 text-gray-700'
-                            }
-                          `}
-                        >
-                          <Clock className="w-4 h-4" />
-                          <span className="text-sm font-medium">{time}</span>
-                        </button>
-                      ))}
+                      {getTimeSlots().map(time => {
+                        const isBooked = bookedSlots.includes(time);
+                        return (
+                          <button
+                            key={time}
+                            onClick={() => !isBooked && setSelectedTimeSlot(time)}
+                            disabled={isBooked}
+                            className={`px-4 py-3 rounded-lg border flex items-center justify-center gap-2 transition-colors
+                              ${isBooked ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed' : ''}
+                              ${!isBooked && selectedTimeSlot === time 
+                                ? 'bg-emerald-700 text-white border-emerald-700' 
+                                : ''}
+                              ${!isBooked && selectedTimeSlot !== time
+                                ? 'bg-white border-gray-300 hover:border-emerald-500 text-gray-700'
+                                : ''}
+                            `}
+                          >
+                            <Clock className="w-4 h-4" />
+                            <span className="text-sm font-medium">{time}</span>
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
@@ -314,4 +402,19 @@ const Book_model = ({ isOpen, onClose }) => {
   );
 };
 
-export default Book_model;
+// Demo wrapper to test the component
+export default function App() {
+  const [isOpen, setIsOpen] = useState(true);
+  
+  return (
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
+      <button
+        onClick={() => setIsOpen(true)}
+        className="bg-emerald-700 text-white px-6 py-3 rounded-lg font-semibold hover:bg-emerald-800"
+      >
+        Open Booking Calendar
+      </button>
+      <Book_model isOpen={isOpen} onClose={() => setIsOpen(false)} />
+    </div>
+  );
+}
