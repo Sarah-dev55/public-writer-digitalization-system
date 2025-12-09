@@ -403,18 +403,4 @@ const Book_model = ({ isOpen, onClose }) => {
 };
 
 // Demo wrapper to test the component
-export default function App() {
-  const [isOpen, setIsOpen] = useState(true);
-  
-  return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-      <button
-        onClick={() => setIsOpen(true)}
-        className="bg-emerald-700 text-white px-6 py-3 rounded-lg font-semibold hover:bg-emerald-800"
-      >
-        Open Booking Calendar
-      </button>
-      <Book_model isOpen={isOpen} onClose={() => setIsOpen(false)} />
-    </div>
-  );
-}
+export default Book_model;
