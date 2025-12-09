@@ -36,6 +36,11 @@ export default function Home() {
             </button>
           </Link>
         </div>
+        <div className="text-center">
+          <Link to="/admin/dashboard">
+            <button className="mt-6 bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-2 rounded-lg">Open Admin Dashboard</button>
+          </Link>
+        </div>
       </main>
       <Footer />
     </div>
