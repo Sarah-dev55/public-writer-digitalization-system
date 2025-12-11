@@ -7,6 +7,8 @@ import ClientOverview from '../pages/client/Overview';
 import Appointments from '../pages/client/Appointments';
 import ClientDocuments from '../pages/client/Documents';
 import AdminDashboard from '../pages/admin/Dashboard';
+import AdminAppointments from '../pages/admin/Appointments';
+import AdminAvailability from '../pages/admin/Availability';
 
 export default function AppRoutes() {
   return (
@@ -20,6 +22,8 @@ export default function AppRoutes() {
         <Route path="/client/documents" element={<ClientDocuments />} />
 
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
+        <Route path="/admin/appointments" element={<AdminAppointments />} />
+        <Route path="/admin/availability" element={<AdminAvailability />} />
       </Routes>
     </BrowserRouter>
   );

@@ -5,7 +5,7 @@ The project uses:
 
 * **Frontend:** React.js + Tailwind CSS
 * **Backend:** Node.js + Express
-* **Database:** MySQL
+* **Database:** MongoDB
 
 ---
 

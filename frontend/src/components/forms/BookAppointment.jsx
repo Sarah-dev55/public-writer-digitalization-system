@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Calendar, Clock, X } from 'lucide-react';
+import { getAllNoWorkDays } from '../../services/clientNoWorkDayService';
+import { getAppointmentsByDate, createAppointment } from '../../services/clientAppointmentService';
 
 const Book_model = ({ isOpen, onClose }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -27,17 +29,9 @@ const Book_model = ({ isOpen, onClose }) => {
     let mounted = true;
     async function fetchNoWorkDays() {
       try {
-        // Replace with your actual API call
-        // const res = await api.get('/noworkdays');
-        // if (mounted) setNoWorkDays(res.data || []);
-        
-        // Demo data matching your API format (dates as YYYY-MM-DD strings)
-        if (mounted) {
-          setNoWorkDays([
-            { date: '2025-12-01', isRecurring: false, reason: 'Holiday' },
-            { date: '2025-12-15', isRecurring: false, reason: 'Office closed' },
-            { date: '2025-12-25', isRecurring: false, reason: 'Christmas' },
-          ]);
+        const res = await getAllNoWorkDays();
+        if (mounted && res) {
+          setNoWorkDays(res || []);
         }
       } catch (err) {
         console.error('Failed to load noWorkDays', err);
@@ -55,13 +49,9 @@ const Book_model = ({ isOpen, onClose }) => {
     async function fetchBookedSlots() {
       try {
         const formattedDate = formatDate(selectedDate);
-        // Simulated API call - replace with your actual API
-        const res = await api.get(`/appointments/date/${formattedDate}`);
-        const slots = res.data.map(apt => apt.timeSlot);
+        const res = await getAppointmentsByDate(formattedDate);
+        const slots = res.map(apt => apt.timeSlot);
         setBookedSlots(slots);
-        
-        // Demo data
-        setBookedSlots(['09:00 AM', '02:00 PM']);
       } catch (err) {
         console.error('Failed to load booked slots', err);
         setBookedSlots([]);
@@ -151,9 +141,7 @@ const Book_model = ({ isOpen, onClose }) => {
     };
 
     try {
-      // Replace with your actual API call
-      // const result = await createAppointment(payload);
-      console.log('Booking appointment:', payload);
+      const result = await createAppointment(payload);
       alert('Appointment booked successfully!');
       setSelectedDate(null);
       setAppointmentType('');

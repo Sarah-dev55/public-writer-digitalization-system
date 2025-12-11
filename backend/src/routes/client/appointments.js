@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const Appointment = require('../models/Appointment');
-const NoWorkDay = require('../models/NoWorkDay');
+const Appointment = require('../../models/Appointment');
+const NoWorkDay = require('../../models/NoWorkDay');
 const { v4: uuidv4 } = require('uuid');
 
 // Get all appointments
@@ -30,7 +30,7 @@ router.post('/', async (req, res) => {
     }
 
     // weekday name for recurring checks
-    const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     const weekday = days[dateObj.getDay()];
 
     // 1️⃣ Check if day is non-working (exact date OR recurring weekday)

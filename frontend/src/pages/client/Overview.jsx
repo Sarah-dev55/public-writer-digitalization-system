@@ -7,15 +7,15 @@ import ActionCards from '../../components/client/ActionCards';
 import AppointmentsList from '../../components/client/AppointmentsList';
 import DocumentsList from '../../components/client/DocumentsList';
 import CaseProgress from '../../components/client/CaseProgress';
-import Book_model from '../../components/forms/BookAppointment'; // ✅ CHANGE 1: Import the booking modal
+import Book_model from '../../components/forms/BookAppointment'; // Import the booking modal
 
 export default function ClientDashboard() {
   const [activeTab, setActiveTab] = useState('appointments');
-  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false); // ✅ CHANGE 2: Add state for modal
+  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false); // Add state for modal
   const navigate = useNavigate();
 
   const handleBookAppointment = () => {
-    setIsBookingModalOpen(true); // ✅ CHANGE 3: Open modal instead of navigating
+    setIsBookingModalOpen(true); //Open modal instead of navigating
   };
 
   const handleUploadDocuments = () => {
@@ -23,12 +23,12 @@ export default function ClientDashboard() {
   };
 
   const handleBookNew = () => {
-    setIsBookingModalOpen(true); // ✅ CHANGE 4: Open modal instead of navigating
+    setIsBookingModalOpen(true); //Open modal instead of navigating
   };
 
   const handleReschedule = (id) => {
     console.log('Reschedule appointment:', id);
-    setIsBookingModalOpen(true); // ✅ CHANGE 5: Open modal for rescheduling
+    setIsBookingModalOpen(true); // Open modal for rescheduling
   };
 
   const handleCancel = (id) => {
@@ -111,7 +111,7 @@ export default function ClientDashboard() {
       
       <Footer />
       
-      {/* ✅ CHANGE 6: Add the booking modal component */}
+      {/*Add the booking modal component */}
       <Book_model 
         isOpen={isBookingModalOpen} 
         onClose={() => setIsBookingModalOpen(false)} 

@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const NoWorkDay = require('../models/NoWorkDay');
+const NoWorkDay = require('../../models/NoWorkDay');
 
 // Get all non-working days
 router.get('/', async (req, res) => {

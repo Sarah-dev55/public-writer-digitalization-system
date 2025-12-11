@@ -1,15 +1,8 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const morgan = require('morgan');
 const connectDB = require('./config/database');
-
-// Import routes
-const userRoutes = require('./routes/users');
-const appointmentRoutes = require('./routes/appointments');
-const checklistRoutes = require('./routes/checklists');
-const documentRoutes = require('./routes/documents');
-const noWorkDayRoutes = require('./routes/noWorkDays');
-const mrMensurRoutes = require('./routes/mrMensur');
 
 const app = express();
 
@@ -17,34 +10,126 @@ const app = express();
 connectDB();
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: process.env.CORS_ORIGIN || '*',
+  credentials: true
+}));
+app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Routes
-app.use('/api/users', userRoutes);
-app.use('/api/appointments', appointmentRoutes);
-app.use('/api/checklists', checklistRoutes);
-app.use('/api/documents', documentRoutes);
-app.use('/api/noworkdays', noWorkDayRoutes);
+// =====================
+// Import Routes
+// =====================
+
+// Client routes
+const clientUserRoutes = require('./routes/client/users');
+const clientAppointmentRoutes = require('./routes/client/appointments');
+const clientChecklistRoutes = require('./routes/client/checklists');
+const clientNoWorkDayRoutes = require('./routes/client/noWorkDays');
+
+// Admin routes
+const adminUserRoutes = require('./routes/admin/apiUsers');
+const adminAppointmentRoutes = require('./routes/admin/appointments');
+const adminChecklistRoutes = require('./routes/admin/checklists');
+const adminDocumentRoutes = require('./routes/admin/documents');
+const availabilityRoutes = require('./routes/admin/availability');
+
+// Other functional routes
+const mrMensurRoutes = require('./routes/mrMensur');
+
+
+// =====================
+// API Routes
+// =====================
+
+// Client-facing API
+app.use('/api/client/users', clientUserRoutes);
+app.use('/api/client/appointments', clientAppointmentRoutes);
+app.use('/api/client/checklists', clientChecklistRoutes);
+app.use('/api/client/noworkdays', clientNoWorkDayRoutes);
+
+// Admin-facing API
+app.use('/api/admin/users', adminUserRoutes);
+app.use('/api/admin/appointments', adminAppointmentRoutes);
+app.use('/api/admin/checklists', adminChecklistRoutes);
+app.use('/api/admin/documents', adminDocumentRoutes);
+app.use('/api/admin/availability', availabilityRoutes);
+// Other
 app.use('/api/mrmensur', mrMensurRoutes);
 
-// Health check route
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'OK', message: 'Server is running' });
-});
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ 
-    error: 'Something went wrong!',
-    message: err.message 
+// =====================
+// Health Check
+// =====================
+app.get('/api/health', (req, res) => {
+  res.json({
+    status: 'OK',
+    message: 'Server is running',
+    timestamp: new Date().toISOString()
   });
 });
 
-const PORT = process.env.PORT || 5000;
+// =====================
+// Root Route
+// =====================
+app.get('/', (req, res) => {
+  res.json({
+    message: 'Backend API Server',
+    version: '1.0.0',
+    endpoints: {
+      client: {
+        users: '/api/client/users',
+        appointments: '/api/client/appointments',
+        checklists: '/api/client/checklists',
+        noWorkDays: '/api/client/noworkdays'
+      },
+      admin: {
+        users: '/api/admin/users',
+        appointments: '/api/admin/appointments',
+        checklists: '/api/admin/checklists',
+        documents: '/api/admin/documents',
+        availability: '/api/admin/availability'
+      },
+      other: {
+        mrMensur: '/api/mrmensur',
+        health: '/api/health'
+      }
+    }
+  });
+});
 
+// =====================
+// 404 Handler
+// =====================
+app.use((req, res) => {
+  res.status(404).json({
+    error: 'Route not found',
+    path: req.path
+  });
+});
+
+// =====================
+// Error Handling
+// =====================
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(err.status || 500).json({
+    error: 'Something went wrong!',
+    message: process.env.NODE_ENV === 'development'
+      ? err.message
+      : 'Internal server error'
+  });
+});
+
+// =====================
+// Start Server
+// =====================
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`Health check: http://localhost:${PORT}/api/health`);
 });
+
+module.exports = app;

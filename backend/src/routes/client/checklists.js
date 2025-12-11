@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const Checklist = require('../models/Checklist');
+const Checklist = require('../../models/Checklist');
 const { v4: uuidv4 } = require('uuid');
 
 // Get all checklists
@@ -46,13 +46,13 @@ router.patch('/:id/items/:itemId', async (req, res) => {
   try {
     const checklist = await Checklist.findById(req.params.id);
     if (!checklist) return res.status(404).json({ message: 'Checklist not found' });
-    
+
     const item = checklist.items.find(i => i.itemId === req.params.itemId);
     if (!item) return res.status(404).json({ message: 'Item not found' });
-    
+
     item.isCompleted = req.body.isCompleted;
     await checklist.save();
-    
+
     res.json(checklist);
   } catch (error) {
     res.status(400).json({ message: error.message });
