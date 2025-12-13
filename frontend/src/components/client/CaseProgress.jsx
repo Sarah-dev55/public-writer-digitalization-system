@@ -37,7 +37,7 @@ export default function CaseProgress({ progress = 66, currentPhase = 'Document P
   const getStepIcon = (step) => {
     if (step.status === 'completed') {
       return (
-        <div className="w-12 h-12 rounded-full bg-[#5a7a66] flex items-center justify-center text-white font-bold">
+        <div className="w-12 h-12 rounded-full bg-app-primary flex items-center justify-center text-app-text-light font-bold">
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
           </svg>
@@ -51,7 +51,7 @@ export default function CaseProgress({ progress = 66, currentPhase = 'Document P
       );
     } else {
       return (
-        <div className="w-12 h-12 rounded-full bg-[#f5f5dc] border-2 border-gray-300 flex items-center justify-center text-gray-500 font-bold">
+        <div className="w-12 h-12 rounded-full bg-app-accent border-2 border-gray-300 flex items-center justify-center text-gray-500 font-bold">
           {step.id}
         </div>
       );
@@ -60,7 +60,7 @@ export default function CaseProgress({ progress = 66, currentPhase = 'Document P
 
   const getStatusText = (step) => {
     if (step.status === 'completed') {
-      return <span className="text-[#5a7a66] font-semibold">Completed</span>;
+      return <span className="text-app-primary font-semibold">Completed</span>;
     } else if (step.status === 'in-progress') {
       return <span className="text-[#A65F00] font-semibold">In Progress</span>;
     } else {
@@ -70,23 +70,23 @@ export default function CaseProgress({ progress = 66, currentPhase = 'Document P
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h2 className="text-3xl font-bold text-[#2d4a3e] mb-6">Case Progress</h2>
+      <h2 className="text-3xl font-bold text-app-primary mb-6">Case Progress</h2>
       
       {/* Progress Bar */}
-      <div className="bg-[#f5f5dc] rounded-xl p-6 mb-8 shadow-md">
+      <div className="bg-white rounded-xl p-6 mb-8 shadow-md">
         <div className="mb-4">
           <div className="flex justify-between items-center mb-2">
-            <span className="text-lg font-semibold text-[#2d4a3e]">{progress}%</span>
+            <span className="text-lg font-semibold text-app-primary">{progress}%</span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-4">
             <div
-              className="bg-[#5a7a66] h-4 rounded-full transition-all duration-500"
+              className="bg-app-primary h-4 rounded-full transition-all duration-500"
               style={{ width: `${progress}%` }}
             ></div>
           </div>
         </div>
         <p className="text-gray-700 mt-2">
-          You are currently in the <span className="font-semibold text-[#2d4a3e]">{currentPhase}</span> phase.
+          You are currently in the <span className="font-semibold text-app-primary">{currentPhase}</span> phase.
         </p>
       </div>
       
@@ -100,7 +100,7 @@ export default function CaseProgress({ progress = 66, currentPhase = 'Document P
               {index < steps.length - 1 && (
                 <div
                   className={`w-0.5 h-16 mt-2 ${
-                    step.status === 'completed' ? 'bg-[#5a7a66]' : 'bg-gray-300'
+                    step.status === 'completed' ? 'bg-app-primary' : 'bg-gray-300'
                   }`}
                 ></div>
               )}
@@ -110,7 +110,7 @@ export default function CaseProgress({ progress = 66, currentPhase = 'Document P
             <div className="flex-1 pb-6">
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
                 <div>
-                  <h3 className="text-xl font-bold text-[#2d4a3e] mb-1">{step.id}. {step.title}</h3>
+                  <h3 className="text-xl font-bold text-app-primary mb-1">{step.id}. {step.title}</h3>
                   <div className="flex items-center gap-4">
                     {getStatusText(step)}
                     {step.date && (

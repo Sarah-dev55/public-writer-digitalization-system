@@ -34,8 +34,8 @@ function Header({
   return (
     <header className={cn("w-full", className)}>
       {/* Top Bar - Contact Info */}
-      <div className="bg-[#588157] text-[#f5f5dc] py-2"></div>
-      <div className="container mx-auto px-4 mx-6 rounded-b-2xl bg-[#588157]">
+      <div className="bg-app-primary text-app-accent py-2"></div>
+      <div className="container mx-auto px-4 mx-6 rounded-b-2xl bg-app-primary">
         <div className="flex items-center justify-between text-sm">
           <div className="flex items-center gap-6">
             <div className="flex items-center gap-2">
@@ -75,7 +75,7 @@ function Header({
           {/* User Info (Top Right) */}
           {user && (
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-[#f5f5dc] overflow-hidden">
+              <div className="w-8 h-8 rounded-full bg-app-accent overflow-hidden">
                 {user.avatar ? (
                   <img
                     src={user.avatar}
@@ -83,7 +83,7 @@ function Header({
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-[#5a7a66] text-[#f5f5dc] font-semibold">
+                  <div className="w-full h-full flex items-center justify-center bg-app-primary text-app-accent font-semibold">
                     {user.name?.charAt(0) || "?"}
                   </div>
                 )}
@@ -97,7 +97,7 @@ function Header({
       </div>
 
       {/* Main Navigation */}
-      <nav className="bg-[#f5f5dc] shadow-lg">
+      <nav className="bg-app-accent shadow-lg">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             {/* Logo */}
@@ -164,10 +164,10 @@ function Header({
                 </svg>
               </div>
               <div className="flex flex-col">
-                <span className="text-[#2d4a3e] text-xl font-bold tracking-wider">
+                <span className="text-app-primary text-xl font-bold tracking-wider">
                   MENSELIR
                 </span>
-                <span className="text-[#2d4a3e] text-xs opacity-80 -mt-1">
+                <span className="text-app-primary text-xs opacity-80 -mt-1">
                   PUBLIC WRITER
                 </span>
               </div>
@@ -182,7 +182,7 @@ function Header({
                     <div>
                       <button
                         onClick={() => toggleDropdown(item.label)}
-                        className="text-[#2d4a3e] hover:text-[#5a7a66] transition-colors font-medium text-sm uppercase tracking-wide flex items-center gap-1"
+                        className="text-app-primary hover:text-app-secondary transition-colors font-medium text-sm uppercase tracking-wide flex items-center gap-1"
                       >
                         {item.label}
                         <span className="text-xs">▼</span>
@@ -207,7 +207,7 @@ function Header({
                     <a
                       href={item.href}
                       onClick={item.onClick}
-                      className="text-[#2d4a3e] hover:text-[#5a7a66] transition-colors font-medium text-sm uppercase tracking-wide"
+                      className="text-app-primary hover:text-app-secondary transition-colors font-medium text-sm uppercase tracking-wide"
                     >
                       {item.label}
                     </a>
@@ -220,7 +220,7 @@ function Header({
             <div className="hidden lg:flex items-center gap-4">
               {actionButton || (
                 <Link to="/client/dashboard">
-                  <button className="bg-[#2d4a3e] text-[#f5f5dc] px-6 py-2.5 rounded-full font-semibold text-sm uppercase tracking-wide hover:bg-[#1d3a2e] transition-all">
+                  <button className="bg-app-primary text-app-accent px-6 py-2.5 rounded-full font-semibold text-sm uppercase tracking-wide hover:bg-app-primary/90 transition-all">
                     GET STARTED
                   </button>
                 </Link>
@@ -232,7 +232,7 @@ function Header({
             {/* Mobile Menu Button */}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="lg:hidden text-[#2d4a3e] text-2xl"
+              className="lg:hidden text-app-primary text-2xl"
             >
               {isMobileMenuOpen ? "✕" : "☰"}
             </button>
@@ -240,14 +240,14 @@ function Header({
 
           {/* Mobile Menu */}
           {isMobileMenuOpen && (
-            <div className="lg:hidden mt-4 pb-4 space-y-3 border-t border-[#5a7a66] pt-4">
+            <div className="lg:hidden mt-4 pb-4 space-y-3 border-t border-app-primary pt-4">
               {menuItems.map((item, index) => (
                 <div key={index}>
                   {item.children ? (
                     <div>
                       <button
                         onClick={() => toggleDropdown(item.label)}
-                        className="w-full text-left text-[#2d4a3e] hover:text-[#5a7a66] transition-colors font-medium text-sm uppercase tracking-wide flex items-center justify-between"
+                        className="w-full text-left text-app-primary hover:text-app-secondary transition-colors font-medium text-sm uppercase tracking-wide flex items-center justify-between"
                       >
                         {item.label}
                         <span className="text-xs">▼</span>
@@ -258,7 +258,7 @@ function Header({
                             <a
                               key={childIndex}
                               href={child.href}
-                              className="block text-[#5a7a66] hover:text-[#2d4a3e] text-sm"
+                              className="block text-app-secondary hover:text-app-primary text-sm"
                             >
                               {child.label}
                             </a>
@@ -270,7 +270,7 @@ function Header({
                     <a
                       href={item.href}
                       onClick={item.onClick}
-                      className="block text-[#2d4a3e] hover:text-[#5a7a66] transition-colors font-medium text-sm uppercase tracking-wide"
+                      className="block text-app-primary hover:text-app-secondary transition-colors font-medium text-sm uppercase tracking-wide"
                     >
                       {item.label}
                     </a>
