@@ -10,7 +10,6 @@ import {
   AwardIcon,
   CheckCircle2Icon,
 } from 'lucide-react';
-import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
 import Footer from '../components/layout/Footer';
 
@@ -117,8 +116,8 @@ export default function Services() {
   const navigate = useNavigate();
 
   return (
-    <div className="flex flex-col w-full min-h-screen">
-      <main className="flex-1">
+    <div className="flex flex-col w-full min-h-screen bg-white">
+      <main className="flex-1 bg-white">
         {/* Back Button Card */}
         
       
@@ -150,7 +149,7 @@ export default function Services() {
         </section>
 
         {/* Services Grid */}
-        <section className="w-full bg-app-accent py-12 px-6 sm:py-16 md:py-20 lg:py-24">
+        <section className="w-full bg-white py-12 px-6 sm:py-16 md:py-20 lg:py-24">
           <div className="mx-auto max-w-6xl">
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 lg:gap-8">
               {servicesData.map((service, index) => {
@@ -201,7 +200,7 @@ export default function Services() {
         {/* Complete Package Section */}
         <section className="w-full bg-gradient-to-r from-app-primary to-app-primary/95 py-12 px-6 sm:py-16 md:py-20 lg:py-24">
           <div className="mx-auto max-w-4xl">
-            <Card className="h-full bg-app-accent border-none rounded-2xl overflow-hidden shadow-xl">
+            <Card className="h-full bg-white border-none rounded-2xl overflow-hidden shadow-xl">
               <CardContent className="flex flex-col gap-8 p-8 sm:p-10 md:p-12">
                 {/* Icon */}
                 <div className="flex justify-center">
@@ -235,21 +234,13 @@ export default function Services() {
                   ))}
                 </div>
 
-                {/* CTA Button */}
-                <div className="flex justify-center pt-4">
-                  <Button
-                    className="bg-app-primary text-app-text-light hover:bg-app-primary/90 px-8 py-3 text-base sm:text-lg font-semibold"
-                  >
-                    Get Started Today
-                  </Button>
-                </div>
               </CardContent>
             </Card>
           </div>
         </section>
 
         {/* Info Section */}
-        <section className="w-full bg-app-accent py-12 px-6 sm:py-16 md:py-20">
+        <section className="w-full bg-white py-12 px-6 sm:py-16 md:py-20">
           <div className="mx-auto max-w-4xl">
             <div className="bg-app-primary/5 rounded-2xl p-8 sm:p-12 border border-app-primary/10">
               <h3 className="text-xl sm:text-2xl font-bold text-app-primary mb-4">

@@ -51,19 +51,28 @@ export default function ClientDashboard() {
     // Add view logic here
   };
 
+  const handleDocumentDelete = (id) => {
+    console.log('Delete document:', id);
+    // Add delete logic here
+  };
+
   const handleUploadNew = () => {
     navigate('/client/documents');
   };
 
-  const menuItems = [
-    { label: 'HOME', active: false, href: '/' },
-    { label: 'ABOUT US', active: false, href: '/about' },
-    { label: 'CONTACT US', active: false, href: '/contact' },
-    { label: 'BLOG', active: false, href: '/blog' },
+  const navItems = [
+    { label: "Home", active: false, href: '/#home' },
+    { label: "Our Services", active: false, href: '/#about' },
+    { label: "Client Reviews", active: false, href: '/#reviews' },
+    { label: "How It Works", active: false, href: '/#how-it-works' },
   ];
+  
 
   const testUser = {
     name: "Sarah Smith",
+    email: "sarah.smith@example.com",
+    phone: "+213 123 456 789",
+    location: "Algiers, Algeria",
     avatar: null
   };
 
@@ -77,7 +86,7 @@ export default function ClientDashboard() {
         }}
       >
         <UnifiedHeader
-          navItems={menuItems}
+          navItems={navItems}
           logoImage="/assets/images/Logo.png"
           logoOnClick={() => navigate('/')}
           ctaButtonText="Get Started"
@@ -85,6 +94,8 @@ export default function ClientDashboard() {
           showUser={true}
           user={testUser}
           navClassName="bg-transparent"
+          contactBarClassName="bg-app-primary/90"
+          showCtaButton={false}
         />
         
         <HeroSection activeTab={activeTab} onTabChange={setActiveTab} />
@@ -111,6 +122,7 @@ export default function ClientDashboard() {
             onUpload={handleDocumentUpload}
             onDownload={handleDocumentDownload}
             onView={handleDocumentView}
+            onDelete={handleDocumentDelete}
             onUploadNew={handleUploadNew}
           />
         )}

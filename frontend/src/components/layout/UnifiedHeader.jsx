@@ -1,8 +1,10 @@
 import { MenuIcon, MailIcon, PhoneIcon } from "lucide-react";
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "../ui/button";
 import { CONTACT_EMAIL, CONTACT_PHONE } from "../../constants/contact";
 import { AuthContext } from "../../context/AuthContext";
+import ProfileModal from "../ui/ProfileModal";
 
 const contactInfo = [
   {
@@ -26,28 +28,70 @@ export const UnifiedHeader = ({
   contactBarClassName = "",
   showUser = false,
   user = null,
+  showCtaButton = true, // New prop to control CTA button visibility
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { requireAuth } = useContext(AuthContext);
+  const [profileModalOpen, setProfileModalOpen] = useState(false);
+  const { requireAuth, isAuthenticated, logout } = useContext(AuthContext);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Handle scrolling to hash after navigation
+  useEffect(() => {
+    if (location.hash) {
+      const element = document.querySelector(location.hash);
+      if (element) {
+        // Small delay to ensure page is rendered
+        setTimeout(() => {
+          element.scrollIntoView({ behavior: "smooth" });
+        }, 100);
+      }
+    }
+  }, [location]);
 
   const handleNavClick = (href) => {
     setMobileMenuOpen(false);
     if (href.startsWith("#")) {
+      // Hash link on current page - scroll to element
       const element = document.querySelector(href);
       if (element) {
         element.scrollIntoView({ behavior: "smooth" });
       }
+    } else if (href.includes("#")) {
+      // Path with hash (e.g., "/#home") - navigate to path with hash
+      navigate(href);
     } else if (href.startsWith("/")) {
-      window.location.href = href;
+      // Regular path - navigate
+      navigate(href);
     }
   };
 
   const handleCtaClick = () => {
-    if (ctaButtonOnClick) {
-      requireAuth(() => ctaButtonOnClick());
+    if (isAuthenticated) {
+      // If authenticated, directly execute the action
+      if (ctaButtonOnClick) {
+        ctaButtonOnClick();
+      } else {
+        window.location.href = "/client/dashboard";
+      }
     } else {
-      requireAuth(() => (window.location.href = "/dashboard"));
+      // If not authenticated, require auth first
+      if (ctaButtonOnClick) {
+        requireAuth(() => ctaButtonOnClick());
+      } else {
+        requireAuth(() => (window.location.href = "/client/dashboard"));
+      }
     }
+  };
+
+  // Helper function to get user initials
+  const getUserInitials = (name) => {
+    if (!name) return "?";
+    const nameParts = name.trim().split(/\s+/);
+    if (nameParts.length >= 2) {
+      return (nameParts[0].charAt(0) + nameParts[nameParts.length - 1].charAt(0)).toUpperCase();
+    }
+    return name.charAt(0).toUpperCase();
   };
 
   return (
@@ -70,22 +114,15 @@ export const UnifiedHeader = ({
             {/* User Info (Top Right) */}
             {showUser && user && (
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-app-accent overflow-hidden">
-                  {user.avatar ? (
-                    <img
-                      src={user.avatar}
-                      alt={user.name}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-app-primary text-app-accent font-semibold">
-                      {user.name?.charAt(0) || "?"}
-                    </div>
-                  )}
-                </div>
-                <span className="text-xs sm:text-sm hidden md:block text-app-text-muted">
-                  {user.name || "User"}
-                </span>
+                <button
+                  onClick={() => setProfileModalOpen(true)}
+                  className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-app-primary overflow-hidden flex items-center justify-center cursor-pointer hover:ring-2 hover:ring-app-accent transition-all"
+                  aria-label="View Profile"
+                >
+                  <div className="w-full h-full flex items-center justify-center bg-app-primary text-app-accent font-semibold text-xs sm:text-sm">
+                    {getUserInitials(user.name)}
+                  </div>
+                </button>
               </div>
             )}
           </div>
@@ -119,14 +156,16 @@ export const UnifiedHeader = ({
           </div>
 
           {/* CTA Buttons - Desktop */}
-          <div className="hidden lg:flex items-center gap-4 flex-shrink-0">
-            <Button 
-              onClick={handleCtaClick} 
-              className="px-6 py-2 sm:px-8 sm:py-3 bg-app-accent hover:bg-app-accent/90 rounded-full h-auto text-xs sm:text-sm font-semibold text-app-primary"
-            >
-              {ctaButtonText}
-            </Button>
-          </div>
+          {showCtaButton && (
+            <div className="hidden lg:flex items-center gap-4 flex-shrink-0">
+              <Button 
+                onClick={handleCtaClick} 
+                className="px-6 py-2 sm:px-8 sm:py-3 bg-app-accent hover:bg-app-accent/90 rounded-full h-auto text-xs sm:text-sm font-semibold text-app-primary"
+              >
+                {ctaButtonText}
+              </Button>
+            </div>
+          )}
 
           {/* Mobile Menu Button */}
           <button
@@ -151,16 +190,39 @@ export const UnifiedHeader = ({
                   {item.label}
                 </button>
               ))}
-              <Button 
-                onClick={handleCtaClick} 
-                className="w-full px-6 py-2 bg-app-accent hover:bg-app-accent/90 rounded-full h-auto text-xs font-semibold text-app-primary mt-2"
-              >
-                {ctaButtonText}
-              </Button>
+              {showCtaButton && (
+                <Button 
+                  onClick={handleCtaClick} 
+                  className="w-full px-6 py-2 bg-app-accent hover:bg-app-accent/90 rounded-full h-auto text-xs font-semibold text-app-primary mt-2"
+                >
+                  {ctaButtonText}
+                </Button>
+              )}
             </div>
           </div>
         )}
       </nav>
+
+      {/* Profile Modal */}
+      {showUser && user && (
+        <ProfileModal
+          open={profileModalOpen}
+          onClose={() => setProfileModalOpen(false)}
+          user={user}
+          onUpdate={(updatedData) => {
+            // Handle profile update
+            console.log("Profile updated:", updatedData);
+            // You can add API call here to update user data
+            setProfileModalOpen(false);
+          }}
+          onLogout={() => {
+            if (logout) {
+              logout();
+            }
+            navigate("/");
+          }}
+        />
+      )}
     </header>
   );
 };

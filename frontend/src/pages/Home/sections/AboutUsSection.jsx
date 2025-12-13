@@ -5,7 +5,7 @@ import {
   GraduationCapIcon,
 } from "lucide-react";
 import React from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Button } from "../../../components/ui/button";
 import { Card, CardContent } from "../../../components/ui/card";
 
@@ -42,6 +42,8 @@ const servicesData = [
 ];
 
 export const AboutUsSection = () => {
+  const navigate = useNavigate();
+
   return (
     <section id="about" className="w-full bg-app-accent py-12 px-6 sm:py-16 md:py-20 lg:py-24">
       <div className="mx-auto max-w-6xl">
@@ -53,19 +55,17 @@ export const AboutUsSection = () => {
 
           <Button
             variant="ghost"
+            onClick={() => navigate("/services")}
             className="flex items-center gap-2 hover:bg-transparent p-0 whitespace-nowrap"
-            asChild
           >
-            <Link to="/services" className="flex items-center gap-2">
-              <span className="text-sm sm:text-base font-semibold text-app-primary">
-                View all services
-              </span>
-              <ArrowRightIcon className="w-5 h-5 text-app-primary flex-shrink-0" />
-            </Link>
+            <span className="text-sm sm:text-base font-semibold text-app-primary">
+              View all services
+            </span>
+            <ArrowRightIcon className="w-5 h-5 text-app-primary flex-shrink-0" />
           </Button>
         </div>
 
-        {/* ServicesGrid */}
+        {/* Services Grid */}
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 lg:gap-8">
           {servicesData.map((service, index) => {
             const IconComponent = service.icon;
