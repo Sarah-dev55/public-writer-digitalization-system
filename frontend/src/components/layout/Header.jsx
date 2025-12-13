@@ -219,9 +219,9 @@ function Header({
             {/* Right Side - Get Started Button */}
             <div className="hidden lg:flex items-center gap-4">
               {actionButton || (
-                <Link to="/client/dashboard">
+                <Link to="/client/overview">
                   <button className="bg-app-primary text-app-accent px-6 py-2.5 rounded-full font-semibold text-sm uppercase tracking-wide hover:bg-app-primary/90 transition-all">
-                    GET STARTED
+                    S
                   </button>
                 </Link>
               )}

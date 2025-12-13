@@ -11,12 +11,22 @@ const navItems = [
 ];
 
 export const HeaderSection = () => {
-  const { requireAuth } = useContext(AuthContext);
+  const { requireAuth, isAuthenticated } = useContext(AuthContext);
 
   const handleNavClick = (href) => {
     const element = document.querySelector(href);
     if (element) {
       element.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
+  const handleCtaClick = () => {
+    if (isAuthenticated) {
+      window.location.href = "/client/overview";
+    } else {
+      requireAuth(() => {
+        window.location.href = "/client/overview";
+      });
     }
   };
 
@@ -32,23 +42,24 @@ export const HeaderSection = () => {
         navItems={navItems}
         logoImage="/assets/images/Logo.png"
         logoOnClick={() => handleNavClick("#home")}
-        ctaButtonText="Dashboard"
-        ctaButtonOnClick={() => (window.location.href = "/client/overview")}
+        ctaButtonText={isAuthenticated ? "Dashboard" : "Sign In"}
+        ctaButtonOnClick={handleCtaClick}
         navClassName="bg-transparent"
+        showCtaButton={true}
       />
 
         {/* Hero Content */}
-        <div className="w-full px-6 lg:px-0 py-16 px-4 flex items-center">
+        <div className="w-full px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 py-12 sm:py-16 md:py-20 lg:py-24 flex items-center">
           <div className="container mx-auto relative z-10 w-full">
             {/* Left Content */}
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-3 sm:gap-4 md:gap-5">
               {/* Tagline */}
-              <p className="text-xs sm:text-sm font-semibold uppercase tracking-widest text-app-accent">
+              <p className="text-xs sm:text-sm md:text-base font-semibold uppercase tracking-widest text-app-accent px-2 sm:px-0">
                 Professional Support For International Procedures
               </p>
 
               {/* Main Heading */}
-              <h3 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-tight text-app-text-light">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold leading-tight text-app-text-light px-2 sm:px-0">
                 <span className="text-app-accent">Professional</span>
                 <br />
                 <span className="text-app-secondary">Support For</span>
@@ -56,20 +67,19 @@ export const HeaderSection = () => {
                 <span className="text-app-accent">International</span>
                 <br />
                 <span className="text-app-secondary">Procedures</span>
-              </h3>
+              </h1>
 
               {/* Description */}
-              <p className="text-sm md:text-base text-app-text-muted leading-relaxed max-w-2xl mb-8">
+              <p className="text-sm sm:text-base md:text-lg text-app-text-muted leading-relaxed max-w-2xl mb-6 sm:mb-8 px-2 sm:px-0">
                 Our team of experienced professionals offers dedicated support with all your international administrative procedures, ensuring a smooth and efficient process.
               </p>
 
               {/* CTA Buttons */}
-              <div className="flex flex-col sm:flex-row gap-4">
-                
-                <Button onClick={() => requireAuth(() => (window.location.href = "/client/overview"))} className="px-6 py-2.5 bg-app-primary hover:bg-app-primary/90 rounded-full h-auto text-sm font-semibold text-app-text-light">
-                  Book appointment.
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 px-2 sm:px-0">
+                <Button onClick={() => requireAuth(() => alert('Open booking flow'))} className="px-5 sm:px-6 py-2 sm:py-2.5 bg-app-primary hover:bg-app-primary/90 rounded-full h-auto text-xs sm:text-sm font-semibold text-app-text-light">
+                  Get a proposal.
                 </Button>
-                <Button onClick={() => handleNavClick('#about')} className="px-6 py-2.5 bg-app-accent hover:bg-app-accent/90 rounded-full h-auto text-sm font-semibold text-app-primary">
+                <Button onClick={() => handleNavClick('#about')} className="px-5 sm:px-6 py-2 sm:py-2.5 bg-app-accent hover:bg-app-accent/90 rounded-full h-auto text-xs sm:text-sm font-semibold text-app-primary">
                   Learn more.
                 </Button>
               </div>

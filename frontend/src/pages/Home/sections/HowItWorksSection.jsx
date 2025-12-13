@@ -26,11 +26,11 @@ const steps = [
 
 export const HowItWorksSection = () => {
   return (
-    <section id="how-it-works" className="w-full bg-app-accent py-10 px-3 sm:py-16 md:py-20 lg:py-24">
-      <div className="">
+    <section id="how-it-works" className="w-full bg-app-accent py-12 px-6 sm:py-16 md:py-20 lg:py-24">
+      <div className="mx-auto max-w-5xl">
         {/* Header */}
-        <div className="mx-auto max-w-6xl flex flex-col sm:flex-row items-center justify-between gap-6">
-          <h2 className="text-2xl py-10 sm:text-3xl md:text-4xl lg:text-5xl font-bold text-app-primary">
+        <div className="mb-12 sm:mb-16 md:mb-20 text-center">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-app-primary">
             Steps How It Works:
           </h2>
         </div>

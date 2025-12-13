@@ -10,7 +10,15 @@ export const HeroSection = () => {
           Our Clients Reviews:
         </h2>
 
-        
+        <Button
+          variant="link"
+          className="flex items-center gap-2 p-0 h-auto hover:no-underline whitespace-nowrap"
+        >
+          <span className="text-sm sm:text-base font-semibold text-app-primary">
+            View all reviews
+          </span>
+          <ArrowRightIcon className="w-5 h-5 text-app-primary flex-shrink-0" />
+        </Button>
       </div>
     </section>
   );
