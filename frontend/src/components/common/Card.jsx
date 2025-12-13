@@ -10,10 +10,10 @@ function cn(...classes) {
  */
 function Card({ className, variant = 'default', ...props }) {
   const variants = {
-    default: 'bg-white border border-gray-200',
-    dark: 'bg-[#3d5a4a] text-white border-0',
-    elevated: 'bg-white shadow-lg border-0',
-    bordered: 'bg-white border-2 border-[#5a7a66]'
+    default: 'bg-app-accent border border-app-primary/20',
+    dark: 'bg-app-primary text-app-text-light border-0',
+    elevated: 'bg-app-accent shadow-lg border-0',
+    bordered: 'bg-app-accent border-2 border-app-primary'
   };
 
   return (

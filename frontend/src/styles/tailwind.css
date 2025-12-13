@@ -1,0 +1,274 @@
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .all-\[unset\] {
+    all: unset;
+  }
+}
+
+:root {
+  --accent-font-family: "Open Sans", Helvetica;
+  --accent-font-size: 15px;
+  --accent-font-style: normal;
+  --accent-font-weight: 600;
+  --accent-letter-spacing: 2.25px;
+  --accent-line-height: normal;
+  --app-accent: rgba(52, 78, 65, 1);
+  --app-primary: rgba(88, 129, 87, 1);
+  --app-secondary: rgba(163, 177, 138, 1);
+  --body: rgba(110, 110, 110, 1);
+  --body-font-family: "Open Sans", Helvetica;
+  --body-font-size: 18px;
+  --body-font-style: normal;
+  --body-font-weight: 400;
+  --body-letter-spacing: 0px;
+  --body-line-height: 29px;
+  --body-small-font-family: "Open Sans", Helvetica;
+  --body-small-font-size: 15px;
+  --body-small-font-style: normal;
+  --body-small-font-weight: 400;
+  --body-small-letter-spacing: 0px;
+  --body-small-line-height: normal;
+  --border-transparent: rgba(255, 255, 255, 0.3);
+  --heading: rgba(45, 45, 45, 1);
+  --heading-big-font-family: "Abril Fatface", Helvetica;
+  --heading-big-font-size: 45px;
+  --heading-big-font-style: normal;
+  --heading-big-font-weight: 400;
+  --heading-big-letter-spacing: 0px;
+  --heading-big-line-height: normal;
+  --heading-medium-font-family: "Abril Fatface", Helvetica;
+  --heading-medium-font-size: 35px;
+  --heading-medium-font-style: normal;
+  --heading-medium-font-weight: 400;
+  --heading-medium-letter-spacing: 0px;
+  --heading-medium-line-height: normal;
+  --heading-small-font-family: "Abril Fatface", Helvetica;
+  --heading-small-font-size: 21px;
+  --heading-small-font-style: normal;
+  --heading-small-font-weight: 400;
+  --heading-small-letter-spacing: 0px;
+  --heading-small-line-height: normal;
+  --heading-standar-font-family: "Abril Fatface", Helvetica;
+  --heading-standar-font-size: 25px;
+  --heading-standar-font-style: normal;
+  --heading-standar-font-weight: 400;
+  --heading-standar-letter-spacing: 0px;
+  --heading-standar-line-height: normal;
+  --icon-big-font-family: "Font Awesome 6 Free", Helvetica;
+  --icon-big-font-size: 45px;
+  --icon-big-font-style: normal;
+  --icon-big-font-weight: 400;
+  --icon-big-letter-spacing: 0px;
+  --icon-big-line-height: normal;
+  --icon-medium-font-family: "Font Awesome 6 Free", Helvetica;
+  --icon-medium-font-size: 35px;
+  --icon-medium-font-style: normal;
+  --icon-medium-font-weight: 400;
+  --icon-medium-letter-spacing: 0px;
+  --icon-medium-line-height: normal;
+  --icon-small-font-family: "Font Awesome 6 Free", Helvetica;
+  --icon-small-font-size: 20px;
+  --icon-small-font-style: normal;
+  --icon-small-font-weight: 400;
+  --icon-small-letter-spacing: 0px;
+  --icon-small-line-height: normal;
+  --quote-font-family: "Open Sans", Helvetica;
+  --quote-font-size: 22px;
+  --quote-font-style: normal;
+  --quote-font-weight: 600;
+  --quote-letter-spacing: 0px;
+  --quote-line-height: 29px;
+  --shadow: 0px 10px 25px 0px rgba(0, 0, 0, 0.07);
+}
+
+:root {
+  --animate-spin: spin 1s linear infinite;
+}
+
+.animate-fade-in {
+  animation: fade-in 1s var(--animation-delay, 0s) ease forwards;
+}
+
+.animate-fade-up {
+  animation: fade-up 1s var(--animation-delay, 0s) ease forwards;
+}
+
+.animate-marquee {
+  animation: marquee var(--duration) infinite linear;
+}
+
+.animate-marquee-vertical {
+  animation: marquee-vertical var(--duration) linear infinite;
+}
+
+.animate-shimmer {
+  animation: shimmer 8s infinite;
+}
+
+.animate-spin {
+  animation: var(--animate-spin);
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+@keyframes image-glow {
+  0% {
+    opacity: 0;
+    animation-timing-function: cubic-bezier(0.74, 0.25, 0.76, 1);
+  }
+
+  10% {
+    opacity: 0.7;
+    animation-timing-function: cubic-bezier(0.12, 0.01, 0.08, 0.99);
+  }
+
+  to {
+    opacity: 0.4;
+  }
+}
+
+@keyframes fade-in {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes fade-up {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes shimmer {
+  0%,
+  90%,
+  to {
+    background-position: calc(-100% - var(--shimmer-width)) 0;
+  }
+
+  30%,
+  60% {
+    background-position: calc(100% + var(--shimmer-width)) 0;
+  }
+}
+
+@keyframes marquee {
+  0% {
+    transform: translate(0);
+  }
+
+  to {
+    transform: translateX(calc(-100% - var(--gap)));
+  }
+}
+
+@keyframes marquee-vertical {
+  0% {
+    transform: translateY(0);
+  }
+
+  to {
+    transform: translateY(calc(-100% - var(--gap)));
+  }
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 47.4% 11.2%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 47.4% 11.2%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+
+    --card: transparent;
+    --card-foreground: 222.2 47.4% 11.2%;
+
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+
+    --destructive: 0 100% 50%;
+    --destructive-foreground: 210 40% 98%;
+
+    --ring: 215 20.2% 65.1%;
+
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 224 71% 4%;
+    --foreground: 213 31% 91%;
+
+    --muted: 223 47% 11%;
+    --muted-foreground: 215.4 16.3% 56.9%;
+
+    --accent: 216 34% 17%;
+    --accent-foreground: 210 40% 98%;
+
+    --popover: 224 71% 4%;
+    --popover-foreground: 215 20.2% 65.1%;
+
+    --border: 216 34% 17%;
+    --input: 216 34% 17%;
+
+    --card: transparent;
+    --card-foreground: 213 31% 91%;
+
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 1.2%;
+
+    --secondary: 222.2 47.4% 11.2%;
+    --secondary-foreground: 210 40% 98%;
+
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 210 40% 98%;
+
+    --ring: 216 34% 17%;
+
+    --radius: 0.5rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}

@@ -1,35 +1,55 @@
-import React, { createContext, useState, useEffect } from 'react';
-import * as authService from '../services/authService';
+import React, { createContext, useState } from "react";
+import LoginModal from "../components/ui/LoginModal";
 
-export const AuthContext = createContext();
+export const AuthContext = createContext({});
 
-export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(false);
+export const AuthProvider = ({ children }) => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loginModalOpen, setLoginModalOpen] = useState(false);
+  const [pendingAction, setPendingAction] = useState(null);
 
-  useEffect(() => {
-    // placeholder: attempt to restore session
-  }, []);
+  const openLogin = (action) => {
+    setPendingAction(() => action || null);
+    setLoginModalOpen(true);
+  };
 
-  const login = async (creds) => {
-    setLoading(true);
+  const closeLogin = () => {
+    setLoginModalOpen(false);
+    setPendingAction(null);
+  };
+
+  const login = (credentials) => {
+    setIsAuthenticated(true);
+    setLoginModalOpen(false);
     try {
-      const data = await authService.login(creds);
-      setUser(data.user || null);
-      return data;
+      if (typeof pendingAction === "function") {
+        pendingAction();
+      }
     } finally {
-      setLoading(false);
+      setPendingAction(null);
     }
   };
 
-  const logout = async () => {
-    await authService.logout();
-    setUser(null);
+  const logout = () => {
+    setIsAuthenticated(false);
+  };
+
+  const requireAuth = (action) => {
+    if (isAuthenticated) {
+      if (typeof action === "function") action();
+    } else {
+      openLogin(action);
+    }
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout }}>
+    <AuthContext.Provider
+      value={{ isAuthenticated, login, logout, requireAuth, openLogin, closeLogin }}
+    >
       {children}
+      <LoginModal open={loginModalOpen} onClose={closeLogin} onLogin={login} />
     </AuthContext.Provider>
   );
-}
+};
+
+export default AuthProvider;

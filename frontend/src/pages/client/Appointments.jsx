@@ -1,5 +1,6 @@
 import React, { useState } from 'react';  // ← IMPORTANT: Add useState here
 import Book_model from '../../components/forms/BookAppointment';
+import Footer from '../../components/layout/Footer';
 
 const Appointments = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -21,6 +22,7 @@ const Appointments = () => {
       </div>
 
       <Book_model isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+      <Footer />
     </div>
   );
 };

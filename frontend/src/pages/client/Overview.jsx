@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Header from '../../components/layout/Header';
+import UnifiedHeader from '../../components/layout/UnifiedHeader';
 import Footer from '../../components/layout/Footer';
 import HeroSection from '../../components/client/HeroSection';
 import ActionCards from '../../components/client/ActionCards';
@@ -56,10 +56,10 @@ export default function ClientDashboard() {
   };
 
   const menuItems = [
-    { label: 'HOME', href: '/' },
-    { label: 'ABOUT US', href: '/about' },
-    { label: 'CONTACT US', href: '/contact' },
-    { label: 'BLOG', href: '/blog' },
+    { label: 'HOME', active: false, href: '/' },
+    { label: 'ABOUT US', active: false, href: '/about' },
+    { label: 'CONTACT US', active: false, href: '/contact' },
+    { label: 'BLOG', active: false, href: '/blog' },
   ];
 
   const testUser = {
@@ -68,16 +68,27 @@ export default function ClientDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F3ECDC]">
-      <Header
-        logo="MENSEUR"
-        email="Disnmarketir@gmail.com"
-        phone="(+92) 123-456-789"
-        menuItems={menuItems}
-        user={testUser}
-      />
-      
-      <HeroSection activeTab={activeTab} onTabChange={setActiveTab} />
+    <div className="min-h-screen bg-app-accent">
+      {/* Header and Hero Section Container */}
+      <div 
+        className="relative w-full bg-cover bg-center flex flex-col"
+        style={{
+          backgroundImage: `linear-gradient(90deg, rgba(52, 78, 65, 0.95) 32%, rgba(0, 0, 0, 0.13) 100%), url('/assets/images/backgroud_picture.jpg')`,
+        }}
+      >
+        <UnifiedHeader
+          navItems={menuItems}
+          logoImage="/assets/images/Logo.png"
+          logoOnClick={() => navigate('/')}
+          ctaButtonText="Get Started"
+          ctaButtonOnClick={() => navigate('/client/dashboard')}
+          showUser={true}
+          user={testUser}
+          navClassName="bg-transparent"
+        />
+        
+        <HeroSection activeTab={activeTab} onTabChange={setActiveTab} />
+      </div>
       
       <main>
         {/* Action Cards - Always visible */}

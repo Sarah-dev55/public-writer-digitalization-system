@@ -43,10 +43,10 @@ function Button({
   
   // Variant styles - different button types
   const variants = {
-    primary: 'bg-[#5a7a66] text-white hover:bg-[#4a6a56] focus:ring-[#5a7a66]',
-    secondary: 'bg-[#6b8e7d] text-white hover:bg-[#5a7d6c] focus:ring-[#6b8e7d]',
-    outline: 'border-2 border-[#5a7a66] text-[#5a7a66] hover:bg-[#5a7a66] hover:text-white focus:ring-[#5a7a66]',
-    ghost: 'text-[#5a7a66] hover:bg-[#e8ebe9] focus:ring-gray-300'
+    primary: 'bg-app-primary text-app-text-light hover:bg-app-primary/90 focus:ring-app-primary',
+    secondary: 'bg-app-secondary text-app-text-light hover:bg-app-secondary/90 focus:ring-app-secondary',
+    outline: 'border-2 border-app-primary text-app-primary hover:bg-app-primary hover:text-app-text-light focus:ring-app-primary',
+    ghost: 'text-app-primary hover:bg-app-accent/50 focus:ring-app-primary'
   };
   
   // Size styles

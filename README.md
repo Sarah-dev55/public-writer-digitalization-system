@@ -5,13 +5,7 @@ The project uses:
 
 * **Frontend:** React.js + Tailwind CSS
 * **Backend:** Node.js + Express
-* **Database:** MongoDB
-
----
-
-## Project Structure
-
-### Frontend (`frontend/`)
+## Frontend (`frontend/`)
 
 ```
 frontend/
@@ -48,7 +42,13 @@ frontend/
 ├── package.json
 ├── tailwind.config.js
 ├── vite.config.js
-└── .env.example                    # Environment variables template
+└── .env.example                    # Environment variables template* **Database:** MongoDB
+
+---
+
+## Project Structure
+
+#
 ```
 
 > **Note:** Some pages and components listed above are **examples only**. You can freely **add new pages, components, hooks, utils, or modify existing ones** according to project needs.
