@@ -2,7 +2,13 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import NotificationDropdown from './NotificationDropdown';
 
-export default function HeroSection({ activeTab = 'appointments', onTabChange }) {
+export default function HeroSection({ 
+  activeTab = 'appointments', 
+  onTabChange, 
+  notifications = [], 
+  onMarkAsRead, 
+  onMarkAllAsRead 
+}) {
   return (
     <div className="relative w-full py-16 px-4 lg:px-0 text-white">
       <div className="container mx-auto relative z-10">
@@ -59,7 +65,11 @@ export default function HeroSection({ activeTab = 'appointments', onTabChange })
           </button>
 
           {/* Notification Bell - Outside the Progress button */}
-          <NotificationDropdown />
+          <NotificationDropdown 
+            notifications={notifications} 
+            onMarkAsRead={onMarkAsRead} 
+            onMarkAllAsRead={onMarkAllAsRead} 
+          />
         </div>
       </div>
     </div>

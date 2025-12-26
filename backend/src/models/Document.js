@@ -3,11 +3,19 @@ const { Schema } = mongoose;
 
 const DocumentSchema = new Schema({
 	checklistItemId: { type: Schema.Types.ObjectId, ref: 'Checklist.items' },
-	fileName: { type: String, required: true },
-	storagePath: { type: String, required: true },
-	type: { type: String },
+	name: { type: String, required: true }, // Document name (e.g., "Passport Copy")
+	fileName: { type: String, required: false }, // Actual file name
+	storagePath: { type: String, required: false }, // File storage path
+	type: { type: String }, // File type (pdf, jpg, etc.)
+	reviewStatus: {
+		type: String,
+		enum: ['approved', 'pending', 'rejected', 'missing', 'required'],
+		default: 'pending'
+	},
+	required: { type: Boolean, default: false }, // Is this document required?
+	rejectionReason: { type: String }, // Reason if rejected
 	uploadedAt: { type: Date, default: Date.now },
-	userId: { type: Schema.Types.ObjectId, ref: 'User' },
+	userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
 }, { timestamps: true });
 
 module.exports = mongoose.model('Document', DocumentSchema);

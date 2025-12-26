@@ -1,55 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Bell } from 'lucide-react';
 
-export default function NotificationDropdown({ notifications = [] }) {
+export default function NotificationDropdown({ notifications = [], onMarkAsRead, onMarkAllAsRead }) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
-
-  // Default sample notifications if none provided
-  const defaultNotifications = [
-    {
-      id: 1,
-      title: 'Document Approved',
-      message: 'Your Passport Copy has been approved',
-      time: '2 hours ago',
-      read: false,
-      type: 'success',
-    },
-    {
-      id: 2,
-      title: 'Appointment Reminder',
-      message: 'You have an appointment tomorrow at 10:00 AM',
-      time: '5 hours ago',
-      read: false,
-      type: 'info',
-    },
-    {
-      id: 3,
-      title: 'Document Review',
-      message: 'Your Academic Transcripts are under review',
-      time: '1 day ago',
-      read: true,
-      type: 'info',
-    },
-    {
-      id: 4,
-      title: 'Document Rejected',
-      message: 'Your Language Certificate needs to be re-uploaded',
-      time: '2 days ago',
-      read: true,
-      type: 'warning',
-    },
-    {
-      id: 5,
-      title: 'Appointment Confirmed',
-      message: 'Your appointment on 2025-11-22 has been confirmed',
-      time: '3 days ago',
-      read: true,
-      type: 'success',
-    },
-  ];
-
-  const displayNotifications = notifications.length > 0 ? notifications : defaultNotifications;
+  
+  // Use passed notifications
+  const displayNotifications = notifications;
   const unreadCount = displayNotifications.filter(n => !n.read).length;
 
   // Close dropdown when clicking outside
@@ -145,8 +102,9 @@ export default function NotificationDropdown({ notifications = [] }) {
                       !notification.read ? 'bg-blue-50/50' : ''
                     }`}
                     onClick={() => {
-                      // Handle notification click
-                      console.log('Notification clicked:', notification.id);
+                      if (!notification.read && onMarkAsRead) {
+                        onMarkAsRead(notification._id);
+                      }
                     }}
                   >
                     <div className="flex items-start gap-3">
@@ -161,7 +119,7 @@ export default function NotificationDropdown({ notifications = [] }) {
                               {notification.message}
                             </p>
                             <p className="text-xs text-gray-400 mt-1">
-                              {notification.time}
+                               {new Date(notification.createdAt).toLocaleDateString()} {new Date(notification.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                             </p>
                           </div>
                           {!notification.read && (
@@ -179,7 +137,10 @@ export default function NotificationDropdown({ notifications = [] }) {
           {/* Footer */}
           {displayNotifications.length > 0 && (
             <div className="px-4 py-3 border-t border-gray-200 bg-gray-50">
-              <button className="w-full text-sm text-app-primary font-semibold hover:text-app-secondary transition-colors">
+              <button 
+                onClick={onMarkAllAsRead}
+                className="w-full text-sm text-app-primary font-semibold hover:text-app-secondary transition-colors"
+              >
                 Mark all as read
               </button>
             </div>

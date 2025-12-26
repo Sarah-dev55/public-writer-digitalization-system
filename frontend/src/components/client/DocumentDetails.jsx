@@ -1,7 +1,7 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Download, Eye, Upload, Trash2, RefreshCw } from 'lucide-react';
-import { uploadDocument, updateDocument } from '../../services/documentService';
+import { uploadDocument, updateDocument, listDocumentsByUser, deleteDocument } from '../../services/documentService';
 import api from '../../services/api';
 import ConfirmationDialog from '../common/ConfirmationDialog';
 
@@ -27,7 +27,18 @@ const StatusBadge = ({ status }) => {
 
 // Document Card Component
 const DocumentCard = ({ document, onView, onDownload, onUpload, onDelete, onReupload, uploading = {} }) => {
-  const { id, name, status, uploadDate, rejectionReason } = document;
+  // Map backend fields to component expectation
+  const { _id, name, reviewStatus, uploadedAt, rejectionReason } = document;
+  const id = _id;
+  
+  // Normalize status to Title Case for UI consistency if it comes lowercase from backend
+  const status = reviewStatus 
+    ? reviewStatus.charAt(0).toUpperCase() + reviewStatus.slice(1) 
+    : 'Pending';
+    
+  const displayDate = uploadedAt 
+    ? new Date(uploadedAt).toLocaleDateString() 
+    : null;
   
   const getStatusIcon = () => {
     if (status === 'Approved') return '✓';
@@ -50,12 +61,12 @@ const DocumentCard = ({ document, onView, onDownload, onUpload, onDelete, onReup
           <span className="text-lg font-medium text-app-primary">{getStatusIcon()}</span>
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-1">
-              <span className="font-medium text-app-primary">{id}. {name}</span>
+              <span className="font-medium text-app-primary">{name}</span>
               <StatusBadge status={status} />
             </div>
-            {uploadDate && (
+            {displayDate && (
               <div className="text-sm text-gray-500">
-                {status === 'Approved' ? 'Approved' : 'Uploaded'} | {uploadDate}
+                {status === 'Approved' ? 'Approved' : 'Uploaded'} | {displayDate}
               </div>
             )}
             {status === 'Missing' && (
@@ -169,65 +180,50 @@ const StatusCard = ({ title, count, color }) => {
 
 // Main Document Management Component
 const DocumentManagement = () => {
-  const [documents, setDocuments] = useState([
-    {
-      id: 1,
-      name: 'Passport Copy',
-      status: 'Approved',
-      uploadDate: 'Uploaded 2025-11-15'
-    },
-    {
-      id: 2,
-      name: 'Academic Transcripts',
-      status: 'Approved',
-      uploadDate: 'Uploaded 2025-12-15'
-    },
-    {
-      id: 3,
-      name: 'Motivation Letter',
-      status: 'Pending',
-      uploadDate: 'Uploaded 2023-11-20'
-    },
-    {
-      id: 4,
-      name: 'Financial Proof',
-      status: 'Pending',
-      uploadDate: 'Uploaded 2025-11-10'
-    },
-    {
-      id: 5,
-      name: 'Language Certificate',
-      status: 'Rejected',
-      uploadDate: 'Uploaded 2025-11-05',
-      rejectionReason: 'Document is not clear. Please upload a higher quality scan.'
-    },
-    {
-      id: 6,
-      name: 'University Acceptance Letter',
-      status: 'Required',
-      uploadDate: null
-    },
-    {
-      id: 7,
-      name: 'Health Insurance',
-      status: 'Required',
-      uploadDate: null
-    },
-    {
-      id: 8,
-      name: 'Birth Certificate',
-      status: 'Required',
-      uploadDate: null
+  // Temporary userId until authentication is implemented
+  const userId = '692cb332a4ba90e0b2dcb02f';
+  
+  const [documents, setDocuments] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch documents on mount
+  useEffect(() => {
+    fetchDocuments();
+  }, []);
+
+  const fetchDocuments = async () => {
+    try {
+      setLoading(true);
+      const data = await listDocumentsByUser(userId);
+      setDocuments(data);
+    } catch (error) {
+      console.error('Error fetching documents:', error);
+      setConfirmationDialog({
+        isOpen: true,
+        title: 'Error',
+        message: 'Failed to load documents. Please refresh the page.',
+        type: 'danger',
+        onConfirm: () => setConfirmationDialog(prev => ({ ...prev, isOpen: false })),
+        confirmText: 'OK',
+        cancelText: '',
+      });
+    } finally {
+      setLoading(false);
     }
-  ]);
+  };
 
   const statusCounts = {
     total: documents.length,
-    approved: documents.filter(d => d.status === 'Approved').length,
-    pendingReview: documents.filter(d => d.status === 'Pending').length,
-    rejected: documents.filter(d => d.status === 'Rejected').length,
-    missing: documents.filter(d => d.status === 'Required' || d.status === 'Missing').length
+    approved: documents.filter(d => d.reviewStatus === 'approved').length,
+    pendingReview: documents.filter(d => d.reviewStatus === 'pending').length,
+    rejected: documents.filter(d => d.reviewStatus === 'rejected').length,
+    missing: documents.filter(d => d.reviewStatus === 'required' || d.reviewStatus === 'missing').length
   };
+
+  const completedCount = statusCounts.approved + statusCounts.pendingReview;
+  const completionPercentage = statusCounts.total > 0 
+    ? Math.round((completedCount / statusCounts.total) * 100) 
+    : 0;
 
   const fileInputRefs = useRef({});
   const [uploading, setUploading] = useState({});
@@ -243,9 +239,12 @@ const DocumentManagement = () => {
 
   const handleView = async (doc) => {
     try {
-      const response = await api.get(`/api/documents/${doc.id}/view`);
+      const response = await api.get(`/client/documents/${doc._id}/view`);
       if (response.data.url) {
-        window.open(response.data.url, '_blank');
+        // Construct base URL by removing /api from the API base URL
+        const baseUrl = api.defaults.baseURL.replace(/\/api$/, '');
+        // Open document in new tab
+        window.open(`${baseUrl}${response.data.url}`, '_blank');
       } else {
         setConfirmationDialog({
           isOpen: true,
@@ -283,7 +282,7 @@ const DocumentManagement = () => {
           setUploading({ ...uploading, [doc.id]: 'downloading' });
           
           // Fetch document file from API
-          const response = await api.get(`/api/documents/${doc.id}/download`, {
+          const response = await api.get(`/client/documents/${doc._id}/download`, {
             responseType: 'blob',
           });
           
@@ -386,30 +385,15 @@ const DocumentManagement = () => {
 
       const formData = new FormData();
       formData.append('file', file);
-      formData.append('documentId', doc.id);
+      formData.append('documentId', doc._id || '');
       formData.append('documentName', doc.name);
+      formData.append('userId', userId);
 
       // Upload document
       const uploadResponse = await uploadDocument(formData);
       
-      // Update document status
-      await updateDocument(doc.id, {
-        status: 'Pending',
-        uploadDate: new Date().toISOString().split('T')[0],
-      });
-
-      // Update local state
-      setDocuments(prevDocs =>
-        prevDocs.map(d =>
-          d.id === doc.id
-            ? {
-                ...d,
-                status: 'Pending',
-                uploadDate: `Uploaded ${new Date().toISOString().split('T')[0]}`,
-              }
-            : d
-        )
-      );
+      // Refresh documents list
+      await fetchDocuments();
 
       setConfirmationDialog({
         isOpen: true,
@@ -469,20 +453,10 @@ const DocumentManagement = () => {
           setUploading({ ...uploading, [doc.id]: 'deleting' });
           
           // Delete document from API
-          await api.delete(`/api/documents/${doc.id}`);
+          await deleteDocument(doc._id, userId);
 
-          // Update local state
-          setDocuments(prevDocs =>
-            prevDocs.map(d =>
-              d.id === doc.id
-                ? {
-                    ...d,
-                    status: 'Required',
-                    uploadDate: null,
-                  }
-                : d
-            )
-          );
+          // Refresh documents list
+          await fetchDocuments();
 
           setConfirmationDialog({
             isOpen: true,
@@ -538,10 +512,10 @@ const DocumentManagement = () => {
         <div className="mb-6 w-full">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm text-app-primary">Document Completion</span>
-            <span className="text-sm font-medium text-app-primary">25%</span>
+            <span className="text-sm font-medium text-app-primary">{completionPercentage}%</span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2">
-            <div className="bg-app-secondary h-2 rounded-full transition-all" style={{ width: '25%' }}></div>
+            <div className="bg-app-secondary h-2 rounded-full transition-all" style={{ width: `${completionPercentage}%` }}></div>
           </div>
         </div>
 

@@ -7,6 +7,21 @@ import api from './api';
  */
 
 /**
+ * Get all appointments for a specific user
+ * @param {string} userId - User ID
+ * @returns {Promise} List of user's appointments
+ */
+export async function getUserAppointments(userId) {
+    try {
+        const res = await api.get(`/client/appointments/user/${userId}`);
+        return res.data;
+    } catch (error) {
+        console.error('Error fetching user appointments:', error);
+        throw error;
+    }
+}
+
+/**
  * Get all appointments
  * @returns {Promise} List of appointments
  */
@@ -82,13 +97,16 @@ export async function updateAppointment(id, payload) {
 }
 
 /**
- * Delete an appointment
+ * Delete an appointment with ownership validation
  * @param {string} id - Appointment ID
+ * @param {string} userId - User ID for ownership validation
  * @returns {Promise} Deletion confirmation
  */
-export async function deleteAppointment(id) {
+export async function deleteAppointment(id, userId) {
     try {
-        const res = await api.delete(`/client/appointments/${id}`);
+        const res = await api.delete(`/client/appointments/user/${id}`, {
+            data: { userId }
+        });
         return res.data;
     } catch (error) {
         console.error(`Error deleting appointment ${id}:`, error);

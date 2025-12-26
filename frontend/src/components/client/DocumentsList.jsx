@@ -45,11 +45,26 @@ export default function DocumentsList({ documents = [], onUpload, onView, onDele
     },
   ];
 
-  const displayDocuments = documents.length > 0 ? documents : defaultDocuments;
+  // Map backend data to component format or use default
+  const displayDocuments = documents.length > 0 
+    ? documents.map(doc => ({
+        id: doc._id,
+        name: doc.name || doc.fileName,
+        required: doc.required || false,
+        updatedAt: doc.uploadedAt ? new Date(doc.uploadedAt).toLocaleDateString() : null,
+        uploaded: true,
+        reviewStatus: doc.reviewStatus || 'pending'
+      }))
+    : []; // Don't show static data if empty, show empty state (or keep default if you prefer fallback)
+    // Actually, user wants "Replace all mocked or static document data." so I should defaults to empty.
+    
+  // Helper to normalize status for comparison
+  const normalizeStatus = (status) => status?.toLowerCase();
 
   const getStatusBadge = (reviewStatus) => {
     const base = 'px-3 py-1 rounded-full text-xs font-semibold';
-    switch (reviewStatus) {
+    const status = normalizeStatus(reviewStatus);
+    switch (status) {
       case 'approved':
         return <span className={`${base} bg-[#A3B18A] text-[#3A4D42]`}>Approved</span>;
       case 'rejected':
@@ -64,7 +79,8 @@ export default function DocumentsList({ documents = [], onUpload, onView, onDele
   };
 
   const getActionButtons = (document) => {
-    switch (document.reviewStatus) {
+    const status = normalizeStatus(document.reviewStatus);
+    switch (status) {
       case 'approved':
         return (
           <button
@@ -115,9 +131,10 @@ export default function DocumentsList({ documents = [], onUpload, onView, onDele
   };
 
   const getDocumentIcon = (reviewStatus) => {
-    const iconColor = reviewStatus === 'approved' ? 'text-[#588157]' : 
-                      reviewStatus === 'rejected' ? 'text-[#BC6C25]' :
-                      reviewStatus === 'pending' ? 'text-[#DDA15E]' :
+    const status = normalizeStatus(reviewStatus);
+    const iconColor = status === 'approved' ? 'text-[#588157]' : 
+                      status === 'rejected' ? 'text-[#BC6C25]' :
+                      status === 'pending' ? 'text-[#DDA15E]' :
                       'text-[#8B5A2B]';
     
     return (

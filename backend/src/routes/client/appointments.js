@@ -3,6 +3,7 @@ const router = express.Router();
 const Appointment = require('../../models/Appointment');
 const NoWorkDay = require('../../models/NoWorkDay');
 const { v4: uuidv4 } = require('uuid');
+const clientAppointmentController = require('../../controllers/client/client_apointments');
 
 // Get all appointments
 router.get('/', async (req, res) => {
@@ -89,4 +90,18 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
+// ==================== NEW ROUTES FOR CLIENT APPOINTMENT MANAGEMENT ====================
+
+// Get all appointments for a specific user
+router.get('/user/:userId', clientAppointmentController.getUserAppointments);
+
+// Update/Reschedule an appointment (with ownership validation)
+router.put('/:id', clientAppointmentController.updateAppointment);
+
+// Delete appointment with ownership validation (enhanced version)
+// Note: The basic delete route above (line 82) can be used for admin purposes
+// This route validates user ownership before deletion
+router.delete('/user/:id', clientAppointmentController.deleteAppointment);
+
 module.exports = router;
+

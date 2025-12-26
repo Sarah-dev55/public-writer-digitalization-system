@@ -80,3 +80,17 @@ export async function deleteUser(id) {
         throw error;
     }
 }
+/**
+ * Get case status for a user
+ * @param {string} userId - User ID
+ * @returns {Promise} Case status details
+ */
+export async function getCaseStatus(userId) {
+    try {
+        const res = await api.get(`/client/users/case-status/${userId}`);
+        return res.data;
+    } catch (error) {
+        console.error(`Error fetching case status for user ${userId}:`, error);
+        throw error;
+    }
+}
