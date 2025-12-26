@@ -1,7 +1,11 @@
 const express = require('express');
 const router = express.Router();
+const userController = require('../controllers/userController');
 
-router.get('/', (req, res) => res.json({ msg: 'Mr Mensur info' }));
-router.post('/', (req, res) => res.json({ msg: 'Create/Update MrMensur', body: req.body }));
+// Auth routes
+router.post('/signup', userController.signup);
+router.post('/login', userController.login);
+router.post('/verify', userController.verify);
+router.post('/resend-code', userController.resendCode);
 
 module.exports = router;
