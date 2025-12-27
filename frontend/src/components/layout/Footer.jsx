@@ -5,13 +5,13 @@ import {
   PhoneIcon,
 } from "lucide-react";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { CONTACT_EMAIL, CONTACT_PHONE, CONTACT_ADDRESS } from "../../constants/contact";
 
-const quickLinks = [
-  { text: "Home", href: "#home" },
-  { text: "Our Services", href: "#about" },
-  { text: "Client Reviews", href: "#reviews" },
-  { text: "How It Works", href: "#how-it-works" },
+const quickLinksConfig = [
+  { key: 'navigation.home', href: "#home" },
+  { key: 'navigation.services', href: "#about" },
+  { key: 'common.howItWorks', href: "#how-it-works" },
 ];
 
 const contactInfo = [
@@ -21,6 +21,14 @@ const contactInfo = [
 ];
 
 export const FooterSection = () => {
+  const { t } = useTranslation();
+  
+  const quickLinks = [
+    { text: t('navigation.home'), href: "#home" },
+    { text: t('navigation.services'), href: "#about" },
+    { text: t('common.howItWorks'), href: "#how-it-works" },
+  ];
+  
   const handleNavClick = (href) => {
     const element = document.querySelector(href);
     if (element) {
@@ -43,15 +51,14 @@ export const FooterSection = () => {
 
             <div className="flex flex-col gap-4">
               <p className="text-sm sm:text-base text-app-text-muted leading-relaxed">
-                Professional administrative support for international procedures
-                and visa applications.
+                {t('common.footerDescription')}
               </p>
             </div>
           </div>
 
           <div className="flex flex-col gap-6">
             <h3 className="text-lg sm:text-xl font-semibold text-app-accent">
-              Quick Links
+              {t('common.quickLinks')}
             </h3>
             <nav className="flex flex-col gap-2">
               {quickLinks.map((link, index) => (
@@ -72,7 +79,7 @@ export const FooterSection = () => {
           {/* Contact Info */}
           <div className="flex flex-col gap-6">
             <h3 className="text-lg sm:text-xl font-semibold text-app-accent">
-              Contact Us
+              {t('common.contactUs')}
             </h3>
 
             <address className="flex flex-col gap-4 not-italic">
@@ -94,7 +101,7 @@ export const FooterSection = () => {
         {/* Copyright */}
         <div className="pt-8 sm:pt-12">
           <p className="text-center text-xs sm:text-sm text-app-accent">
-            &copy; {new Date().getFullYear()} Company Name. All rights reserved.
+            &copy; {new Date().getFullYear()} {t('common.companyName')}. {t('common.allRightsReserved')}
           </p>
         </div>
       </div>

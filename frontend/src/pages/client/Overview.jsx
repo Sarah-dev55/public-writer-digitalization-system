@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import UnifiedHeader from '../../components/layout/UnifiedHeader';
 import Footer from '../../components/layout/Footer';
@@ -10,6 +11,7 @@ import CaseProgress from '../../components/client/CaseProgress';
 import Book_model from '../../components/forms/BookAppointment'; // Import the booking modal
 
 export default function ClientDashboard() {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('appointments');
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false); // Add state for modal
   const navigate = useNavigate();
@@ -61,8 +63,8 @@ export default function ClientDashboard() {
   };
 
   const navItems = [
-    { label: "Home", active: false, href: '/#home' },
-    { label: "Our Services", active: false, href: '/#about' },
+    { label: t('navigation.home'), active: false, href: '/#home' },
+    { label: t('navigation.services'), active: false, href: '/#about' },
     { label: "Client Reviews", active: false, href: '/#reviews' },
     { label: "How It Works", active: false, href: '/#how-it-works' },
   ];

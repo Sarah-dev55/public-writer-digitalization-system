@@ -1,25 +1,27 @@
 import React from "react";
-
-const statsData = [
-  {
-    value: "20",
-    label: "Years of experience",
-  },
-  {
-    value: "97%",
-    label: "Success rate",
-  },
-  {
-    value: "100",
-    label: "Client satisfaction",
-  },
-  {
-    value: "24/7h",
-    label: "Online support",
-  },
-];
+import { useTranslation } from "react-i18next";
 
 export const StatsSection = () => {
+  const { t } = useTranslation();
+
+  const statsData = [
+    {
+      value: "20",
+      label: t('common.yearsExperience'),
+    },
+    {
+      value: "97%",
+      label: t('common.successRate'),
+    },
+    {
+      value: "100",
+      label: t('common.clientSatisfaction'),
+    },
+    {
+      value: "24/7h",
+      label: t('common.onlineSupport'),
+    },
+  ];
   return (
     <section className="w-full bg-app-primary py-12 px-6 sm:py-16 md:py-20 lg:py-24">
       <div className="mx-auto max-w-6xl">

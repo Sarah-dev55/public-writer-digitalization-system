@@ -1,11 +1,14 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 export default function AppointmentsList({ appointments = [], onBookNew, onReschedule, onCancel }) {
+  const { t } = useTranslation();
+  
   // Default sample data if none provided
   const defaultAppointments = [
     {
       id: 1,
-      title: 'Initial Consultation',
+      title: t('dashboard.initialConsultation'),
       date: '2025-11-22',
       time: '10:00 AM',
       duration: '1 hour',
@@ -13,7 +16,7 @@ export default function AppointmentsList({ appointments = [], onBookNew, onResch
     },
     {
       id: 2,
-      title: 'Document Review',
+      title: t('dashboard.documentReview'),
       date: '2025-11-29',
       time: '2:00 PM',
       duration: '45 minutes',
@@ -21,7 +24,7 @@ export default function AppointmentsList({ appointments = [], onBookNew, onResch
     },
     {
       id: 3,
-      title: 'Interview Preparation',
+      title: t('dashboard.interviewPreparation'),
       date: '2025-11-15',
       time: '11:00 AM',
       duration: '1 hour',
@@ -36,7 +39,7 @@ export default function AppointmentsList({ appointments = [], onBookNew, onResch
       case 'completed':
         return (
           <button className="px-4 py-2 bg-app-secondary text-app-primary rounded-lg text-sm font-semibold">
-            View
+            {t('common.view')}
           </button>
         );
       case 'pending':
@@ -46,13 +49,13 @@ export default function AppointmentsList({ appointments = [], onBookNew, onResch
               onClick={() => onReschedule && onReschedule(appointment.id)}
               className="px-4 py-2 bg-[#DDA15E] hover:bg-[#BC6C25] text-white rounded-lg text-sm font-semibold transition-colors"
             >
-              View
+              {t('common.view')}
             </button>
             <button
               onClick={() => onCancel && onCancel(appointment.id)}
               className="px-4 py-2 bg-[#8B5A2B] hover:bg-[#6B4423] text-white rounded-lg text-sm font-semibold transition-colors"
             >
-              Cancel
+              {t('appointments.cancelAppointment')}
             </button>
           </div>
         );
@@ -63,13 +66,13 @@ export default function AppointmentsList({ appointments = [], onBookNew, onResch
               onClick={() => onReschedule && onReschedule(appointment.id)}
               className="px-4 py-2 bg-[#DDA15E] hover:bg-[#BC6C25] text-white rounded-lg text-sm font-semibold transition-colors"
             >
-              Reschedule
+              {t('appointments.rescheduleAppointment')}
             </button>
             <button
               onClick={() => onCancel && onCancel(appointment.id)}
               className="px-4 py-2 bg-[#8B5A2B] hover:bg-[#6B4423] text-white rounded-lg text-sm font-semibold transition-colors"
             >
-              Cancel
+              {t('appointments.cancelAppointment')}
             </button>
           </div>
         );
@@ -82,11 +85,11 @@ export default function AppointmentsList({ appointments = [], onBookNew, onResch
     const base = 'px-3 py-1 rounded-full text-xs font-semibold';
     switch (status) {
       case 'completed':
-        return <span className={`${base} bg-app-secondary text-app-primary`}>Completed</span>;
+        return <span className={`${base} bg-app-secondary text-app-primary`}>{t('dashboard.completed')}</span>;
       case 'pending':
-        return <span className={`${base} bg-[#DDA15E] text-white`}>Pending</span>;
+        return <span className={`${base} bg-[#DDA15E] text-white`}>{t('dashboard.pending')}</span>;
       case 'scheduled':
-        return <span className={`${base} bg-app-primary text-app-text-light`}>Scheduled</span>;
+        return <span className={`${base} bg-app-primary text-app-text-light`}>{t('dashboard.scheduled')}</span>;
       default:
         return <span className={`${base} bg-gray-400 text-white`}>{status}</span>;
     }
@@ -95,7 +98,7 @@ export default function AppointmentsList({ appointments = [], onBookNew, onResch
   return (
     <div className="px-20 py-10 w-full">
       <div className="mb-8 bg-app-primary px-4 py-2">
-        <h2 className="text-2xl text-app-accent">My Appointments</h2>
+        <h2 className="text-2xl text-app-accent">{t('dashboard.myAppointments')}</h2>
       </div>
       
       <div className="space-y-4 mb-8 px-2">

@@ -5,6 +5,7 @@ import { Button } from "../ui/button";
 import { CONTACT_EMAIL, CONTACT_PHONE } from "../../constants/contact";
 import { AuthContext } from "../../context/AuthContext";
 import ProfileModal from "../ui/ProfileModal";
+import LanguageSwitcher from "../common/LanguageSwitcher";
 
 const contactInfo = [
   {
@@ -158,6 +159,7 @@ export const UnifiedHeader = ({
           {/* CTA Buttons - Desktop */}
           {showCtaButton && (
             <div className="hidden lg:flex items-center gap-4 flex-shrink-0">
+              <LanguageSwitcher />
               <Button 
                 onClick={handleCtaClick} 
                 className="px-6 py-2 sm:px-8 sm:py-3 bg-app-accent hover:bg-app-accent/90 rounded-full h-auto text-xs sm:text-sm font-semibold text-app-primary"
@@ -190,6 +192,9 @@ export const UnifiedHeader = ({
                   {item.label}
                 </button>
               ))}
+              <div className="py-2 border-t border-white/10">
+                <LanguageSwitcher />
+              </div>
               {showCtaButton && (
                 <Button 
                   onClick={handleCtaClick} 
