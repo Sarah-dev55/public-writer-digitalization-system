@@ -11,7 +11,7 @@ connectDB();
 
 // Middleware
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || '*',
+  origin: process.env. CORS_ORIGIN || '*',
   credentials: true
 }));
 app.use(morgan('dev'));
@@ -34,6 +34,7 @@ const adminAppointmentRoutes = require('./routes/admin/appointments');
 const adminChecklistRoutes = require('./routes/admin/checklists');
 const adminDocumentRoutes = require('./routes/admin/documents');
 const availabilityRoutes = require('./routes/admin/availability');
+const clientArchiveRoutes = require('./routes/admin/clientArchives');
 
 // Other functional routes
 const mrMensurRoutes = require('./routes/mrMensur');
@@ -49,12 +50,14 @@ app.use('/api/client/appointments', clientAppointmentRoutes);
 app.use('/api/client/checklists', clientChecklistRoutes);
 app.use('/api/client/noworkdays', clientNoWorkDayRoutes);
 
-// Admin-facing API
+// Admin-facing API (Public Writer)
 app.use('/api/admin/users', adminUserRoutes);
 app.use('/api/admin/appointments', adminAppointmentRoutes);
 app.use('/api/admin/checklists', adminChecklistRoutes);
 app.use('/api/admin/documents', adminDocumentRoutes);
 app.use('/api/admin/availability', availabilityRoutes);
+app.use('/api/admin/archives', clientArchiveRoutes);
+
 // Other
 app.use('/api/mrmensur', mrMensurRoutes);
 
@@ -89,7 +92,8 @@ app.get('/', (req, res) => {
         appointments: '/api/admin/appointments',
         checklists: '/api/admin/checklists',
         documents: '/api/admin/documents',
-        availability: '/api/admin/availability'
+        availability: '/api/admin/availability',
+        archives: '/api/admin/archives'
       },
       other: {
         mrMensur: '/api/mrmensur',
@@ -112,7 +116,7 @@ app.use((req, res) => {
 // =====================
 // Error Handling
 // =====================
-app.use((err, req, res, next) => {
+app. use((err, req, res, next) => {
   console.error(err.stack);
   res.status(err.status || 500).json({
     error: 'Something went wrong!',
@@ -125,7 +129,7 @@ app.use((err, req, res, next) => {
 // =====================
 // Start Server
 // =====================
-const PORT = process.env.PORT || 5000;
+const PORT = process. env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
