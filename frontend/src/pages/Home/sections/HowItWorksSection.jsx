@@ -1,37 +1,39 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent } from "../../../components/ui/card";
 
-const steps = [
-  {
-    number: "01",
-    title: "Create Account",
-    description: "Register with your basic information",
-  },
-  {
-    number: "02",
-    title: "Book Appointment",
-    description: "Choose a convenient time slot",
-  },
-  {
-    number: "03",
-    title: "Get Consultation",
-    description: "Meet with our experts",
-  },
-  {
-    number: "04",
-    title: "Get Experience",
-    description: "Complete your procedure successfully",
-  },
-];
-
 export const HowItWorksSection = () => {
+  const { t } = useTranslation();
+
+  const steps = [
+    {
+      number: "01",
+      title: t('howItWorks.createAccount'),
+      description: t('howItWorks.registerBasicInfo'),
+    },
+    {
+      number: "02",
+      title: t('howItWorks.bookAppointment'),
+      description: t('howItWorks.chooseTimeSlot'),
+    },
+    {
+      number: "03",
+      title: t('howItWorks.getConsultation'),
+      description: t('howItWorks.meetExperts'),
+    },
+    {
+      number: "04",
+      title: t('howItWorks.getExperience'),
+      description: t('howItWorks.completeSuccessfully'),
+    },
+  ];
   return (
     <section id="how-it-works" className="w-full bg-app-accent py-12 px-6 sm:py-16 md:py-20 lg:py-24">
       <div className="mx-auto max-w-5xl">
         {/* Header */}
         <div className="mb-12 sm:mb-16 md:mb-20 text-center">
           <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-app-primary">
-            Steps How It Works:
+            {t('common.howItWorks')}
           </h2>
         </div>
 

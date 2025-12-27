@@ -1,14 +1,17 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Eye, Download, RefreshCw, Trash2, Upload, ArrowRight } from 'lucide-react';
 
 export default function DocumentsList({ documents = [], onUpload, onView, onDownload, onDelete, onUploadNew }) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
+  
   // Default sample data if none provided
   const defaultDocuments = [
     {
       id: 1,
-      name: 'Passport Copy',
+      name: t('dashboard.passportCopy'),
       required: true,
       updatedAt: '2025-11-10',
       uploaded: true,
@@ -16,7 +19,7 @@ export default function DocumentsList({ documents = [], onUpload, onView, onDown
     },
     {
       id: 2,
-      name: 'Academic Transcripts',
+      name: t('dashboard.academicTranscripts'),
       required: true,
       updatedAt: '2025-11-12',
       uploaded: true,
@@ -24,7 +27,7 @@ export default function DocumentsList({ documents = [], onUpload, onView, onDown
     },
     {
       id: 3,
-      name: 'Motivation Letter',
+      name: t('dashboard.motivationLetter'),
       required: true,
       updatedAt: '2025-11-18',
       uploaded: true,
@@ -32,7 +35,7 @@ export default function DocumentsList({ documents = [], onUpload, onView, onDown
     },
     {
       id: 4,
-      name: 'Financial Proof',
+      name: t('dashboard.financialProof'),
       required: true,
       updatedAt: null,
       uploaded: false,
@@ -40,7 +43,7 @@ export default function DocumentsList({ documents = [], onUpload, onView, onDown
     },
     {
       id: 5,
-      name: 'Language Certificate',
+      name: t('dashboard.languageCertificate'),
       required: false,
       updatedAt: '2025-11-15',
       uploaded: true,
@@ -54,13 +57,13 @@ export default function DocumentsList({ documents = [], onUpload, onView, onDown
     const base = 'px-3 py-1 rounded-full text-xs font-semibold';
     switch (reviewStatus) {
       case 'approved':
-        return <span className={`${base} bg-app-secondary text-app-primary`}>Approved</span>;
+        return <span className={`${base} bg-app-secondary text-app-primary`}>{t('dashboard.approved')}</span>;
       case 'rejected':
-        return <span className={`${base} bg-[#BC6C25] text-white`}>Rejected</span>;
+        return <span className={`${base} bg-[#BC6C25] text-white`}>{t('dashboard.rejected')}</span>;
       case 'pending':
-        return <span className={`${base} bg-[#DDA15E] text-white`}>Pending</span>;
+        return <span className={`${base} bg-[#DDA15E] text-white`}>{t('dashboard.pending')}</span>;
       case 'missing':
-        return <span className={`${base} bg-[#8B5A2B] text-white`}>Missing</span>;
+        return <span className={`${base} bg-[#8B5A2B] text-white`}>{t('dashboard.missing')}</span>;
       default:
         return <span className={`${base} bg-gray-400 text-white`}>{reviewStatus}</span>;
     }

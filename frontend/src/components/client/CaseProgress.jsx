@@ -1,34 +1,37 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 export default function CaseProgress({ progress = 66, currentPhase = 'Document Preparation' }) {
+  const { t } = useTranslation();
+  
   const steps = [
     {
       id: 1,
-      title: 'Initial Consultation',
+      title: t('dashboard.initialConsultation'),
       status: 'completed',
       date: '2025-11-23',
     },
     {
       id: 2,
-      title: 'Document Preparation',
+      title: t('dashboard.documentPreparation'),
       status: 'in-progress',
       date: null,
     },
     {
       id: 3,
-      title: 'Application Submission',
+      title: t('dashboard.applicationSubmission'),
       status: 'pending',
       date: null,
     },
     {
       id: 4,
-      title: 'Interview Preparation',
+      title: t('dashboard.interviewPreparation'),
       status: 'pending',
       date: null,
     },
     {
       id: 5,
-      title: 'Final Review',
+      title: t('dashboard.finalReview'),
       status: 'pending',
       date: null,
     },
@@ -60,17 +63,17 @@ export default function CaseProgress({ progress = 66, currentPhase = 'Document P
 
   const getStatusText = (step) => {
     if (step.status === 'completed') {
-      return <span className="text-app-primary font-semibold">Completed</span>;
+      return <span className="text-app-primary font-semibold">{t('dashboard.completed')}</span>;
     } else if (step.status === 'in-progress') {
-      return <span className="text-[#A65F00] font-semibold">In Progress</span>;
+      return <span className="text-[#A65F00] font-semibold">{t('dashboard.inProgress')}</span>;
     } else {
-      return <span className="text-gray-500 font-semibold">Pending</span>;
+      return <span className="text-gray-500 font-semibold">{t('dashboard.pending')}</span>;
     }
   };
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h2 className="text-3xl font-bold text-app-primary mb-6">Case Progress</h2>
+      <h2 className="text-3xl font-bold text-app-primary mb-6">{t('dashboard.caseProgress')}</h2>
       
       {/* Progress Bar */}
       <div className="bg-white rounded-xl p-6 mb-8 shadow-md">

@@ -1,5 +1,6 @@
 import { ArrowRightIcon, QuoteIcon } from "lucide-react";
 import React, { useEffect, useState, useContext } from "react";
+import { useTranslation } from "react-i18next";
 import { Button } from "../../../components/ui/button";
 import { Card, CardContent } from "../../../components/ui/card";
 import LeaveReviewModal from "../../../components/ui/LeaveReviewModal";
@@ -9,6 +10,7 @@ import { fetchReviews, getRecentReviews } from "../../../api/reviews";
 const REVIEWS_LIMIT_HOME = 3;
 
 export const ClientReviewsSection = () => {
+  const { t } = useTranslation();
   const [allReviews, setAllReviews] = useState([]);
   const [displayedReviews, setDisplayedReviews] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -76,7 +78,7 @@ export const ClientReviewsSection = () => {
       <div className="mx-auto max-w-6xl">
         {isLoading ? (
           <div className="text-center py-12">
-            <p className="text-app-text-primary">Loading reviews...</p>
+            <p className="text-app-text-primary">{t('common.loadingReviews')}</p>
           </div>
         ) : (
           <>
@@ -114,7 +116,7 @@ export const ClientReviewsSection = () => {
                 onClick={handleOpen} 
                 className="flex items-center gap-2 px-6 sm:px-8 py-3 sm:py-4 bg-app-secondary rounded-full hover:bg-app-primary/90 h-auto"
               >
-                <span className="text-sm sm:text-base font-semibold text-app-text-light">LEAVE YOUR REVIEW</span>
+                <span className="text-sm sm:text-base font-semibold text-app-text-light">{t('common.leaveYourReview')}</span>
                 <ArrowRightIcon className="w-5 h-5 text-app-text-light" />
               </Button>
             </div>

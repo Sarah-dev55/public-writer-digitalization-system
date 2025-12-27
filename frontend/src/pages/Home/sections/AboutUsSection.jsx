@@ -6,43 +6,45 @@ import {
 } from "lucide-react";
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Button } from "../../../components/ui/button";
 import { Card, CardContent } from "../../../components/ui/card";
 
-const servicesData = [
-  {
-    icon: CalendarDaysIcon,
-    title: "Work Permits",
-    items: [
-      "Study visa application",
-      "Scholarship application",
-      "University admissions",
-      "Interview preparation",
-    ],
-  },
-  {
-    icon: GraduationCapIcon,
-    title: "Student Procedures",
-    items: [
-      "Study visa application",
-      "Scholarship application",
-      "University admissions",
-      "Interview preparation",
-    ],
-  },
-  {
-    icon: BriefcaseIcon,
-    title: "Interview Preparation",
-    items: [
-      "Interview coaching",
-      "Form with 50+ questions",
-      "Mock interviews",
-    ],
-  },
-];
-
 export const AboutUsSection = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
+
+  const servicesData = [
+    {
+      icon: CalendarDaysIcon,
+      title: t('services.workPermits'),
+      items: [
+        t('services.studyVisaApplication'),
+        t('services.scholarshipApplication'),
+        t('services.universityAdmissions'),
+        t('services.interviewPreparation'),
+      ],
+    },
+    {
+      icon: GraduationCapIcon,
+      title: t('services.studentProcedures'),
+      items: [
+        t('services.studyVisaApplication'),
+        t('services.scholarshipApplication'),
+        t('services.universityAdmissions'),
+        t('services.interviewPreparation'),
+      ],
+    },
+    {
+      icon: BriefcaseIcon,
+      title: t('services.interviewPreparation'),
+      items: [
+        t('services.interviewCoaching'),
+        t('services.formWith50Questions'),
+        t('services.mockInterviews'),
+      ],
+    },
+  ];
 
   return (
     <section id="about" className="w-full bg-app-accent py-12 px-6 sm:py-16 md:py-20 lg:py-24">
@@ -50,7 +52,7 @@ export const AboutUsSection = () => {
         {/* Header */}
         <div className="mb-12 sm:mb-16 md:mb-20 flex flex-col sm:flex-row items-center justify-between gap-6">
           <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-app-primary">
-            Our Services:
+            {t('common.ourServices')}
           </h2>
 
           <Button
@@ -59,7 +61,7 @@ export const AboutUsSection = () => {
             className="flex items-center gap-2 hover:bg-transparent p-0 whitespace-nowrap"
           >
             <span className="text-sm sm:text-base font-semibold text-app-primary">
-              View all services
+              {t('common.viewAllServices')}
             </span>
             <ArrowRightIcon className="w-5 h-5 text-app-primary flex-shrink-0" />
           </Button>

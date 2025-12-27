@@ -1,14 +1,17 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 export default function AdminSidebar() {
+  const { t } = useTranslation();
+  
   const items = [
-    { label: 'Dashboard', href: '/admin/dashboard', icon: 'dashboard', active: true },
-    { label: 'Appointments', href: '/admin/appointments', icon: 'calendar' },
-    { label: 'Documents', href: '/admin/documents', icon: 'file' },
-    { label: 'Availability', href: '/admin/availability', icon: 'availability' },
-    { label: 'Clients', href: '/admin/clients', icon: 'users' },
-    { label: 'Settings', href: '/admin/settings', icon: 'settings' },
+    { label: t('admin.dashboard'), href: '/admin/dashboard', icon: 'dashboard', active: true },
+    { label: t('navigation.appointments'), href: '/admin/appointments', icon: 'calendar' },
+    { label: t('navigation.documents'), href: '/admin/documents', icon: 'file' },
+    { label: t('admin.availability'), href: '/admin/availability', icon: 'availability' },
+    { label: t('admin.clients'), href: '/admin/clients', icon: 'users' },
+    { label: t('common.settings'), href: '/admin/settings', icon: 'settings' },
   ];
 
   const Icon = ({ name }) => {

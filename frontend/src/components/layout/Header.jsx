@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 /**
  * cn utility - Combines classes
@@ -21,6 +22,7 @@ function Header({
   actionButton,
   className = "",
 }) {
+  const { t } = useTranslation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState({});
 
@@ -89,7 +91,7 @@ function Header({
                 )}
               </div>
               <span className="text-sm hidden md:block">
-                Client services Dashboard
+                {t('common.clientServicesDashboard')}
               </span>
             </div>
           )}
@@ -165,10 +167,10 @@ function Header({
               </div>
               <div className="flex flex-col">
                 <span className="text-app-primary text-xl font-bold tracking-wider">
-                  MENSELIR
+                  {t('common.menselir')}
                 </span>
                 <span className="text-app-primary text-xs opacity-80 -mt-1">
-                  PUBLIC WRITER
+                  {t('common.publicWriter')}
                 </span>
               </div>
             </div>
@@ -221,7 +223,7 @@ function Header({
               {actionButton || (
                 <Link to="/client/overview">
                   <button className="bg-app-primary text-app-accent px-6 py-2.5 rounded-full font-semibold text-sm uppercase tracking-wide hover:bg-app-primary/90 transition-all">
-                    S
+                    {t('common.getStarted')}
                   </button>
                 </Link>
               )}
@@ -281,7 +283,7 @@ function Header({
               {actionButton || (
                 <Link to="/client/dashboard" className="w-full">
                   <button className="w-full bg-[#2d4a3e] text-[#f5f5dc] px-6 py-2.5 rounded-full font-semibold text-sm uppercase tracking-wide hover:bg-[#1d3a2e] transition-all">
-                    GET STARTED
+                    {t('common.getStarted')}
                   </button>
                 </Link>
               )}
