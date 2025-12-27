@@ -126,3 +126,32 @@ export async function uploadDocument(formData) {
         throw error;
     }
 }
+
+/**
+ * Download a document file
+ * @param {string} id - Document ID
+ * @param {string} fileName - Name of the file for download
+ * @returns {Promise} Download result
+ */
+export async function downloadDocument(id, fileName) {
+    try {
+        const res = await api.get(`/admin/documents/${id}/download`, {
+            responseType: 'blob'
+        });
+        
+        // Create a blob URL and trigger download
+        const url = window.URL.createObjectURL(new Blob([res.data]));
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', fileName || 'document');
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
+        
+        return { success: true };
+    } catch (error) {
+        console.error(`Error downloading document ${id}:`, error);
+        throw error;
+    }
+}

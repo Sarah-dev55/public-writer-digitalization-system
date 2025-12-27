@@ -1,6 +1,22 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { downloadDocument } from '../../services/adminDocumentService';
 
 export default function PendingDocuments({ documents = [], onReview = () => {}, onAccept = () => {}, onReject = () => {} }) {
+  const [downloadingId, setDownloadingId] = useState(null);
+
+  const handleDownload = async (document) => {
+    try {
+      setDownloadingId(document._id || document.id);
+      const docId = document._id || document.id;
+      const fileName = document.fileName || document.title || 'document';
+      await downloadDocument(docId, fileName);
+    } catch (error) {
+      console.error('Download failed:', error);
+      alert('Failed to download document. Please try again.');
+    } finally {
+      setDownloadingId(null);
+    }
+  };
   return (
     <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
       <div className="flex items-center justify-between mb-6">
@@ -27,6 +43,14 @@ export default function PendingDocuments({ documents = [], onReview = () => {}, 
                 <p className="text-sm text-gray-500">Submitted: {document.uploadedAt || document.submittedDate || document.createdAt || ''}</p>
               </div>
               <div className="flex items-center gap-2">
+                <button 
+                  onClick={() => handleDownload(document)} 
+                  disabled={downloadingId === (document._id || document.id)}
+                  className="px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="#fff"><path d="M12 3v12" strokeWidth="1.5"/><path d="M8 11l4 4 4-4" strokeWidth="1.5"/><path d="M21 21H3" strokeWidth="1.5"/></svg>
+                  {downloadingId === (document._id || document.id) ? 'Downloading...' : 'Download'}
+                </button>
                 <button onClick={() => onReview(document)} className="px-3 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg transition-colors flex items-center gap-2">
                   <svg className="w-4 h-4 text-gray-600" viewBox="0 0 24 24" fill="none" stroke="#374151"><path d="M15 12H9" strokeWidth="1.5"/><path d="M12 15V9" strokeWidth="1.5"/></svg>
                   Review
