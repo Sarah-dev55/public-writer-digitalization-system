@@ -8,6 +8,14 @@ const DocumentSchema = new Schema({
 	type: { type: String },
 	uploadedAt: { type: Date, default: Date.now },
 	userId: { type: Schema.Types.ObjectId, ref: 'User' },
+	status: { 
+		type: String, 
+		enum: ['pending', 'accepted', 'rejected', 'needs_correction'],
+		default: 'pending' 
+	},
+	statusNotes: { type: String }, // Notes from public writer about why rejected or what needs correction
+	reviewedAt: { type: Date },
+	reviewedBy: { type: Schema.Types.ObjectId, ref: 'User' },
 }, { timestamps: true });
 
 module.exports = mongoose.model('Document', DocumentSchema);

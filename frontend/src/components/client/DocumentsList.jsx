@@ -55,13 +55,20 @@ export default function DocumentsList({ documents = [], onUpload, onView, onDown
 
   const getStatusBadge = (reviewStatus) => {
     const base = 'px-3 py-1 rounded-full text-xs font-semibold';
-    switch (reviewStatus) {
-      case 'approved':
+    // Support both old and new status values
+    const normalizedStatus = reviewStatus === 'approved' ? 'accepted' : 
+                            reviewStatus === 'needs_correction' ? 'needs_correction' :
+                            reviewStatus;
+    
+    switch (normalizedStatus) {
+      case 'accepted':
         return <span className={`${base} bg-app-secondary text-app-primary`}>{t('dashboard.approved')}</span>;
       case 'rejected':
         return <span className={`${base} bg-[#BC6C25] text-white`}>{t('dashboard.rejected')}</span>;
       case 'pending':
         return <span className={`${base} bg-[#DDA15E] text-white`}>{t('dashboard.pending')}</span>;
+      case 'needs_correction':
+        return <span className={`${base} bg-orange-500 text-white`}>{t('dashboard.needsCorrection', 'Needs Correction')}</span>;
       case 'missing':
         return <span className={`${base} bg-[#8B5A2B] text-white`}>{t('dashboard.missing')}</span>;
       default:
@@ -70,8 +77,13 @@ export default function DocumentsList({ documents = [], onUpload, onView, onDown
   };
 
   const getActionIcons = (document) => {
-    switch (document.reviewStatus) {
-      case 'approved':
+    // Normalize status
+    const status = document.reviewStatus === 'approved' ? 'accepted' : 
+                  document.reviewStatus === 'needs_correction' ? 'needs_correction' :
+                  document.reviewStatus;
+                  
+    switch (status) {
+      case 'accepted':
         return (
           <div className="flex items-center gap-2">
             <button
@@ -93,6 +105,7 @@ export default function DocumentsList({ documents = [], onUpload, onView, onDown
           </div>
         );
       case 'rejected':
+      case 'needs_correction':
         return (
           <button
             onClick={() => onUpload && onUpload(document.id)}
@@ -153,9 +166,15 @@ export default function DocumentsList({ documents = [], onUpload, onView, onDown
   };
 
   const getDocumentIcon = (reviewStatus) => {
-    const iconColor = reviewStatus === 'approved' ? 'text-[#588157]' : 
-                      reviewStatus === 'rejected' ? 'text-[#BC6C25]' :
-                      reviewStatus === 'pending' ? 'text-[#DDA15E]' :
+    // Normalize status
+    const status = reviewStatus === 'approved' ? 'accepted' : 
+                  reviewStatus === 'needs_correction' ? 'needs_correction' :
+                  reviewStatus;
+                  
+    const iconColor = status === 'accepted' ? 'text-[#588157]' : 
+                      status === 'rejected' ? 'text-[#BC6C25]' :
+                      status === 'pending' ? 'text-[#DDA15E]' :
+                      status === 'needs_correction' ? 'text-orange-500' :
                       'text-[#8B5A2B]';
     
     return (
@@ -209,6 +228,15 @@ export default function DocumentsList({ documents = [], onUpload, onView, onDown
                     </p>
                     {getStatusBadge(document.reviewStatus)}
                   </div>
+                  {/* Display status notes if they exist */}
+                  {document.statusNotes && (document.reviewStatus === 'rejected' || document.reviewStatus === 'needs_correction') && (
+                    <div className="mt-3 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                      <p className="text-sm font-semibold text-orange-900 mb-1">
+                        {document.reviewStatus === 'rejected' ? '⚠ Reason for rejection:' : '⚠ Corrections needed:'}
+                      </p>
+                      <p className="text-sm text-orange-800">{document.statusNotes}</p>
+                    </div>
+                  )}
                 </div>
               </div>
               <div className="flex items-center justify-end">
