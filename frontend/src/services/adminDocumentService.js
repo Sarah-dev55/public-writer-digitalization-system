@@ -155,3 +155,23 @@ export async function downloadDocument(id, fileName) {
         throw error;
     }
 }
+
+/**
+ * Update document status
+ * @param {string} id - Document ID
+ * @param {string} status - New status ('pending', 'accepted', 'rejected', 'needs_correction')
+ * @param {string} statusNotes - Optional notes about the status change
+ * @returns {Promise} Updated document
+ */
+export async function updateDocumentStatus(id, status, statusNotes = '') {
+    try {
+        const res = await api.put(`/admin/documents/${id}/status`, {
+            status,
+            statusNotes
+        });
+        return res.data;
+    } catch (error) {
+        console.error(`Error updating document status ${id}:`, error);
+        throw error;
+    }
+}

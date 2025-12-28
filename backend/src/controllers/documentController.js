@@ -77,4 +77,42 @@ async function download(req, res) {
 	}
 }
 
-module.exports = { listByUser, listAll, listPending, create, update, download };
+async function updateStatus(req, res) {
+	try {
+		const { id } = req.params;
+		const { status, statusNotes } = req.body;
+
+		// Validate status
+		const validStatuses = ['pending', 'accepted', 'rejected', 'needs_correction'];
+		if (!validStatuses.includes(status)) {
+			return res.status(400).json({ 
+				success: false, 
+				message: 'Invalid status. Must be one of: pending, accepted, rejected, needs_correction' 
+			});
+		}
+
+		// Find and update the document
+		const updateData = {
+			status,
+			statusNotes: statusNotes || '',
+			reviewedAt: new Date(),
+			reviewedBy: req.user ? req.user.id : null // Assuming auth middleware sets req.user
+		};
+
+		const doc = await Document.findByIdAndUpdate(
+			id,
+			updateData,
+			{ new: true, runValidators: true }
+		);
+
+		if (!doc) {
+			return res.status(404).json({ success: false, message: 'Document not found' });
+		}
+
+		res.json({ success: true, data: doc });
+	} catch (err) {
+		res.status(500).json({ success: false, message: err.message });
+	}
+}
+
+module.exports = { listByUser, listAll, listPending, create, update, download, updateStatus };

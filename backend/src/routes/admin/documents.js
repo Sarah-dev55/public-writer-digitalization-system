@@ -20,4 +20,7 @@ router.post('/', documentController.create);
 // PUT /api/documents/:id - update document (e.g., status)
 router.put('/:id', documentController.update);
 
+// PUT /api/documents/:id/status - update document status specifically
+router.put('/:id/status', documentController.updateStatus);
+
 module.exports = router;

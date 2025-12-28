@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
 import { downloadDocument } from '../../services/adminDocumentService';
+import DocumentStatusModal from './DocumentStatusModal';
 
-export default function PendingDocuments({ documents = [], onReview = () => {}, onAccept = () => {}, onReject = () => {} }) {
+export default function PendingDocuments({ documents = [], onReview = () => {}, onStatusUpdated = () => {} }) {
   const [downloadingId, setDownloadingId] = useState(null);
+  const [selectedDocument, setSelectedDocument] = useState(null);
+  const [showStatusModal, setShowStatusModal] = useState(false);
 
   const handleDownload = async (document) => {
     try {
@@ -16,6 +19,36 @@ export default function PendingDocuments({ documents = [], onReview = () => {}, 
     } finally {
       setDownloadingId(null);
     }
+  };
+
+  const handleOpenStatusModal = (document) => {
+    setSelectedDocument(document);
+    setShowStatusModal(true);
+  };
+
+  const handleCloseStatusModal = () => {
+    setSelectedDocument(null);
+    setShowStatusModal(false);
+  };
+
+  const handleStatusUpdated = (updatedDocument) => {
+    onStatusUpdated(updatedDocument);
+    handleCloseStatusModal();
+  };
+
+  const getStatusBadge = (status) => {
+    const statusConfig = {
+      pending: { label: 'Pending', color: 'bg-yellow-100 text-yellow-800' },
+      accepted: { label: 'Accepted', color: 'bg-green-100 text-green-800' },
+      rejected: { label: 'Rejected', color: 'bg-red-100 text-red-800' },
+      needs_correction: { label: 'Needs Correction', color: 'bg-orange-100 text-orange-800' }
+    };
+    const config = statusConfig[status] || statusConfig.pending;
+    return (
+      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.color}`}>
+        {config.label}
+      </span>
+    );
   };
   return (
     <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
@@ -39,35 +72,54 @@ export default function PendingDocuments({ documents = [], onReview = () => {}, 
                 <svg className="w-6 h-6 text-red-500" viewBox="0 0 24 24" fill="none" stroke="#ef4444"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" strokeWidth="1.5"/></svg>
               </div>
               <div className="flex-1">
-                <p className="text-gray-900">{document.fileName || document.title} - {document.clientName || (document.userId && (document.userId.fullName || document.userId))}</p>
-                <p className="text-sm text-gray-500">Submitted: {document.uploadedAt || document.submittedDate || document.createdAt || ''}</p>
+                <div className="flex items-center gap-2 mb-1">
+                  <p className="text-gray-900 font-medium">{document.fileName || document.title}</p>
+                  {getStatusBadge(document.status || 'pending')}
+                </div>
+                <p className="text-sm text-gray-500">
+                  Client: {document.clientName || (document.userId && (document.userId.fullName || document.userId))}
+                </p>
+                <p className="text-sm text-gray-500">
+                  Submitted: {document.uploadedAt ? new Date(document.uploadedAt).toLocaleDateString() : document.submittedDate || document.createdAt || ''}
+                </p>
+                {document.statusNotes && (
+                  <p className="text-sm text-gray-600 mt-1 italic">Note: {document.statusNotes}</p>
+                )}
               </div>
               <div className="flex items-center gap-2">
                 <button 
                   onClick={() => handleDownload(document)} 
                   disabled={downloadingId === (document._id || document.id)}
                   className="px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="Download document"
                 >
                   <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="#fff"><path d="M12 3v12" strokeWidth="1.5"/><path d="M8 11l4 4 4-4" strokeWidth="1.5"/><path d="M21 21H3" strokeWidth="1.5"/></svg>
                   {downloadingId === (document._id || document.id) ? 'Downloading...' : 'Download'}
                 </button>
-                <button onClick={() => onReview(document)} className="px-3 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg transition-colors flex items-center gap-2">
-                  <svg className="w-4 h-4 text-gray-600" viewBox="0 0 24 24" fill="none" stroke="#374151"><path d="M15 12H9" strokeWidth="1.5"/><path d="M12 15V9" strokeWidth="1.5"/></svg>
-                  Review
-                </button>
-                <button onClick={() => onReject(document)} className="px-3 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors flex items-center gap-2">
-                  <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="#fff"><path d="M6 18L18 6M6 6l12 12" strokeWidth="1.5"/></svg>
-                  Reject
-                </button>
-                <button onClick={() => onAccept(document)} className="px-3 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors flex items-center gap-2">
-                  <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="#fff"><path d="M20 6L9 17l-5-5" strokeWidth="1.5"/></svg>
-                  Accept
+                <button 
+                  onClick={() => handleOpenStatusModal(document)} 
+                  className="px-3 py-2 bg-[#31493d] hover:bg-[#243629] text-white rounded-lg transition-colors flex items-center gap-2"
+                  title="Update document status"
+                >
+                  <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="#fff">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" strokeWidth="1.5"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" strokeWidth="1.5"/>
+                  </svg>
+                  Update Status
                 </button>
               </div>
             </div>
           ))
         )}
       </div>
+
+      {showStatusModal && selectedDocument && (
+        <DocumentStatusModal
+          document={selectedDocument}
+          onClose={handleCloseStatusModal}
+          onStatusUpdated={handleStatusUpdated}
+        />
+      )}
     </div>
   );
 }
