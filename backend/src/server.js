@@ -20,6 +20,10 @@ app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Serve uploaded files statically
+const path = require('path');
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
 // =====================
 // Import Routes
 // =====================
@@ -29,6 +33,8 @@ const clientUserRoutes = require('./routes/client/users');
 const clientAppointmentRoutes = require('./routes/client/appointments');
 const clientChecklistRoutes = require('./routes/client/checklists');
 const clientNoWorkDayRoutes = require('./routes/client/noWorkDays');
+const clientDocumentRoutes = require('./routes/client/documents');
+const clientNotificationRoutes = require('./routes/client/notifications');
 
 // Admin routes
 const adminUserRoutes = require('./routes/admin/apiUsers');
@@ -51,6 +57,8 @@ app.use('/api/client/users', clientUserRoutes);
 app.use('/api/client/appointments', clientAppointmentRoutes);
 app.use('/api/client/checklists', clientChecklistRoutes);
 app.use('/api/client/noworkdays', clientNoWorkDayRoutes);
+app.use('/api/client/documents', clientDocumentRoutes);
+app.use('/api/client/notifications', clientNotificationRoutes);
 
 // Admin-facing API (Public Writer)
 app.use('/api/admin/users', adminUserRoutes);
@@ -87,7 +95,8 @@ app.get('/', (req, res) => {
         users: '/api/client/users',
         appointments: '/api/client/appointments',
         checklists: '/api/client/checklists',
-        noWorkDays: '/api/client/noworkdays'
+        noWorkDays: '/api/client/noworkdays',
+        documents: '/api/client/documents'
       },
       admin: {
         users: '/api/admin/users',

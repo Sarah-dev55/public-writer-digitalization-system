@@ -1,40 +1,16 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 
-export default function CaseProgress({ progress = 66, currentPhase = 'Document Preparation' }) {
+export default function CaseProgress({ progress = 0, currentPhase = 'Unknown', steps = [] }) {
   const { t } = useTranslation();
   
-  const steps = [
-    {
-      id: 1,
-      title: t('dashboard.initialConsultation'),
-      status: 'completed',
-      date: '2025-11-23',
-    },
-    {
-      id: 2,
-      title: t('dashboard.documentPreparation'),
-      status: 'in-progress',
-      date: null,
-    },
-    {
-      id: 3,
-      title: t('dashboard.applicationSubmission'),
-      status: 'pending',
-      date: null,
-    },
-    {
-      id: 4,
-      title: t('dashboard.interviewPreparation'),
-      status: 'pending',
-      date: null,
-    },
-    {
-      id: 5,
-      title: t('dashboard.finalReview'),
-      status: 'pending',
-      date: null,
-    },
+  // Use passed steps or default empty if not provided (though Overview should provide them)
+  const displaySteps = steps.length > 0 ? steps : [
+    { id: 1, title: 'Initial Consultation', status: 'pending', date: null },
+    { id: 2, title: 'Document Preparation', status: 'pending', date: null },
+    { id: 3, title: 'Application Submission', status: 'pending', date: null },
+    { id: 4, title: 'Interview Preparation', status: 'pending', date: null },
+    { id: 5, title: 'Final Review', status: 'pending', date: null },
   ];
 
   const getStepIcon = (step) => {
@@ -95,12 +71,12 @@ export default function CaseProgress({ progress = 66, currentPhase = 'Document P
       
       {/* Timeline */}
       <div className="space-y-6">
-        {steps.map((step, index) => (
+        {displaySteps.map((step, index) => (
           <div key={step.id} className="flex gap-4">
             {/* Step Icon */}
             <div className="flex flex-col items-center">
               {getStepIcon(step)}
-              {index < steps.length - 1 && (
+              {index < displaySteps.length - 1 && (
                 <div
                   className={`w-0.5 h-16 mt-2 ${
                     step.status === 'completed' ? 'bg-app-primary' : 'bg-gray-300'

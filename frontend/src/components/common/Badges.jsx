@@ -37,7 +37,10 @@ function Badge({
     danger: 'bg-red-100 text-red-700 border border-red-200',
     info: 'bg-blue-100 text-blue-700 border border-blue-200',
     default: 'bg-gray-100 text-gray-700 border border-gray-200',
-    pending: 'bg-yellow-100 text-yellow-700 border border-yellow-200',
+    // pending removed, scheduled added. Maps pending to warning just in case, or we use scheduled checks.
+    // 'scheduled' uses a primary-like or info-like color. 
+    // Since 'confirmed' was green, let's make scheduled green too as it implies booked.
+    scheduled: 'bg-green-100 text-green-700 border border-green-200',
     confirmed: 'bg-green-100 text-green-700 border border-green-200',
     completed: 'bg-blue-100 text-blue-700 border border-blue-200',
     cancelled: 'bg-red-100 text-red-700 border border-red-200'
@@ -86,7 +89,7 @@ function BadgeWithDot({
     danger: 'bg-red-500',
     info: 'bg-blue-500',
     default: 'bg-gray-500',
-    pending: 'bg-yellow-500',
+    scheduled: 'bg-green-500', 
     confirmed: 'bg-green-500',
     completed: 'bg-blue-500',
     cancelled: 'bg-red-500'

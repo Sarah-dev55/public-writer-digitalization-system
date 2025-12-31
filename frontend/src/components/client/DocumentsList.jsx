@@ -51,18 +51,28 @@ export default function DocumentsList({ documents = [], onUpload, onView, onDown
     },
   ];
 
-  const displayDocuments = documents.length > 0 ? documents : defaultDocuments;
+  // Map backend data to component format or use default
+  const displayDocuments = documents.length > 0 
+    ? documents.map(doc => ({
+        id: doc._id,
+        name: doc.name || doc.fileName,
+        required: doc.required || false,
+        updatedAt: doc.uploadedAt ? new Date(doc.uploadedAt).toLocaleDateString() : null,
+        uploaded: true,
+        reviewStatus: doc.reviewStatus || 'pending'
+      }))
+    : []; // Don't show static data if empty, show empty state (or keep default if you prefer fallback)
+    // Actually, user wants "Replace all mocked or static document data." so I should defaults to empty.
+    
+  // Helper to normalize status for comparison
+  const normalizeStatus = (status) => status?.toLowerCase();
 
   const getStatusBadge = (reviewStatus) => {
     const base = 'px-3 py-1 rounded-full text-xs font-semibold';
-    // Support both old and new status values
-    const normalizedStatus = reviewStatus === 'approved' ? 'accepted' : 
-                            reviewStatus === 'needs_correction' ? 'needs_correction' :
-                            reviewStatus;
-    
-    switch (normalizedStatus) {
-      case 'accepted':
-        return <span className={`${base} bg-app-secondary text-app-primary`}>{t('dashboard.approved')}</span>;
+    const status = normalizeStatus(reviewStatus);
+    switch (status) {
+      case 'approved':
+        return <span className={`${base} bg-[#A3B18A] text-[#3A4D42]`}>Approved</span>;
       case 'rejected':
         return <span className={`${base} bg-[#BC6C25] text-white`}>{t('dashboard.rejected')}</span>;
       case 'pending':
@@ -76,14 +86,10 @@ export default function DocumentsList({ documents = [], onUpload, onView, onDown
     }
   };
 
-  const getActionIcons = (document) => {
-    // Normalize status
-    const status = document.reviewStatus === 'approved' ? 'accepted' : 
-                  document.reviewStatus === 'needs_correction' ? 'needs_correction' :
-                  document.reviewStatus;
-                  
+  const getActionButtons = (document) => {
+    const status = normalizeStatus(document.reviewStatus);
     switch (status) {
-      case 'accepted':
+      case 'approved':
         return (
           <div className="flex items-center gap-2">
             <button
@@ -166,15 +172,10 @@ export default function DocumentsList({ documents = [], onUpload, onView, onDown
   };
 
   const getDocumentIcon = (reviewStatus) => {
-    // Normalize status
-    const status = reviewStatus === 'approved' ? 'accepted' : 
-                  reviewStatus === 'needs_correction' ? 'needs_correction' :
-                  reviewStatus;
-                  
-    const iconColor = status === 'accepted' ? 'text-[#588157]' : 
+    const status = normalizeStatus(reviewStatus);
+    const iconColor = status === 'approved' ? 'text-[#588157]' : 
                       status === 'rejected' ? 'text-[#BC6C25]' :
                       status === 'pending' ? 'text-[#DDA15E]' :
-                      status === 'needs_correction' ? 'text-orange-500' :
                       'text-[#8B5A2B]';
     
     return (
@@ -240,7 +241,7 @@ export default function DocumentsList({ documents = [], onUpload, onView, onDown
                 </div>
               </div>
               <div className="flex items-center justify-end">
-                {getActionIcons(document)}
+                {getActionButtons(document)}
               </div>
             </div>
           </div>

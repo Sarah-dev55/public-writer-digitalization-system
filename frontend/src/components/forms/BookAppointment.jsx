@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Calendar, Clock, X } from 'lucide-react';
 import { getAllNoWorkDays } from '../../services/clientNoWorkDayService';
-import { getAppointmentsByDate, createAppointment } from '../../services/clientAppointmentService';
+import { getAppointmentsByDate, createAppointment, updateAppointment } from '../../services/clientAppointmentService';
 
-const Book_model = ({ isOpen, onClose }) => {
+const Book_model = ({ isOpen, onClose, mode = 'create', appointment = null }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(null);
   const [appointmentType, setAppointmentType] = useState('');
@@ -42,6 +42,32 @@ const Book_model = ({ isOpen, onClose }) => {
     return () => { mounted = false; };
   }, []);
 
+  // Pre-fill form when in edit or view mode
+  useEffect(() => {
+    if (appointment && (mode === 'edit' || mode === 'view') && isOpen) {
+      // Parse date string to Date object
+      const [year, month, day] = appointment.date.split('-').map(Number);
+      const dateObj = new Date(year, month - 1, day);
+      
+      setSelectedDate(dateObj);
+      setCurrentDate(new Date(year, month - 1, 1)); // Set calendar to appointment month
+      setAppointmentType(appointment.appointmentType);
+      setSelectedTimeSlot(appointment.timeSlot);
+      setAdditionalNotes(appointment.notes || '');
+    }
+  }, [appointment, mode, isOpen]);
+
+  // Reset form when modal closes
+  useEffect(() => {
+    if (!isOpen && mode === 'create') {
+      setSelectedDate(null);
+      setAppointmentType('');
+      setSelectedTimeSlot('');
+      setAdditionalNotes('');
+      setCurrentDate(new Date());
+    }
+  }, [isOpen, mode]);
+
   // Fetch booked slots when date is selected
   useEffect(() => {
     if (!selectedDate) return;
@@ -50,7 +76,17 @@ const Book_model = ({ isOpen, onClose }) => {
       try {
         const formattedDate = formatDate(selectedDate);
         const res = await getAppointmentsByDate(formattedDate);
-        const slots = res.map(apt => apt.timeSlot);
+        
+        // Filter appointments to determine true availability
+        // 1. Filter out cancelled appointments (they don't block slots)
+        // 2. In edit mode, exclude the current appointment (user can keep their own slot)
+        const activeAppointments = (res || []).filter(apt => {
+          if (apt.status === 'cancelled') return false;
+          if (mode === 'edit' && appointment && apt._id === appointment._id) return false;
+          return true;
+        });
+
+        const slots = activeAppointments.map(apt => apt.timeSlot);
         setBookedSlots(slots);
       } catch (err) {
         console.error('Failed to load booked slots', err);
@@ -90,7 +126,7 @@ const Book_model = ({ isOpen, onClose }) => {
     setNotAvailableDates(blocked);
   }, [currentDate, noWorkDays]);
 
-  // Time slots
+  // Time slots with strict HH:MM AA format
   const getTimeSlots = () => [
     '09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM',
     '02:00 PM', '03:00 PM', '04:00 PM', '05:00 PM'
@@ -112,13 +148,20 @@ const Book_model = ({ isOpen, onClose }) => {
   };
 
   const selectDate = (day) => {
+    // Prevent date selection in view mode
+    if (mode === 'view') return;
+    
     // Only allow selection if the date is NOT in the notAvailableDates array
     if (!notAvailableDates.includes(day)) {
       const newDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
       setSelectedDate(newDate);
-      setAppointmentType('');
-      setSelectedTimeSlot('');
-      setAdditionalNotes('');
+      
+      // Only reset other fields in create mode
+      if (mode === 'create') {
+        setAppointmentType('');
+        setSelectedTimeSlot('');
+        setAdditionalNotes('');
+      }
     }
   };
 
@@ -141,16 +184,25 @@ const Book_model = ({ isOpen, onClose }) => {
     };
 
     try {
-      const result = await createAppointment(payload);
-      alert('Appointment booked successfully!');
+      if (mode === 'edit') {
+        // Update existing appointment
+        await updateAppointment(appointment._id, payload);
+        alert('Appointment rescheduled successfully!');
+      } else {
+        // Create new appointment
+        await createAppointment(payload);
+        alert('Appointment booked successfully!');
+      }
+      
+      // Reset form
       setSelectedDate(null);
       setAppointmentType('');
       setSelectedTimeSlot('');
       setAdditionalNotes('');
       onClose();
     } catch (error) {
-      const msg = error.message;
-      alert('Error booking appointment: ' + msg);
+      const msg = error.response?.data?.message || error.message;
+      alert(`Error ${mode === 'edit' ? 'rescheduling' : 'booking'} appointment: ` + msg);
     }
   };
 
@@ -176,11 +228,11 @@ const Book_model = ({ isOpen, onClose }) => {
         <button
           key={day}
           onClick={() => selectDate(day)}
-          disabled={!isAvailable}
+          disabled={!isAvailable || mode === 'view'}
           className={`h-10 w-full rounded-lg flex items-center justify-center text-sm font-medium transition-colors
             ${isSelected ? 'bg-emerald-700 text-white' : ''}
-            ${!isSelected && isAvailable ? 'hover:bg-emerald-50 text-gray-700' : ''}
-            ${!isAvailable ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'cursor-pointer'}
+            ${!isSelected && isAvailable && mode !== 'view' ? 'hover:bg-emerald-50 text-gray-700' : ''}
+            ${!isAvailable || mode === 'view' ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'cursor-pointer'}
             ${isTodayDate && !isSelected ? 'border-2 border-gray-900' : ''}
           `}
         >
@@ -193,6 +245,14 @@ const Book_model = ({ isOpen, onClose }) => {
   };
 
   const showSummary = selectedDate && appointmentType && selectedTimeSlot;
+
+  const getModalTitle = () => {
+    switch(mode) {
+      case 'edit': return 'Reschedule Appointment';
+      case 'view': return 'Appointment Details';
+      default: return 'Book Appointment';
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -212,16 +272,30 @@ const Book_model = ({ isOpen, onClose }) => {
           <div className="p-8 border-r border-gray-200">
             {/* Calendar Header */}
             <div className="flex items-center justify-between mb-6">
-              <button onClick={previousMonth} className="p-2 hover:bg-gray-100 rounded-lg">
+              <button 
+                onClick={previousMonth} 
+                disabled={mode === 'view'}
+                className={`p-2 rounded-lg ${
+                  mode === 'view' ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-100'
+                }`}
+              >
                 <ChevronLeft className="w-5 h-5" />
               </button>
               <div className="text-center">
                 <h2 className="text-xl font-semibold">
-                  {currentDate.toLocaleString('default', { month: 'long' })}
+                  {getModalTitle()}
                 </h2>
-                <p className="text-gray-600">{currentDate.getFullYear()}</p>
+                <p className="text-sm text-gray-500 mt-1">
+                  {currentDate.toLocaleString('default', { month: 'long' })} {currentDate.getFullYear()}
+                </p>
               </div>
-              <button onClick={nextMonth} className="p-2 hover:bg-gray-100 rounded-lg">
+              <button 
+                onClick={nextMonth} 
+                disabled={mode === 'view'}
+                className={`p-2 rounded-lg ${
+                  mode === 'view' ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-100'
+                }`}
+              >
                 <ChevronRight className="w-5 h-5" />
               </button>
             </div>
@@ -281,7 +355,10 @@ const Book_model = ({ isOpen, onClose }) => {
                   <select
                     value={appointmentType}
                     onChange={(e) => setAppointmentType(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white"
+                    disabled={mode === 'view'}
+                    className={`w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 ${
+                      mode === 'view' ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'
+                    }`}
                   >
                     <option value="">Select appointment type</option>
                     {appointmentTypes.map(type => (
@@ -304,14 +381,14 @@ const Book_model = ({ isOpen, onClose }) => {
                         return (
                           <button
                             key={time}
-                            onClick={() => !isBooked && setSelectedTimeSlot(time)}
-                            disabled={isBooked}
+                            onClick={() => !isBooked && mode !== 'view' && setSelectedTimeSlot(time)}
+                            disabled={isBooked || mode === 'view'}
                             className={`px-4 py-3 rounded-lg border flex items-center justify-center gap-2 transition-colors
-                              ${isBooked ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed' : ''}
-                              ${!isBooked && selectedTimeSlot === time 
+                              ${isBooked || mode === 'view' ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed' : ''}
+                              ${!isBooked && mode !== 'view' && selectedTimeSlot === time 
                                 ? 'bg-emerald-700 text-white border-emerald-700' 
                                 : ''}
-                              ${!isBooked && selectedTimeSlot !== time
+                              ${!isBooked && mode !== 'view' && selectedTimeSlot !== time
                                 ? 'bg-white border-gray-300 hover:border-emerald-500 text-gray-700'
                                 : ''}
                             `}
@@ -335,7 +412,10 @@ const Book_model = ({ isOpen, onClose }) => {
                       value={additionalNotes}
                       onChange={(e) => setAdditionalNotes(e.target.value)}
                       placeholder="Any specific topics or documents you want to discuss..."
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 resize-none"
+                      readOnly={mode === 'view'}
+                      className={`w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 resize-none ${
+                        mode === 'view' ? 'bg-gray-100 cursor-not-allowed' : ''
+                      }`}
                       rows={3}
                     />
                   </div>
@@ -373,12 +453,22 @@ const Book_model = ({ isOpen, onClose }) => {
                 )}
 
                 {/* Confirm Button */}
-                {showSummary && (
+                {showSummary && mode !== 'view' && (
                   <button
                     onClick={handleConfirm}
                     className="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-semibold py-3 rounded-lg transition-colors"
                   >
-                    Confirm Booking
+                    {mode === 'edit' ? 'Update Appointment' : 'Confirm Booking'}
+                  </button>
+                )}
+
+                {/* Close Button for View Mode */}
+                {mode === 'view' && (
+                  <button
+                    onClick={onClose}
+                    className="w-full bg-gray-600 hover:bg-gray-700 text-white font-semibold py-3 rounded-lg transition-colors"
+                  >
+                    Close
                   </button>
                 )}
               </div>
