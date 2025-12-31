@@ -58,7 +58,7 @@ router.post('/', async (req, res) => {
       notes,
       appointmentType,
       userId,
-      status: 'pending'
+      status: 'scheduled'
     });
 
     const newAppointment = await appointment.save();

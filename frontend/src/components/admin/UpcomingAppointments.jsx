@@ -44,8 +44,8 @@ export default function UpcomingAppointments({ appointments = [] }) {
             </div>
             <div className="text-right">
               <span className={`text-xs px-2 py-1 rounded-full ${
-                apt.status === 'confirmed' ? 'bg-green-100 text-green-700' :
-                apt.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+                (apt.status === 'confirmed' || apt.status === 'scheduled') ? 'bg-green-100 text-green-700' :
+                apt.status === 'completed' ? 'bg-blue-100 text-blue-700' :
                 'bg-gray-100 text-gray-700'
               }`}>
                 {apt.status || 'scheduled'}

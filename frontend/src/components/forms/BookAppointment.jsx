@@ -76,7 +76,17 @@ const Book_model = ({ isOpen, onClose, mode = 'create', appointment = null }) =>
       try {
         const formattedDate = formatDate(selectedDate);
         const res = await getAppointmentsByDate(formattedDate);
-        const slots = res.map(apt => apt.timeSlot);
+        
+        // Filter appointments to determine true availability
+        // 1. Filter out cancelled appointments (they don't block slots)
+        // 2. In edit mode, exclude the current appointment (user can keep their own slot)
+        const activeAppointments = (res || []).filter(apt => {
+          if (apt.status === 'cancelled') return false;
+          if (mode === 'edit' && appointment && apt._id === appointment._id) return false;
+          return true;
+        });
+
+        const slots = activeAppointments.map(apt => apt.timeSlot);
         setBookedSlots(slots);
       } catch (err) {
         console.error('Failed to load booked slots', err);
@@ -116,7 +126,7 @@ const Book_model = ({ isOpen, onClose, mode = 'create', appointment = null }) =>
     setNotAvailableDates(blocked);
   }, [currentDate, noWorkDays]);
 
-  // Time slots
+  // Time slots with strict HH:MM AA format
   const getTimeSlots = () => [
     '09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM',
     '02:00 PM', '03:00 PM', '04:00 PM', '05:00 PM'

@@ -24,9 +24,34 @@ router.get('/case-status/:userId', async (req, res) => {
       { id: 5, title: 'Final Review', status: 'pending', date: null }
     ];
 
-    // Step 1: Initial Consultation (Always completed if user exists)
-    steps[0].status = 'completed';
-    steps[0].date = user.createdAt.toISOString().split('T')[0];
+    // Step 1: Initial Consultation
+    // Logic: 
+    // - If user exists -> 'pending' (default)
+    // - If appointment booked -> 'in-progress'
+    // - If appointment completed -> 'completed'
+
+    // Check if any appointment exists
+    const anyAppointment = appointments.length > 0;
+    // Check if any appointment is completed (handling 'complete', 'completed', and whitespace)
+    const completedAppointment = appointments.some(a => {
+      const s = (a.status || '').toLowerCase().trim();
+      return s === 'completed' || s === 'complete';
+    });
+
+    if (completedAppointment) {
+      steps[0].status = 'completed';
+      // Find the completed appointment date
+      const completedApt = appointments.find(a => a.status === 'completed');
+      steps[0].date = completedApt ? completedApt.date : user.createdAt.toISOString().split('T')[0];
+    } else if (anyAppointment) {
+      steps[0].status = 'in-progress';
+      // Use the first appointment date
+      steps[0].date = appointments[0].date;
+    } else {
+      // User exists but no appointment yet
+      steps[0].status = 'pending';
+      steps[0].date = user.createdAt.toISOString().split('T')[0];
+    }
 
     // Step 2: Document Preparation
     // Logic: Complete if at least 1 document uploaded and ALL required docs are approved
@@ -39,9 +64,18 @@ router.get('/case-status/:userId', async (req, res) => {
     // If hard override from user.currentStats
     if (user.currentStats > 1) {
       steps[1].status = 'completed';
+    } else if (steps[0].status !== 'completed') {
+      // Step 2 cannot be started until Step 1 is completed
+      steps[1].status = 'pending';
     } else if (hasDocuments && !rejectedDocs && !missingDocs && !pendingDocs) {
       steps[1].status = 'completed';
     } else if (hasDocuments) {
+      // Step 1 is completed AND documents exist -> In Progress
+      steps[1].status = 'in-progress';
+    } else {
+      // Step 1 is completed, but no documents yet -> In Progress (Ready to start)
+      // or should it be pending? "In Progress" implies it's the current active phase.
+      // Since Step 1 is done, Step 2 IS the current phase.
       steps[1].status = 'in-progress';
     }
 

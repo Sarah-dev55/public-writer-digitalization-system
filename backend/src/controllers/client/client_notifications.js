@@ -1,5 +1,6 @@
 const Notification = require('../../models/Notification');
 const Appointment = require('../../models/Appointment');
+const Document = require('../../models/Document');
 const { v4: uuidv4 } = require('uuid');
 
 /**
@@ -52,7 +53,62 @@ async function getUserNotifications(req, res) {
             }
         }
 
-        // 3. If no notifications at all, create a "Welcome" one (Seed logic)
+        // 3. CHECK FOR DOCUMENT STATUS UPDATES (Lazy Notification Generation)
+        // Find documents that are approved or rejected for this user
+        const statusDocs = await Document.find({
+            userId,
+            reviewStatus: { $in: ['approved', 'rejected'] }
+        });
+
+        for (const doc of statusDocs) {
+            // Check if we already have a notification for THIS specific status update
+            // Logic: Is there a notification for this doc created AFTER the doc was last updated?
+            // We verify by matching the document ID in the list or message context if stored, 
+            // but simplified here by checking title/content + creation time vs doc update time.
+
+            const docTitle = doc.reviewStatus === 'approved' ? 'Document Approved' : 'Document Rejected';
+
+            // Allow a small buffer (e.g., 2 seconds) for execution time differences
+            const bufferTime = new Date(doc.updatedAt.getTime() - 2000);
+
+            const existingNotification = await Notification.findOne({
+                userId,
+                title: docTitle,
+                message: { $regex: new RegExp(doc.name || doc.fileName) }, // Ensure it matches the specific doc
+                createdAt: { $gte: bufferTime } // Notification must be newer than the document update
+            });
+
+            if (!existingNotification) {
+                // Determine message based on status
+                let messageBody = '';
+                let type = 'info';
+
+                if (doc.reviewStatus === 'approved') {
+                    messageBody = `Your document "${doc.name}" has been approved.`;
+                    type = 'success';
+                } else if (doc.reviewStatus === 'rejected') {
+                    messageBody = `Your document "${doc.name}" was rejected.`;
+                    if (doc.rejectionReason) {
+                        messageBody += ` Reason: ${doc.rejectionReason}`;
+                    }
+                    type = 'error';
+                }
+
+                // Create the notification
+                const newStatusNotif = new Notification({
+                    userId,
+                    title: docTitle,
+                    message: messageBody,
+                    type,
+                    createdAt: new Date() // Sets creation time to NOW
+                });
+
+                await newStatusNotif.save();
+                notifications.unshift(newStatusNotif);
+            }
+        }
+
+        // 4. If no notifications at all, create a "Welcome" one (Seed logic)
         if (notifications.length === 0) {
             const welcomeNotif = new Notification({
                 userId,

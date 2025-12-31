@@ -21,10 +21,12 @@ export default function AppointmentsList({ appointments = [], loading = false, o
     return {
       id: appointment._id,
       title: typeLabels[appointment.appointmentType] || appointment.appointmentType || 'Appointment',
+
       date: appointment.date,
       time: appointment.timeSlot,
       duration: typeDurations[appointment.appointmentType] || '30 minutes',
-      status: appointment.status || 'pending',
+      // Map any legacy 'pending' status to 'scheduled' to ensure consistency with the two-status model
+      status: (appointment.status === 'pending' ? 'scheduled' : appointment.status) || 'scheduled',
     };
   };
 
@@ -40,23 +42,6 @@ export default function AppointmentsList({ appointments = [], loading = false, o
           >
             View
           </button>
-        );
-      case 'pending':
-        return (
-          <div className="flex gap-2">
-            <button
-              onClick={() => onView && onView(appointment.id)}
-              className="px-4 py-2 bg-[#DDA15E] hover:bg-[#BC6C25] text-white rounded-lg text-sm font-semibold transition-colors"
-            >
-              View
-            </button>
-            <button
-              onClick={() => onCancel && onCancel(appointment.id)}
-              className="px-4 py-2 bg-[#8B5A2B] hover:bg-[#6B4423] text-white rounded-lg text-sm font-semibold transition-colors"
-            >
-              Cancel
-            </button>
-          </div>
         );
       case 'scheduled':
         return (
@@ -76,6 +61,8 @@ export default function AppointmentsList({ appointments = [], loading = false, o
           </div>
         );
       default:
+        // Default fallthrough for any unhandled status, treating it as scheduled for availability of actions if needed, 
+        // or just null. Since we enforce two statuses, usually null is fine, but if we want to be safe we can return null.
         return null;
     }
   };
@@ -85,12 +72,11 @@ export default function AppointmentsList({ appointments = [], loading = false, o
     switch (status) {
       case 'completed':
         return <span className={`${base} bg-app-secondary text-app-primary`}>Completed</span>;
-      case 'pending':
-        return <span className={`${base} bg-[#DDA15E] text-white`}>Pending</span>;
       case 'scheduled':
         return <span className={`${base} bg-app-primary text-app-text-light`}>Scheduled</span>;
       default:
-        return <span className={`${base} bg-gray-400 text-white`}>{status}</span>;
+        // Even 'pending' should be intercepted by mapAppointmentData, but if it slips through:
+        return <span className={`${base} bg-app-primary text-app-text-light`}>{status}</span>;
     }
   };
 
