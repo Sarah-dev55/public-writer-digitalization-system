@@ -1,0 +1,13 @@
+@import "tailwindcss";
+
+@theme {
+  /* Custom Colors */
+  --color-app-primary: #344e41;
+  --color-app-secondary: #588157;
+  --color-app-accent: #f3ecdc;
+  --color-app-text-primary: #344e41;
+  --color-app-text-light: #ffffff;
+  --color-app-text-muted: rgba(255, 255, 255, 0.75);
+  --color-app-text-secondary: rgba(255, 255, 255, 0.75);
+}
+
