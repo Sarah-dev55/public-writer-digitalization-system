@@ -10,6 +10,8 @@ import ClientDocuments from '../pages/client/Documents';
 import AdminDashboard from '../pages/admin/Dashboard';
 import AdminAppointments from '../pages/admin/Appointments';
 import AdminAvailability from '../pages/admin/Availability';
+import AdminDocuments from '../pages/admin/Documents';
+import AdminClients from '../pages/admin/Clients';
 
 export default function AppRoutes() {
   return (
@@ -26,6 +28,8 @@ export default function AppRoutes() {
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
         <Route path="/admin/appointments" element={<AdminAppointments />} />
         <Route path="/admin/availability" element={<AdminAvailability />} />
+        <Route path="/admin/documents" element={<AdminDocuments />} />
+        <Route path="/admin/clients" element={<AdminClients />} />
       </Routes>
     </BrowserRouter>
   );

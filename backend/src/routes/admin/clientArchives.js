@@ -8,9 +8,6 @@ router.get('/', clientArchiveController.listAll);
 // GET /api/admin/archives/search - search archives by name or case type
 router.get('/search', clientArchiveController.search);
 
-// GET /api/admin/archives/:id - get single archive by ID
-router.get('/:id', clientArchiveController.getById);
-
 // GET /api/admin/archives/client/:clientId - get archive by client ID
 router.get('/client/:clientId', clientArchiveController.getByClientId);
 
@@ -23,8 +20,11 @@ router.post('/', clientArchiveController.create);
 // POST /api/admin/archives/from-user/:userId - create archive from existing user
 router.post('/from-user/:userId', clientArchiveController.createFromUser);
 
+// GET /api/admin/archives/:id - get single archive by ID
+router.get('/:id', clientArchiveController.getById);
+
 // PUT /api/admin/archives/:id - update archive
-router. put('/:id', clientArchiveController.update);
+router.put('/:id', clientArchiveController.update);
 
 // POST /api/admin/archives/:id/cases - add new case to archive
 router.post('/:id/cases', clientArchiveController.addCase);
@@ -33,7 +33,7 @@ router.post('/:id/cases', clientArchiveController.addCase);
 router.put('/:id/cases/:caseId', clientArchiveController.updateCase);
 
 // POST /api/admin/archives/:id/cases/:caseId/documents - add document to case
-router.post('/:id/cases/: caseId/documents', clientArchiveController.addDocumentToCase);
+router.post('/:id/cases/:caseId/documents', clientArchiveController.addDocumentToCase);
 
 // PUT /api/admin/archives/:id/archive - archive/deactivate client
 router.put('/:id/archive', clientArchiveController.archiveClient);

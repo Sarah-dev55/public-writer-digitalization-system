@@ -3,7 +3,6 @@ const router = express.Router();
 const User = require('../../models/User');
 const Document = require('../../models/Document');
 const Appointment = require('../../models/Appointment');
-const { v4: uuidv4 } = require('uuid'); // npm install uuid
 
 // Get case status
 router.get('/case-status/:userId', async (req, res) => {
@@ -156,6 +155,48 @@ router.get('/:id', async (req, res) => {
 
 // Create new user
 router.post('/', async (req, res) => {
+<<<<<<< HEAD
+  try {
+    const { fullName, email, phone, password } = req.body;
+
+    if (!fullName || !email) {
+      return res.status(400).json({ message: 'fullName and email are required' });
+    }
+
+    // If password is provided, encourage using /api/auth/signup instead.
+    if (password) {
+      return res.status(400).json({
+        message: 'Use /api/auth/signup to create an account with a password.'
+      });
+    }
+
+    const existing = await User.findOne({ email: String(email).toLowerCase().trim() });
+    if (existing) {
+      return res.status(400).json({ message: 'Email already registered' });
+    }
+
+    const user = await User.create({
+      fullName,
+      email: String(email).toLowerCase().trim(),
+      phone,
+      role: 'public_writer'
+    });
+
+    // Create checklist and link it
+    const Checklist = require('../../models/Checklist');
+    const checklist = await Checklist.create({
+      title: `Checklist - ${user.fullName}`,
+      userId: user._id,
+      items: []
+    });
+
+    user.checklistId = checklist._id;
+    await user.save();
+
+    return res.status(201).json(user);
+  } catch (error) {
+    return res.status(400).json({ message: error.message });
+=======
   const user = new User({
     _id: uuidv4(),
     fullName: req.body.fullName,
@@ -169,6 +210,7 @@ router.post('/', async (req, res) => {
     res.status(201).json(newUser);
   } catch (error) {
     res.status(400).json({ message: error.message });
+>>>>>>> develop
   }
 });
 

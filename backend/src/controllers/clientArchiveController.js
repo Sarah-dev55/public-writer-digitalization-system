@@ -49,50 +49,84 @@ async function getByClientId(req, res) {
   }
 }
 
-// Search archives by client name or case type
+// Search archives by client name, case type, or document/file name.
+//
+// Supported query params:
+// - query: free-text search across clientName, clientEmail, caseHistory.caseType,
+//          caseHistory.description, and populated document.name / document.fileName
+// - caseType: filter by case type (regex, case-insensitive)
+// - status: filter by caseHistory.status
+// - startDate/endDate: filter by caseHistory.startDate range
 async function search(req, res) {
   try {
     const { query, caseType, status, startDate, endDate } = req.query;
-    
-    let searchCriteria = {};
-    
-    // Text search for client name or case description
-    if (query) {
-      searchCriteria.$or = [
-        { clientName: { $regex: query, $options: 'i' } },
-        { clientEmail: { $regex: query, $options: 'i' } },
-        { 'caseHistory.caseType': { $regex: query, $options: 'i' } },
-        { 'caseHistory.description': { $regex: query, $options: 'i' } }
-      ];
-    }
-    
+
+    // NOTE: Because documents are referenced and stored in a separate collection,
+    // we can't reliably search document.name / document.fileName with a simple
+    // ClientArchive.find() filter. We therefore:
+    //   1) apply DB-level filters that *do* exist on ClientArchive
+    //   2) populate documents
+    //   3) apply a final in-memory filter for free-text "query" across both
+    //      archive fields and populated documents.
+
+    const baseCriteria = {};
+
     // Filter by case type
     if (caseType) {
-      searchCriteria['caseHistory.caseType'] = { $regex: caseType, $options:  'i' };
+      baseCriteria['caseHistory.caseType'] = { $regex: caseType, $options: 'i' };
     }
-    
+
     // Filter by case status
     if (status) {
-      searchCriteria['caseHistory.status'] = status;
+      baseCriteria['caseHistory.status'] = status;
     }
-    
+
     // Filter by date range
     if (startDate || endDate) {
-      searchCriteria['caseHistory.startDate'] = {};
+      baseCriteria['caseHistory.startDate'] = {};
       if (startDate) {
-        searchCriteria['caseHistory.startDate'].$gte = new Date(startDate);
+        baseCriteria['caseHistory.startDate'].$gte = new Date(startDate);
       }
       if (endDate) {
-        searchCriteria['caseHistory.startDate'].$lte = new Date(endDate);
+        baseCriteria['caseHistory.startDate'].$lte = new Date(endDate);
       }
     }
-    
-    const archives = await ClientArchive.find(searchCriteria)
+
+    let archives = await ClientArchive.find(baseCriteria)
       .populate('clientId', 'fullName email phone')
       .populate('caseHistory.documents')
       .populate('caseHistory.appointments')
       .sort({ updatedAt: -1 });
-    
+
+    // Free-text filtering (includes document name + fileName).
+    if (query && String(query).trim().length > 0) {
+      const q = String(query).trim().toLowerCase();
+
+      const contains = (val) => {
+        if (val === null || val === undefined) return false;
+        return String(val).toLowerCase().includes(q);
+      };
+
+      archives = archives.filter((archive) => {
+        // Archive-level fields
+        if (contains(archive.clientName) || contains(archive.clientEmail)) return true;
+
+        // Case-level fields
+        const cases = Array.isArray(archive.caseHistory) ? archive.caseHistory : [];
+        for (const c of cases) {
+          if (contains(c.caseType) || contains(c.description)) return true;
+
+          // Document-level fields (populated)
+          const docs = Array.isArray(c.documents) ? c.documents : [];
+          for (const d of docs) {
+            if (contains(d?.name) || contains(d?.fileName)) return true;
+          }
+        }
+
+        return false;
+      });
+    }
+
     res.json({ success: true, data: archives, count: archives.length });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
