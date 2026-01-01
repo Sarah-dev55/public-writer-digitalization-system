@@ -28,6 +28,9 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 // Import Routes
 // =====================
 
+// Auth routes
+const authRoutes = require('./routes/auth');
+
 // Client routes
 const clientUserRoutes = require('./routes/client/users');
 const clientAppointmentRoutes = require('./routes/client/appointments');
@@ -51,6 +54,9 @@ const mrMensurRoutes = require('./routes/mrMensur');
 // =====================
 // API Routes
 // =====================
+
+// Auth API
+app.use('/api/auth', authRoutes);
 
 // Client-facing API
 app.use('/api/client/users', clientUserRoutes);
