@@ -1,5 +1,6 @@
 import React, { useContext } from "react";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 import { Button } from "../../../components/ui/button";
 import { AuthContext } from "../../../context/AuthContext";
 import UnifiedHeader from "../../../components/layout/UnifiedHeader";
@@ -7,7 +8,8 @@ import LanguageSwitcher from "../../../components/common/LanguageSwitcher";
 
 export const HeaderSection = () => {
   const { t } = useTranslation();
-  const { requireAuth, isAuthenticated } = useContext(AuthContext);
+  const navigate = useNavigate();
+  const { requireAuth, isAuthenticated, logout } = useContext(AuthContext);
 
   const navItems = [
     { label: t('navigation.home'), active: true, href: "#home" },
@@ -27,9 +29,7 @@ export const HeaderSection = () => {
     if (isAuthenticated) {
       window.location.href = "/client/overview";
     } else {
-      requireAuth(() => {
-        window.location.href = "/client/overview";
-      });
+      navigate("/login");
     }
   };
 
@@ -80,9 +80,30 @@ export const HeaderSection = () => {
 
               {/* CTA Buttons */}
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 px-2 sm:px-0">
-                <Button onClick={() => requireAuth(() => alert('Open booking flow'))} className="px-5 sm:px-6 py-2 sm:py-2.5 bg-app-primary hover:bg-app-primary/90 rounded-full h-auto text-xs sm:text-sm font-semibold text-app-text-light">
+                <Button 
+                  onClick={() => requireAuth(() => alert('Open booking flow'))} 
+                  className="px-5 sm:px-6 py-2 sm:py-2.5 bg-app-primary hover:bg-app-primary/90 rounded-full h-auto text-xs sm:text-sm font-semibold text-app-text-light"
+                >
                   {t('common.submit')}
                 </Button>
+                
+                {/* Auth Links */}
+                {!isAuthenticated && (
+                  <div className="flex gap-2 flex-col sm:flex-row">
+                    <Button 
+                      onClick={() => navigate("/login")}
+                      className="px-5 sm:px-6 py-2 sm:py-2.5 bg-app-secondary/80 hover:bg-app-secondary rounded-full h-auto text-xs sm:text-sm font-semibold text-app-text-light"
+                    >
+                      {t('navigation.login')}
+                    </Button>
+                    <Button 
+                      onClick={() => navigate("/signup")}
+                      className="px-5 sm:px-6 py-2 sm:py-2.5 bg-app-accent/80 hover:bg-app-accent rounded-full h-auto text-xs sm:text-sm font-semibold text-app-text-light"
+                    >
+                      {t('navigation.signup')}
+                    </Button>
+                  </div>
+                )}
               </div>
             </div>
           </div>

@@ -4,6 +4,7 @@ import { Download, Eye, Upload, Trash2, RefreshCw } from 'lucide-react';
 import { uploadDocument, updateDocument, listDocumentsByUser, deleteDocument } from '../../services/documentService';
 import api from '../../services/api';
 import ConfirmationDialog from '../common/ConfirmationDialog';
+import useAuth from '../../hooks/useAuth';
 
 // Status Badge Component (palette aligned with overview/header)
 const StatusBadge = ({ status }) => {
@@ -180,16 +181,17 @@ const StatusCard = ({ title, count, color }) => {
 
 // Main Document Management Component
 const DocumentManagement = () => {
-  // Temporary userId until authentication is implemented
-  const userId = '692cb332a4ba90e0b2dcb02f';
+  const { user } = useAuth();
+  const userId = (user && (user._id || user.id)) || null;
   
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Fetch documents on mount
+  // Fetch documents on mount (after auth)
   useEffect(() => {
+    if (!userId) return;
     fetchDocuments();
-  }, []);
+  }, [userId]);
 
   const fetchDocuments = async () => {
     try {

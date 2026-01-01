@@ -1,7 +1,12 @@
 import api from './api';
 
 export async function login(credentials) {
-  const res = await api.post('/auth/login', credentials);
+  const res = await api.post('/auth/signin', credentials);
+  return res.data; // expected { success, token, data }
+}
+
+export async function signup(payload) {
+  const res = await api.post('/auth/signup', payload);
   return res.data;
 }
 

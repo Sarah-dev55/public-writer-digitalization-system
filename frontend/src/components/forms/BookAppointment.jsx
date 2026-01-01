@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Calendar, Clock, X } from 'lucide-react';
 import { getAllNoWorkDays } from '../../services/clientNoWorkDayService';
 import { getAppointmentsByDate, createAppointment, updateAppointment } from '../../services/clientAppointmentService';
+import useAuth from '../../hooks/useAuth';
 
 const Book_model = ({ isOpen, onClose, mode = 'create', appointment = null }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -12,6 +13,7 @@ const Book_model = ({ isOpen, onClose, mode = 'create', appointment = null }) =>
   const [noWorkDays, setNoWorkDays] = useState([]);
   const [notAvailableDates, setNotAvailableDates] = useState([]);
   const [bookedSlots, setBookedSlots] = useState([]);
+  const { user } = useAuth();
 
   // Appointment types
   const appointmentTypes = [
@@ -175,12 +177,19 @@ const Book_model = ({ isOpen, onClose, mode = 'create', appointment = null }) =>
   const handleConfirm = async () => {
     if (!selectedDate || !selectedTimeSlot || !appointmentType) return;
 
+    const userId = (user && (user._id || user.id)) || null;
+
+    if (!userId) {
+      alert('You must be logged in to book an appointment');
+      return;
+    }
+
     const payload = {
       date: formatDate(selectedDate),
       timeSlot: selectedTimeSlot,
       notes: additionalNotes,
       appointmentType,
-      userId: '692cb332a4ba90e0b2dcb02f'
+      userId
     };
 
     try {

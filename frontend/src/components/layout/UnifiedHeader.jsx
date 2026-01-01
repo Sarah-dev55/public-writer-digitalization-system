@@ -33,7 +33,7 @@ export const UnifiedHeader = ({
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileModalOpen, setProfileModalOpen] = useState(false);
-  const { requireAuth, isAuthenticated, logout } = useContext(AuthContext);
+  const { requireAuth, isAuthenticated, logout, updateProfile, reloadUser } = useContext(AuthContext);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -116,7 +116,10 @@ export const UnifiedHeader = ({
             {showUser && user && (
               <div className="flex items-center gap-3">
                 <button
-                  onClick={() => setProfileModalOpen(true)}
+                  onClick={() => {
+                    if (reloadUser) reloadUser();
+                    setProfileModalOpen(true);
+                  }}
                   className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-app-primary overflow-hidden flex items-center justify-center cursor-pointer hover:ring-2 hover:ring-app-accent transition-all"
                   aria-label="View Profile"
                 >
@@ -214,12 +217,11 @@ export const UnifiedHeader = ({
           open={profileModalOpen}
           onClose={() => setProfileModalOpen(false)}
           user={user}
-          onUpdate={(updatedData) => {
-            // Handle profile update
-            console.log("Profile updated:", updatedData);
-            // You can add API call here to update user data
+          onUpdate={async (updatedData) => {
+            await updateProfile(updatedData);
             setProfileModalOpen(false);
           }}
+          reloadUser={reloadUser}
           onLogout={() => {
             if (logout) {
               logout();

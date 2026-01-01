@@ -12,6 +12,8 @@ import AdminAppointments from '../pages/admin/Appointments';
 import AdminAvailability from '../pages/admin/Availability';
 import AdminDocuments from '../pages/admin/Documents';
 import AdminClients from '../pages/admin/Clients';
+import PrivateRoute from './PrivateRoute';
+import AdminRoute from './AdminRoute';
 
 export default function AppRoutes() {
   return (
@@ -21,15 +23,18 @@ export default function AppRoutes() {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<SignUp />} />
         <Route path="/services" element={<Services />} />
-        <Route path="/client/overview" element={<ClientOverview />} />
-        <Route path="/client/appointments" element={<Appointments />} />
-        <Route path="/client/documents" element={<ClientDocuments />} />
+        
+        {/* Client Routes - Protected */}
+        <Route path="/client/overview" element={<PrivateRoute><ClientOverview /></PrivateRoute>} />
+        <Route path="/client/appointments" element={<PrivateRoute><Appointments /></PrivateRoute>} />
+        <Route path="/client/documents" element={<PrivateRoute><ClientDocuments /></PrivateRoute>} />
 
-        <Route path="/admin/dashboard" element={<AdminDashboard />} />
-        <Route path="/admin/appointments" element={<AdminAppointments />} />
-        <Route path="/admin/availability" element={<AdminAvailability />} />
-        <Route path="/admin/documents" element={<AdminDocuments />} />
-        <Route path="/admin/clients" element={<AdminClients />} />
+        {/* Admin Routes - Protected */}
+        <Route path="/admin/dashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+        <Route path="/admin/appointments" element={<AdminRoute><AdminAppointments /></AdminRoute>} />
+        <Route path="/admin/availability" element={<AdminRoute><AdminAvailability /></AdminRoute>} />
+        <Route path="/admin/documents" element={<AdminRoute><AdminDocuments /></AdminRoute>} />
+        <Route path="/admin/clients" element={<AdminRoute><AdminClients /></AdminRoute>} />
       </Routes>
     </BrowserRouter>
   );

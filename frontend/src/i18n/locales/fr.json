@@ -60,7 +60,8 @@
     "checklist": "Liste de contrôle",
     "users": "Utilisateurs",
     "availability": "Disponibilité",
-    "admin": "Panneau d'administration"
+    "admin": "Panneau d'administration",
+    "adminDashboard": "Tableau de bord Admin"
   },
   "auth": {
     "email": "Email",

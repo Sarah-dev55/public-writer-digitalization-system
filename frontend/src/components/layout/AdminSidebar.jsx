@@ -1,98 +1,115 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
+import useAuth from '../../hooks/useAuth';
 import { useTranslation } from 'react-i18next';
+import { Home, Calendar, FileText, Clock, Users, Settings, LogOut } from 'lucide-react';
 
-export default function AdminSidebar() {
+/**
+ * AdminSidebar: Admin-side navigation menu
+ * Shows only admin-related menu items
+ */
+export default function AdminSidebar({ user }) {
+  const { logout } = useAuth();
+  const navigate = useNavigate();
   const { t } = useTranslation();
-  
-  const items = [
-    { label: t('admin.dashboard'), href: '/admin/dashboard', icon: 'dashboard', active: true },
-    { label: t('navigation.appointments'), href: '/admin/appointments', icon: 'calendar' },
-    { label: t('navigation.documents'), href: '/admin/documents', icon: 'file' },
-    { label: t('admin.availability'), href: '/admin/availability', icon: 'availability' },
-    { label: t('admin.clients'), href: '/admin/clients', icon: 'users' },
-    { label: t('common.settings'), href: '/admin/settings', icon: 'settings' },
+  const location = useLocation();
+
+  // Check if path is active
+  const isActive = (path) => location.pathname === path;
+
+  // Admin-only menu items
+  const menuItems = [
+    {
+      label: t('admin.dashboard') || 'Dashboard',
+      icon: Home,
+      href: '/admin/dashboard',
+      path: '/admin/dashboard'
+    },
+    {
+      label: t('navigation.appointments') || 'Appointments',
+      icon: Calendar,
+      href: '/admin/appointments',
+      path: '/admin/appointments'
+    },
+    {
+      label: t('navigation.documents') || 'Documents',
+      icon: FileText,
+      href: '/admin/documents',
+      path: '/admin/documents'
+    },
+    {
+      label: t('admin.availability') || 'Availability',
+      icon: Clock,
+      href: '/admin/availability',
+      path: '/admin/availability'
+    },
+    {
+      label: t('admin.clients') || 'Clients',
+      icon: Users,
+      href: '/admin/clients',
+      path: '/admin/clients'
+    },
+    {
+      label: t('common.settings') || 'Settings',
+      icon: Settings,
+      href: '/admin/settings',
+      path: '/admin/settings'
+    }
   ];
 
-  const Icon = ({ name }) => {
-    switch (name) {
-      case 'dashboard':
-        return (
-          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-            <rect x="3" y="3" width="7" height="7" strokeWidth="1.5" stroke="#fff"/>
-            <rect x="14" y="3" width="7" height="4" strokeWidth="1.5" stroke="#fff"/>
-            <rect x="14" y="11" width="7" height="10" strokeWidth="1.5" stroke="#fff"/>
-            <rect x="3" y="11" width="7" height="7" strokeWidth="1.5" stroke="#fff"/>
-          </svg>
-        );
-      case 'calendar':
-        return (
-          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="#fff">
-            <rect x="3" y="4" width="18" height="18" rx="2" strokeWidth="1.5" />
-            <path d="M16 2v4M8 2v4" strokeWidth="1.5" />
-            <path d="M3 10h18" strokeWidth="1.5" />
-          </svg>
-        );
-      case 'file':
-        return (
-          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="#fff">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" strokeWidth="1.5" />
-            <path d="M14 2v6h6" strokeWidth="1.5" />
-          </svg>
-        );
-      case 'users':
-        return (
-          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="#fff">
-            <path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2" strokeWidth="1.5" />
-            <circle cx="9" cy="7" r="4" strokeWidth="1.5" />
-            <path d="M23 21v-2a4 4 0 0 0-3-3.87" strokeWidth="1.5" />
-            <path d="M16 3.13a4 4 0 0 1 0 7.75" strokeWidth="1.5" />
-          </svg>
-        );
-      case 'settings':
-        return (
-          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="#fff">
-            <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z" strokeWidth="1.5" />
-            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09c.68 0 1.24-.42 1.51-1a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06c.46.46 1.08.67 1.72.52.63-.15 1.16-.6 1.4-1.2.24-.6.06-1.27-.45-1.77L8.66 2.34A2 2 0 0 1 11.49.5l.06.06c.46.46 1.08.67 1.72.52.63-.15 1.16-.6 1.4-1.2.24-.6.06-1.27-.45-1.77" strokeWidth="0.8" />
-          </svg>
-        );
-      case 'availability':
-        return (
-          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="#fff">
-            <rect x="3" y="4" width="18" height="18" rx="2" strokeWidth="1.5" />
-            <path d="M16 2v4M8 2v4" strokeWidth="1.5" />
-            <path d="M3 10h18" strokeWidth="1.5" />
-            <path d="M7 14l2 2 4-4" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        );
-      default:
-        return null;
-    }
-  };
-
   return (
-    <aside className="fixed left-0 top-0 h-full w-64 bg-[#31493d] text-white shadow-lg z-40">
-      <div className="p-6 border-b border-white/10">
-        <div className="w-12 h-12 bg-[#3f5d4e] rounded-lg flex items-center justify-center">
-          <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none">
-            <path d="M3 6h18v12H3z" fill="#fff" opacity="0.06" />
-          </svg>
-        </div>
+    <aside className="w-64 bg-gradient-to-b from-slate-800 to-slate-900 text-white min-h-screen flex flex-col fixed h-full left-0 top-0 shadow-xl z-40">
+      {/* Logo Section */}
+      <div className="p-6 border-b border-slate-700">
+        <h2 className="text-xl font-bold text-white flex items-center gap-2">
+          <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center text-white font-bold">
+            A
+          </div>
+          Admin Panel
+        </h2>
+        <p className="text-sm text-slate-400 mt-2">
+          {user?.fullName || 'Administrator'}
+        </p>
       </div>
 
-      <nav className="px-4 py-6 space-y-2">
-        {items.map((it) => (
-          <Link key={it.label} to={it.href} className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${it.active ? 'bg-white/10 text-white' : 'text-white/70 hover:bg-white/5'}`}>
-            <Icon name={it.icon} />
-            <span className="font-medium">{it.label}</span>
-          </Link>
-        ))}
+      {/* Navigation Menu */}
+      <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+        {menuItems.map((item) => {
+          const Icon = item.icon;
+          const active = isActive(item.path);
+          
+          return (
+            <a
+              key={item.path}
+              href={item.href}
+              className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+                active
+                  ? 'bg-blue-600 text-white shadow-md font-semibold'
+                  : 'text-slate-300 hover:bg-slate-700 hover:text-white'
+              }`}
+            >
+              <Icon className="w-5 h-5" />
+              <span>{item.label}</span>
+            </a>
+          );
+        })}
       </nav>
 
-      <div className="absolute bottom-6 w-full px-4">
-        <button className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-white/70 hover:bg-white/5">
-          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="#fff"><path d="M9 21H5a2 2 0 0 1-2-2V7" strokeWidth="1.5" /><path d="M16 17l5-5-5-5" strokeWidth="1.5" /><path d="M21 12H9" strokeWidth="1.5" /></svg>
-          Logout
+      {/* Logout Section */}
+      <div className="p-4 border-t border-slate-700">
+        <button
+          onClick={async () => {
+            try {
+              await logout();
+              navigate('/');
+            } catch (error) {
+              console.error('Logout failed', error);
+            }
+          }}
+          className="flex items-center gap-3 w-full px-4 py-3 rounded-lg text-slate-300 hover:bg-slate-700 hover:text-white transition-all duration-200"
+        >
+          <LogOut className="w-5 h-5" />
+          <span>{t('common.logout') || 'Logout'}</span>
         </button>
       </div>
     </aside>

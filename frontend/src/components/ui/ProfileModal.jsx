@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { X, User, Settings, Bell, LogOut, ChevronRight, Pencil } from "lucide-react";
 import { Button } from "./button";
+import { getErrorMessage } from "../../utils/errorUtils";
 
-export const ProfileModal = ({ open, onClose, user, onUpdate, onLogout }) => {
+export const ProfileModal = ({ open, onClose, user, onUpdate, onLogout, reloadUser }) => {
   const [activeView, setActiveView] = useState("profile"); // "profile" or "settings"
   const [isEditing, setIsEditing] = useState(false);
   const [notificationStatus, setNotificationStatus] = useState("Allow");
@@ -14,19 +15,40 @@ export const ProfileModal = ({ open, onClose, user, onUpdate, onLogout }) => {
     location: "",
   });
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(false);
+  const [error, setError] = useState(null);
   const [theme, setTheme] = useState("Light");
   const [language, setLanguage] = useState("Eng");
 
   useEffect(() => {
-    if (user) {
+    if (user && open) {
       setFormData({
-        name: user.name || "",
+        name: user.name || user.fullName || "",
         email: user.email || "",
         phone: user.phone || "",
         location: user.location || "",
       });
     }
-  }, [user]);
+  }, [user, open]);
+
+  // Fetch fresh data when opened
+  useEffect(() => {
+    if (open && user?.id || user?._id) {
+      const fetchFreshData = async () => {
+        setInitialLoading(true);
+        try {
+          if (reloadUser) {
+            await reloadUser();
+          }
+        } catch (error) {
+          console.error("Error fetching fresh user data:", error);
+        } finally {
+          setInitialLoading(false);
+        }
+      };
+      fetchFreshData();
+    }
+  }, [open, user?.id, user?._id]);
 
   if (!open) return null;
 
@@ -36,11 +58,15 @@ export const ProfileModal = ({ open, onClose, user, onUpdate, onLogout }) => {
     try {
       await new Promise((resolve) => setTimeout(resolve, 700));
       if (onUpdate) {
-        onUpdate(formData);
+        // Map 'name' to 'fullName' for backend compatibility if needed
+        const payload = { ...formData, fullName: formData.name };
+        await onUpdate(payload);
       }
       setIsEditing(false);
+      setError(null);
     } catch (error) {
       console.error("Failed to update profile", error);
+      setError(getErrorMessage(error));
     } finally {
       setLoading(false);
     }
@@ -53,7 +79,7 @@ export const ProfileModal = ({ open, onClose, user, onUpdate, onLogout }) => {
   const handleCancel = () => {
     if (user) {
       setFormData({
-        name: user.name || "",
+        name: user.name || user.fullName || "",
         email: user.email || "",
         phone: user.phone || "",
         location: user.location || "",
@@ -105,14 +131,14 @@ export const ProfileModal = ({ open, onClose, user, onUpdate, onLogout }) => {
             <div className="mb-6">
               <div className="w-20 h-20 rounded-full bg-app-primary overflow-hidden flex items-center justify-center mx-auto mb-4 shadow-lg ring-2 ring-app-accent/20">
                 <div className="w-full h-full flex items-center justify-center bg-app-primary text-app-accent font-bold text-2xl">
-                  {getUserInitials(user?.name)}
+                  {getUserInitials(user?.name || user?.fullName)}
                 </div>
               </div>
               <h3 className="text-center font-semibold text-app-primary text-lg mb-1">
-                {user?.name || "Your name"}
+                {user?.name || user?.fullName || "Your name"}
               </h3>
               <p className="text-center text-sm text-gray-600">
-                {user?.email || "yourname@gmail.com"}
+                {user?.email || ""}
               </p>
             </div>
 
@@ -213,12 +239,19 @@ export const ProfileModal = ({ open, onClose, user, onUpdate, onLogout }) => {
               <div className="h-full">
                 <h2 className="text-xl font-bold text-app-primary mb-6">My Profile</h2>
 
+                {initialLoading ? (
+                  <div className="flex flex-col items-center justify-center py-10">
+                    <div className="w-10 h-10 border-4 border-app-primary border-t-transparent rounded-full animate-spin mb-4"></div>
+                    <p className="text-gray-500 animate-pulse">Fetching latest information...</p>
+                  </div>
+                ) : (
+                  <>
                 {/* Profile Header */}
                 <div className="flex items-center gap-4 mb-6 pb-6 border-b border-gray-200">
                   <div className="relative">
                     <div className="w-20 h-20 rounded-full bg-app-primary overflow-hidden flex items-center justify-center shadow-lg ring-2 ring-app-accent/20">
                       <div className="w-full h-full flex items-center justify-center bg-app-primary text-app-accent font-bold text-2xl">
-                        {getUserInitials(formData.name || user?.name)}
+                        {getUserInitials(formData.name || user?.name || user?.fullName)}
                       </div>
                     </div>
                     {isEditing && (
@@ -235,16 +268,21 @@ export const ProfileModal = ({ open, onClose, user, onUpdate, onLogout }) => {
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold text-app-primary mb-1">
-                      {formData.name || user?.name || "Your name"}
+                      {formData.name || user?.name || user?.fullName || "Your name"}
                     </h3>
                     <p className="text-sm text-gray-600">
-                      {formData.email || user?.email || "yourname@gmail.com"}
+                      {formData.email || user?.email || ""}
                     </p>
                   </div>
                 </div>
 
                 {/* Profile Form */}
                 <form onSubmit={handleSubmit} className="space-y-4">
+                  {error && (
+                    <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm mb-4">
+                      {error}
+                    </div>
+                  )}
                   <div>
                     <label className="block text-sm font-semibold text-app-primary mb-2">
                       Name
@@ -255,12 +293,12 @@ export const ProfileModal = ({ open, onClose, user, onUpdate, onLogout }) => {
                         value={formData.name}
                         onChange={(e) => handleChange("name", e.target.value)}
                         className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-app-primary focus:border-app-primary transition-all text-sm"
-                        placeholder="your name"
+                        placeholder="Enter your name"
                         required
                       />
                     ) : (
                       <p className="p-2 bg-app-accent/30 rounded-lg text-gray-700 border border-gray-200 text-sm">
-                        {formData.name || "your name"}
+                        {formData.name || user?.name || user?.fullName || ""}
                       </p>
                     )}
                   </div>
@@ -275,12 +313,12 @@ export const ProfileModal = ({ open, onClose, user, onUpdate, onLogout }) => {
                         value={formData.email}
                         onChange={(e) => handleChange("email", e.target.value)}
                         className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-app-primary focus:border-app-primary transition-all text-sm"
-                        placeholder="yourname@gmail.com"
+                        placeholder="Enter your email"
                         required
                       />
                     ) : (
                       <p className="p-2 bg-app-accent/30 rounded-lg text-gray-700 border border-gray-200 text-sm">
-                        {formData.email || "yourname@gmail.com"}
+                        {formData.email || user?.email || ""}
                       </p>
                     )}
                   </div>
@@ -295,11 +333,11 @@ export const ProfileModal = ({ open, onClose, user, onUpdate, onLogout }) => {
                         value={formData.phone}
                         onChange={(e) => handleChange("phone", e.target.value)}
                         className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-app-primary focus:border-app-primary transition-all text-sm"
-                        placeholder="Add number"
+                        placeholder="Enter phone number"
                       />
                     ) : (
                       <p className="p-2 bg-app-accent/30 rounded-lg text-gray-700 border border-gray-200 text-sm">
-                        {formData.phone || "Add number"}
+                        {formData.phone || ""}
                       </p>
                     )}
                   </div>
@@ -314,11 +352,11 @@ export const ProfileModal = ({ open, onClose, user, onUpdate, onLogout }) => {
                         value={formData.location}
                         onChange={(e) => handleChange("location", e.target.value)}
                         className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-app-primary focus:border-app-primary transition-all text-sm"
-                        placeholder="USA"
+                        placeholder="Enter location"
                       />
                     ) : (
                       <p className="p-2 bg-app-accent/30 rounded-lg text-gray-700 border border-gray-200 text-sm">
-                        {formData.location || "USA"}
+                        {formData.location || ""}
                       </p>
                     )}
                   </div>
@@ -354,6 +392,8 @@ export const ProfileModal = ({ open, onClose, user, onUpdate, onLogout }) => {
                     )}
                   </div>
                 </form>
+                </>
+                )}
               </div>
             ) : (
               <div className="h-full">

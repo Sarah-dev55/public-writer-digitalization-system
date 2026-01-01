@@ -60,7 +60,8 @@
     "checklist": "Checklist",
     "users": "Users",
     "availability": "Availability",
-    "admin": "Admin Panel"
+    "admin": "Admin Panel",
+    "adminDashboard": "Admin Dashboard"
   },
   "auth": {
     "email": "Email",

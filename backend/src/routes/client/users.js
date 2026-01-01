@@ -155,7 +155,6 @@ router.get('/:id', async (req, res) => {
 
 // Create new user
 router.post('/', async (req, res) => {
-<<<<<<< HEAD
   try {
     const { fullName, email, phone, password } = req.body;
 
@@ -196,21 +195,6 @@ router.post('/', async (req, res) => {
     return res.status(201).json(user);
   } catch (error) {
     return res.status(400).json({ message: error.message });
-=======
-  const user = new User({
-    _id: uuidv4(),
-    fullName: req.body.fullName,
-    email: req.body.email,
-    phone: req.body.phone,
-    checklistId: req.body.checklistId || uuidv4()
-  });
-
-  try {
-    const newUser = await user.save();
-    res.status(201).json(newUser);
-  } catch (error) {
-    res.status(400).json({ message: error.message });
->>>>>>> develop
   }
 });
 

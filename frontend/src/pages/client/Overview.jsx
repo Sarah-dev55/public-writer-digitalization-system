@@ -15,6 +15,7 @@ import { getUserAppointments, deleteAppointment } from '../../services/clientApp
 import { getCaseStatus } from '../../services/clientUserService';
 import { getUserNotifications, markNotificationAsRead, markAllNotificationsAsRead } from '../../services/notificationService';
 import api from '../../services/api';
+import useAuth from '../../hooks/useAuth';
 
 export default function ClientDashboard() {
   const { t } = useTranslation();
@@ -37,11 +38,12 @@ export default function ClientDashboard() {
   });
   const navigate = useNavigate();
 
-  // Temporary userId until authentication is implemented
-  const userId = '692cb332a4ba90e0b2dcb02f';
+  const { user } = useAuth();
+  const userId = (user && (user._id || user.id)) || null;
 
   // Fetch data on component mount
   useEffect(() => {
+    if (!userId) return; // wait for authenticated user
     fetchAppointments();
     fetchDocuments();
     fetchCaseStatus();
@@ -242,11 +244,6 @@ export default function ClientDashboard() {
     { label: "How It Works", active: false, href: '/#how-it-works' },
   ];
 
-  const testUser = {
-    name: "Sarah Smith",
-    avatar: null
-  };
-
   return (
     <div className="min-h-screen bg-app-accent">
       {/* Header and Hero Section Container */}
@@ -263,7 +260,7 @@ export default function ClientDashboard() {
           ctaButtonText="Get Started"
           ctaButtonOnClick={() => navigate('/client/dashboard')}
           showUser={true}
-          user={testUser}
+          user={user}
           navClassName="bg-transparent"
           contactBarClassName="bg-app-primary/90"
           showCtaButton={false}

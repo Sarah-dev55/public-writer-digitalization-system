@@ -6,7 +6,7 @@ import UnifiedHeader from "../../../components/layout/UnifiedHeader";
 
 export const HeaderSection = () => {
   const { t } = useTranslation();
-  const { requireAuth, isAuthenticated } = useContext(AuthContext);
+  const { requireAuth, isAuthenticated, user } = useContext(AuthContext);
 
   const navItems = [
     { label: t('navigation.home'), active: true, href: "#home" },
@@ -23,13 +23,35 @@ export const HeaderSection = () => {
   };
 
   const handleCtaClick = () => {
-    if (isAuthenticated) {
-      window.location.href = "/client/overview";
-    } else {
-      requireAuth(() => {
+    if (isAuthenticated && user) {
+      // Redirect based on user role
+      if (user.role === 'admin') {
+        window.location.href = "/admin/dashboard";
+      } else {
         window.location.href = "/client/overview";
+      }
+    } else {
+      // Not authenticated, open login modal
+      requireAuth(() => {
+        // After login, redirect based on role
+        if (user && user.role === 'admin') {
+          window.location.href = "/admin/dashboard";
+        } else {
+          window.location.href = "/client/overview";
+        }
       });
     }
+  };
+
+  // Determine CTA button text based on auth status and role
+  const getCtaButtonText = () => {
+    if (!isAuthenticated) {
+      return t('navigation.login');
+    }
+    if (user?.role === 'admin') {
+      return t('navigation.adminDashboard') || 'Admin Dashboard';
+    }
+    return t('navigation.dashboard') || 'My Dashboard';
   };
 
   return (
@@ -44,7 +66,7 @@ export const HeaderSection = () => {
         navItems={navItems}
         logoImage="/assets/images/Logo.png"
         logoOnClick={() => handleNavClick("#home")}
-        ctaButtonText={isAuthenticated ? t('navigation.dashboard') : t('navigation.login')}
+        ctaButtonText={getCtaButtonText()}
         ctaButtonOnClick={handleCtaClick}
         navClassName="bg-transparent"
         showCtaButton={true}

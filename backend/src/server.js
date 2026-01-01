@@ -46,6 +46,7 @@ const adminChecklistRoutes = require('./routes/admin/checklists');
 const adminDocumentRoutes = require('./routes/admin/documents');
 const availabilityRoutes = require('./routes/admin/availability');
 const clientArchiveRoutes = require('./routes/admin/clientArchives');
+const { verifyToken, requireRole } = require('./middleware/auth');
 
 // Other functional routes
 const mrMensurRoutes = require('./routes/mrMensur');
@@ -66,13 +67,14 @@ app.use('/api/client/noworkdays', clientNoWorkDayRoutes);
 app.use('/api/client/documents', clientDocumentRoutes);
 app.use('/api/client/notifications', clientNotificationRoutes);
 
-// Admin-facing API (Public Writer)
-app.use('/api/admin/users', adminUserRoutes);
-app.use('/api/admin/appointments', adminAppointmentRoutes);
-app.use('/api/admin/checklists', adminChecklistRoutes);
-app.use('/api/admin/documents', adminDocumentRoutes);
-app.use('/api/admin/availability', availabilityRoutes);
-app.use('/api/admin/archives', clientArchiveRoutes);
+// Admin-facing API (Admin only)
+// Protect admin routes with JWT and role check (allow only 'admin')
+app.use('/api/admin/users', verifyToken, requireRole('admin'), adminUserRoutes);
+app.use('/api/admin/appointments', verifyToken, requireRole('admin'), adminAppointmentRoutes);
+app.use('/api/admin/checklists', verifyToken, requireRole('admin'), adminChecklistRoutes);
+app.use('/api/admin/documents', verifyToken, requireRole('admin'), adminDocumentRoutes);
+app.use('/api/admin/availability', verifyToken, requireRole('admin'), availabilityRoutes);
+app.use('/api/admin/archives', verifyToken, requireRole('admin'), clientArchiveRoutes);
 
 // Other
 app.use('/api/mrmensur', mrMensurRoutes);

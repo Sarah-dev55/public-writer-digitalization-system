@@ -36,7 +36,7 @@ export default function Dashboard() {
         if (apptRes && apptRes.success) setAppointments(apptRes.data || []);
 
         // fetch first user to use for listing documents (seed creates one user)
-        const usersRes = await api.get('/api/users');
+        const usersRes = await api.get('/users');
         let userId = null;
         if (usersRes && usersRes.data && usersRes.data.success && usersRes.data.data && usersRes.data.data.length > 0) {
           userId = usersRes.data.data[0]._id;

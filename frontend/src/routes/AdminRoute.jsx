@@ -6,6 +6,7 @@ import { ROLES } from '../utils/constants';
 export default function AdminRoute({ children }) {
   const { user } = useAuth();
   if (!user) return <Navigate to="/login" replace />;
-  if (user.role !== ROLES.ADMIN) return <Navigate to="/" replace />;
+  // Only 'admin' role can access admin routes
+  if (user.role !== 'admin') return <Navigate to="/" replace />;
   return children;
 }
