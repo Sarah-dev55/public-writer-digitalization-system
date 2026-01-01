@@ -1,303 +1,357 @@
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const nodemailer = require('nodemailer');
+const emailService = require('../utils/emailService');
 
-const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-    }
-});
+// Generate 6-digit verification code
+const generateVerificationCode = () => {
+    return Math.floor(100000 + Math.random() * 900000).toString();
+};
 
-// --- Signup ---
-async function signup(req, res) {
+// Generate JWT token
+const generateToken = (userId) => {
+    return jwt.sign({ id: userId }, process.env.JWT_SECRET || 'your-secret-key', {
+        expiresIn: '30d'
+    });
+};
+
+// Format user response (remove sensitive data)
+const formatUserResponse = (user) => {
+    return {
+        id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        phone: user.phone,
+        location: user.location || '',
+        avatar: user.avatar,
+        isVerified: user.isVerified,
+        fullName: `${user.firstName} ${user.lastName}`
+    };
+};
+
+// @route   POST /api/auth/signup
+// @desc    Register a new user
+exports.signup = async(req, res) => {
     try {
-        const { firstName, lastName, email, password, phone, location } = req.body;
+        const { firstName, lastName, phone, email, password } = req.body;
 
-        // 1. التحقق من الحقول المطلوبة
-        if (!firstName || !lastName || !email || !password || !phone) {
+        // Validation
+        if (!firstName || !lastName || !phone || !email || !password) {
             return res.status(400).json({
                 success: false,
-                message: "All fields are required"
+                message: 'All fields are required'
             });
         }
 
-        const fullName = `${firstName} ${lastName}`;
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
-
-        // 2. البحث عن المستخدم الحالي
-        const existingUser = await User.findOne({ email });
-
+        // Check if user already exists
+        const existingUser = await User.findOne({ email: email.toLowerCase() });
         if (existingUser) {
-            // أ: إذا كان الحساب موثقاً بالفعل، نرفض التسجيل
-            if (existingUser.isVerified) {
-                return res.status(400).json({
-                    success: false,
-                    message: "Email already registered and verified. Please login."
-                });
-            }
-
-            // ب: إذا كان الحساب موجوداً ولكنه غير موثق، نقوم بتحديث بياناته وإرسال كود جديد
-            existingUser.fullName = fullName;
-            existingUser.password = hashedPassword;
-            existingUser.phone = phone;
-            existingUser.location = location || '';
-            existingUser.verificationCode = otpCode;
-            await existingUser.save();
-
-            // إرسال الإيميل
-            await transporter.sendMail({
-                from: process.env.EMAIL_USER,
-                to: email,
-                subject: "Your New Verification Code",
-                text: `Your verification code is: ${otpCode}`
-            });
-
-            return res.status(200).json({
-                success: true,
-                message: "Email was pending verification. A new code has been sent!"
+            return res.status(400).json({
+                success: false,
+                message: 'Email already registered'
             });
         }
 
-        // 3. إذا كان المستخدم جديداً تماماً، نقوم بإنشائه
-        const newUser = new User({
-            fullName,
-            email,
-            password: hashedPassword,
+        // Hash password
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // Generate verification code
+        const verificationCode = generateVerificationCode();
+        const verificationCodeExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+        // Create user
+        const user = await User.create({
+            firstName,
+            lastName,
             phone,
-            location: location || '',
-            verificationCode: otpCode,
+            email: email.toLowerCase(),
+            password: hashedPassword,
+            verificationCode,
+            verificationCodeExpires,
             isVerified: false
         });
 
-        await newUser.save();
-
-        await transporter.sendMail({
-            from: process.env.EMAIL_USER,
-            to: email,
-            subject: "Your Verification Code",
-            text: `Your verification code is: ${otpCode}`
-        });
+        // Send verification email
+        try {
+            await emailService.sendVerificationEmail(email, verificationCode);
+        } catch (emailError) {
+            console.error('Email sending failed:', emailError);
+            // Don't fail signup if email fails
+        }
 
         res.status(201).json({
             success: true,
-            message: "Signup successful! Check your email for verification code."
-        });
-
-    } catch (err) {
-        console.error("Signup Error:", err.message);
-        res.status(500).json({
-            success: false,
-            message: "Server error: " + err.message
-        });
-    }
-}
-
-// --- Login ---
-async function login(req, res) {
-    try {
-        const { email, password } = req.body;
-
-        if (!email || !password) {
-            return res.status(400).json({
-                success: false,
-                message: "Email and password are required"
-            });
-        }
-
-        const user = await User.findOne({ email });
-
-        if (!user) {
-            return res.status(404).json({
-                success: false,
-                message: "User not found"
-            });
-        }
-
-        const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) {
-            return res.status(400).json({
-                success: false,
-                message: "Invalid credentials"
-            });
-        }
-
-        if (!user.isVerified) {
-            return res.status(401).json({
-                success: false,
-                needsVerification: true,
-                message: "Please verify your email first."
-            });
-        }
-
-        const token = jwt.sign({ id: user._id },
-            process.env.JWT_SECRET, { expiresIn: '1d' }
-        );
-
-        res.json({
-            success: true,
-            message: "Login successful",
+            message: 'Account created! Please check your email for verification code.',
             data: {
-                token,
-                user: {
-                    id: user._id,
-                    fullName: user.fullName,
-                    email: user.email,
-                    phone: user.phone,
-                    location: user.location
-                }
+                user: formatUserResponse(user)
             }
         });
-    } catch (err) {
-        console.error("Login Error:", err.message);
+
+    } catch (error) {
+        console.error('Signup error:', error);
         res.status(500).json({
             success: false,
-            message: "Server error: " + err.message
+            message: 'Server error during signup'
         });
     }
-}
+};
 
-// --- Verify ---
-async function verify(req, res) {
+// @route   POST /api/auth/verify
+// @desc    Verify user email with code
+exports.verify = async(req, res) => {
     try {
         const { email, code } = req.body;
 
         if (!email || !code) {
             return res.status(400).json({
                 success: false,
-                message: "Email and code are required"
+                message: 'Email and verification code are required'
             });
         }
 
-        const user = await User.findOne({ email, verificationCode: code });
-
+        // Find user
+        const user = await User.findOne({ email: email.toLowerCase() });
         if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+
+        // Check if already verified
+        if (user.isVerified) {
             return res.status(400).json({
                 success: false,
-                message: "Invalid verification code"
+                message: 'Account already verified'
             });
         }
 
+        // Check code
+        if (user.verificationCode !== code) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid verification code'
+            });
+        }
+
+        // Check if code expired
+        if (user.verificationCodeExpires < new Date()) {
+            return res.status(400).json({
+                success: false,
+                message: 'Verification code expired'
+            });
+        }
+
+        // Verify user
         user.isVerified = true;
-        user.verificationCode = undefined;
+        user.verificationCode = null;
+        user.verificationCodeExpires = null;
         await user.save();
 
-        const token = jwt.sign({ id: user._id },
-            process.env.JWT_SECRET, { expiresIn: '1d' }
-        );
+        // Generate token
+        const token = generateToken(user._id);
 
         res.json({
             success: true,
-            message: "Email verified successfully!",
+            message: 'Email verified successfully!',
             data: {
                 token,
-                user: {
-                    id: user._id,
-                    fullName: user.fullName,
-                    email: user.email,
-                    phone: user.phone,
-                    location: user.location
-                }
+                user: formatUserResponse(user)
             }
         });
-    } catch (err) {
-        console.error("Verify Error:", err.message);
+
+    } catch (error) {
+        console.error('Verification error:', error);
         res.status(500).json({
             success: false,
-            message: "Server error: " + err.message
+            message: 'Server error during verification'
         });
     }
-}
+};
 
-// --- Resend Code ---
-async function resendCode(req, res) {
+// @route   POST /api/auth/login
+// @desc    Login user
+exports.login = async(req, res) => {
+    try {
+        const { email, password } = req.body;
+
+        if (!email || !password) {
+            return res.status(400).json({
+                success: false,
+                message: 'Email and password are required'
+            });
+        }
+
+        // Find user
+        const user = await User.findOne({ email: email.toLowerCase() });
+        if (!user) {
+            return res.status(401).json({
+                success: false,
+                message: 'Invalid email or password'
+            });
+        }
+
+        // Check if verified
+        if (!user.isVerified) {
+            return res.status(403).json({
+                success: false,
+                message: 'Please verify your email first',
+                needsVerification: true
+            });
+        }
+
+        // Check password
+        const isPasswordValid = await bcrypt.compare(password, user.password);
+        if (!isPasswordValid) {
+            return res.status(401).json({
+                success: false,
+                message: 'Invalid email or password'
+            });
+        }
+
+        // Generate token
+        const token = generateToken(user._id);
+
+        res.json({
+            success: true,
+            message: 'Login successful!',
+            data: {
+                token,
+                user: formatUserResponse(user)
+            }
+        });
+
+    } catch (error) {
+        console.error('Login error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error during login'
+        });
+    }
+};
+
+// @route   POST /api/auth/resend-code
+// @desc    Resend verification code
+exports.resendCode = async(req, res) => {
     try {
         const { email } = req.body;
 
         if (!email) {
             return res.status(400).json({
                 success: false,
-                message: "Email is required"
+                message: 'Email is required'
             });
         }
 
-        const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
-
-        const user = await User.findOneAndUpdate({ email }, { verificationCode: otpCode });
-
+        const user = await User.findOne({ email: email.toLowerCase() });
         if (!user) {
             return res.status(404).json({
                 success: false,
-                message: "User not found"
+                message: 'User not found'
             });
         }
 
-        await transporter.sendMail({
-            from: process.env.EMAIL_USER,
-            to: email,
-            subject: "New Verification Code",
-            text: `Your new verification code is: ${otpCode}`
-        });
+        if (user.isVerified) {
+            return res.status(400).json({
+                success: false,
+                message: 'Account already verified'
+            });
+        }
+
+        // Generate new code
+        const verificationCode = generateVerificationCode();
+        const verificationCodeExpires = new Date(Date.now() + 10 * 60 * 1000);
+
+        user.verificationCode = verificationCode;
+        user.verificationCodeExpires = verificationCodeExpires;
+        await user.save();
+
+        // Send email
+        try {
+            await emailService.sendVerificationEmail(email, verificationCode);
+        } catch (emailError) {
+            console.error('Email sending failed:', emailError);
+        }
 
         res.json({
             success: true,
-            message: "Verification code resent successfully!"
+            message: 'Verification code resent successfully!'
         });
-    } catch (err) {
-        console.error("Resend Code Error:", err.message);
+
+    } catch (error) {
+        console.error('Resend code error:', error);
         res.status(500).json({
             success: false,
-            message: "Server error: " + err.message
+            message: 'Server error'
         });
     }
-}
+};
 
-// --- Delete Unverified Users ---
-async function deleteUnverifiedUsers(req, res) {
+// @route   GET /api/auth/me
+// @desc    Get current user profile
+exports.getProfile = async(req, res) => {
     try {
-        const result = await User.deleteMany({ isVerified: false });
-
-        res.json({
-            success: true,
-            message: `${result.deletedCount} unverified users deleted successfully.`
-        });
-    } catch (err) {
-        res.status(500).json({ success: false, message: err.message });
-    }
-}
-
-// --- Get User Profile ---
-async function getProfile(req, res) {
-    try {
-        const user = await User.findById(req.userId).select('-password -verificationCode');
+        const user = await User.findById(req.user.id).select('-password');
 
         if (!user) {
             return res.status(404).json({
                 success: false,
-                message: "User not found"
+                message: 'User not found'
             });
         }
 
         res.json({
             success: true,
             data: {
-                id: user._id,
-                fullName: user.fullName,
-                email: user.email,
-                phone: user.phone,
-                location: user.location
+                user: formatUserResponse(user)
             }
         });
-    } catch (err) {
-        console.error("Get Profile Error:", err.message);
+
+    } catch (error) {
+        console.error('Get profile error:', error);
         res.status(500).json({
             success: false,
-            message: "Server error: " + err.message
+            message: 'Server error'
         });
     }
-}
+};
 
-module.exports = { login, signup, verify, resendCode, deleteUnverifiedUsers, getProfile };
+// @route   PUT /api/auth/profile
+// @desc    Update user profile
+exports.updateProfile = async(req, res) => {
+    try {
+        const { firstName, lastName, phone, location } = req.body;
+
+        const user = await User.findById(req.user.id);
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+
+        // Update fields
+        if (firstName) user.firstName = firstName;
+        if (lastName) user.lastName = lastName;
+        if (phone) user.phone = phone;
+        if (location !== undefined) user.location = location;
+
+        await user.save();
+
+        res.json({
+            success: true,
+            message: 'Profile updated successfully!',
+            data: {
+                user: formatUserResponse(user)
+            }
+        });
+
+    } catch (error) {
+        console.error('Update profile error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error'
+        });
+    }
+};

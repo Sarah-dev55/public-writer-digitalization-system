@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const path = require('path'); // أضفنا هذا السطر ليعمل التوجيه بشكل صحيح
 const connectDB = require('./config/database');
 
 // Load environment variables
@@ -11,9 +12,9 @@ connectDB();
 
 const app = express();
 
-// ✅ CORS Configuration - Very Important
+// ✅ CORS Configuration
 app.use(cors({
-    origin: ['http://localhost:5177', 'http://localhost:3000'], // All possible React ports
+    origin: ['http://localhost:5173', 'http://localhost:3000', 'http://localhost:5175'],
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true
@@ -22,15 +23,16 @@ app.use(cors({
 // Parse JSON
 app.use(express.json());
 
-// Routes
-const authRoutes = require('./routes/mrMensur');
+// --- إصلاح قسم الروابط (Routes) ---
+// قمنا بحذف التكرار واستخدام مسار ديناميكي لضمان عمله على جهازك
+const authRoutes = require(path.resolve(__dirname, 'routes', 'mrMensur.js'));
 app.use('/api/auth', authRoutes);
 
 // Home route for testing
 app.get('/', (req, res) => {
     res.json({
         success: true,
-        message: "🚀 Server is Live on Port 5070!"
+        message: "🚀 Server is Live!"
     });
 });
 

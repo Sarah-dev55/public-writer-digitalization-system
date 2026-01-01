@@ -1,405 +1,337 @@
-import React, { useState, useEffect } from "react";
-import { X, User, Settings, Bell, LogOut, ChevronRight, Pencil } from "lucide-react";
-import { Button } from "./button";
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 
-export const ProfileModal = ({ open, onClose, user, onUpdate, onLogout }) => {
-  const [activeView, setActiveView] = useState("profile"); // "profile" or "settings"
+export const ProfileModal = ({ open, onClose, user, onUpdate }) => {
   const [isEditing, setIsEditing] = useState(false);
-  const [notificationStatus, setNotificationStatus] = useState("Allow");
-  const [showNotificationDropdown, setShowNotificationDropdown] = useState(false);
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    location: "",
-  });
   const [loading, setLoading] = useState(false);
-  const [theme, setTheme] = useState("Light");
-  const [language, setLanguage] = useState("Eng");
+  const [error, setError] = useState('');
+  const [message, setMessage] = useState('');
+  
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    phone: '',
+    location: ''
+  });
 
+  // Auto-populate form data whenever user data changes or modal opens
   useEffect(() => {
-    if (user) {
+    if (user && open) {
+      console.log('User data:', user); // Debug log
       setFormData({
-        name: user.name || "",
-        email: user.email || "",
-        phone: user.phone || "",
-        location: user.location || "",
+        firstName: user.firstName || '',
+        lastName: user.lastName || '',
+        phone: user.phone || '',
+        location: user.location || ''
       });
+      // Clear any previous errors when modal opens
+      setError('');
+      setMessage('');
     }
-  }, [user]);
+  }, [user, open]);
 
   if (!open) return null;
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setError('');
+    setMessage('');
+
     try {
-      await new Promise((resolve) => setTimeout(resolve, 700));
-      if (onUpdate) {
-        onUpdate(formData);
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        throw new Error('No authentication token found. Please login again.');
       }
-      setIsEditing(false);
-    } catch (error) {
-      console.error("Failed to update profile", error);
+
+      console.log('Sending update request with token:', token.substring(0, 20) + '...'); // Debug
+
+      const response = await fetch('http://localhost:5070/api/auth/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(formData)
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        // Handle token errors specifically
+        if (response.status === 401) {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          throw new Error('Session expired. Please login again.');
+        }
+        throw new Error(data.message || 'Update failed');
+      }
+
+      setMessage('Profile updated successfully!');
+      
+      // Update user in localStorage
+      const updatedUser = data.data.user;
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+      
+      // Notify parent component
+      if (onUpdate) {
+        onUpdate(updatedUser);
+      }
+
+      setTimeout(() => {
+        setIsEditing(false);
+        setMessage('');
+      }, 1500);
+
+    } catch (err) {
+      setError(err.message || 'Failed to update profile');
+      
+      // If session expired, redirect to login after showing error
+      if (err.message.includes('Session expired') || err.message.includes('login again')) {
+        setTimeout(() => {
+          onClose();
+          window.location.reload();
+        }, 2000);
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  const handleChange = (field, value) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-  };
-
   const handleCancel = () => {
-    if (user) {
-      setFormData({
-        name: user.name || "",
-        email: user.email || "",
-        phone: user.phone || "",
-        location: user.location || "",
-      });
-    }
+    // Reset to original user data
+    setFormData({
+      firstName: user?.firstName || '',
+      lastName: user?.lastName || '',
+      phone: user?.phone || '',
+      location: user?.location || ''
+    });
     setIsEditing(false);
+    setError('');
+    setMessage('');
   };
 
   const handleLogout = () => {
-    if (onLogout) {
-      onLogout();
-    }
-    onClose();
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    window.location.href = '/';
   };
 
-  // Helper function to get user initials
-  const getUserInitials = (name) => {
-    if (!name) return "?";
-    const nameParts = name.trim().split(/\s+/);
-    if (nameParts.length >= 2) {
-      return (nameParts[0].charAt(0) + nameParts[nameParts.length - 1].charAt(0)).toUpperCase();
-    }
-    return name.charAt(0).toUpperCase();
+  const getInitials = () => {
+    if (!user) return '??';
+    const first = user.firstName?.[0] || '';
+    const last = user.lastName?.[0] || '';
+    return (first + last).toUpperCase() || '??';
   };
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) {
-          onClose();
-        }
-      }}
-    >
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl mx-4 h-[85vh] overflow-hidden flex flex-col relative">
-        {/* Close Button */}
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-gray-500 hover:text-app-primary transition-colors z-10 p-2 hover:bg-gray-100 rounded-full"
-          aria-label="Close"
-        >
-          <X className="w-5 h-5" />
-        </button>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 overflow-y-auto py-10">
+      <Card className="w-full max-w-4xl mx-4 bg-white rounded-lg shadow-lg max-h-[90vh] overflow-y-auto">
+        <CardContent className="p-0">
+          <div className="flex flex-col md:flex-row">
+            
+            {/* Left Sidebar */}
+            <div className="w-full md:w-64 bg-gray-50 p-6 border-r relative">
+              <button
+                onClick={onClose}
+                className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl font-light"
+              >
+                ✕
+              </button>
 
-        <div className="flex flex-col md:flex-row h-full min-h-0">
-          {/* Left Sidebar */}
-          <div className="w-full md:w-80 bg-gradient-to-b from-gray-50 to-white border-r border-gray-200 p-5 flex flex-col flex-shrink-0">
-            {/* User Info Section */}
-            <div className="mb-6">
-              <div className="w-20 h-20 rounded-full bg-app-primary overflow-hidden flex items-center justify-center mx-auto mb-4 shadow-lg ring-2 ring-app-accent/20">
-                <div className="w-full h-full flex items-center justify-center bg-app-primary text-app-accent font-bold text-2xl">
-                  {getUserInitials(user?.name)}
+              {/* User Avatar */}
+              <div className="flex flex-col items-center mb-6">
+                <div className="w-20 h-20 rounded-full bg-app-primary text-white flex items-center justify-center text-2xl font-bold mb-3">
+                  {getInitials()}
                 </div>
+                <h3 className="font-semibold text-lg text-center">
+                  {user?.firstName} {user?.lastName}
+                </h3>
+                <p className="text-sm text-gray-600 text-center">{user?.email}</p>
               </div>
-              <h3 className="text-center font-semibold text-app-primary text-lg mb-1">
-                {user?.name || "Your name"}
-              </h3>
-              <p className="text-center text-sm text-gray-600">
-                {user?.email || "yourname@gmail.com"}
-              </p>
+
+              {/* Navigation Menu */}
+              <nav className="space-y-2">
+                {/* My Profile - Always Active */}
+                <button className="w-full flex items-center gap-3 px-4 py-3 bg-app-primary text-white rounded-lg">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  <span>My Profile</span>
+                  <svg className="w-4 h-4 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+
+                {/* Log Out */}
+                <button 
+                  onClick={handleLogout}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  </svg>
+                  <span>Log Out</span>
+                </button>
+              </nav>
             </div>
 
-            {/* Divider */}
-            <div className="border-t border-gray-200 mb-6"></div>
-
-            {/* Navigation Menu */}
-            <nav className="flex flex-col gap-2">
-              <button
-                onClick={() => {
-                  setActiveView("profile");
-                  setIsEditing(false);
-                }}
-                className={`flex items-center justify-between p-3 rounded-lg transition-all duration-200 ${
-                  activeView === "profile"
-                    ? "bg-app-primary text-app-accent shadow-md"
-                    : "text-gray-700 hover:bg-gray-100 hover:shadow-sm"
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <User className={`w-5 h-5 ${activeView === "profile" ? "text-app-accent" : "text-gray-600"}`} />
-                  <span className="font-medium">My Profile</span>
-                </div>
-                <ChevronRight className={`w-5 h-5 ${activeView === "profile" ? "text-app-accent" : "text-gray-400"}`} />
-              </button>
-
-              <button
-                onClick={() => {
-                  setActiveView("settings");
-                  setIsEditing(false);
-                }}
-                className={`flex items-center justify-between p-3 rounded-lg transition-all duration-200 ${
-                  activeView === "settings"
-                    ? "bg-app-primary text-app-accent shadow-md"
-                    : "text-gray-700 hover:bg-gray-100 hover:shadow-sm"
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <Settings className={`w-5 h-5 ${activeView === "settings" ? "text-app-accent" : "text-gray-600"}`} />
-                  <span className="font-medium">Settings</span>
-                </div>
-                <ChevronRight className={`w-5 h-5 ${activeView === "settings" ? "text-app-accent" : "text-gray-400"}`} />
-              </button>
-
-              {/* Notification with Dropdown */}
-              <div className="relative">
-                <button
-                  onClick={() => setShowNotificationDropdown(!showNotificationDropdown)}
-                  className="flex items-center justify-between p-3 rounded-lg transition-all duration-200 w-full text-gray-700 hover:bg-gray-100 hover:shadow-sm"
-                >
-                  <div className="flex items-center gap-3">
-                    <Bell className="w-5 h-5 text-gray-600" />
-                    <span className="font-medium">Notification</span>
+            {/* Right Content */}
+            <div className="flex-1 p-8">
+              <div className="mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">My Profile</h2>
+                <div className="flex items-center gap-3 mt-2">
+                  <div className="w-16 h-16 rounded-full bg-app-primary text-white flex items-center justify-center text-xl font-bold">
+                    {getInitials()}
                   </div>
-                  <span className="text-sm text-gray-500 font-medium">{notificationStatus}</span>
-                </button>
-                {showNotificationDropdown && (
-                  <div className="absolute left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-xl z-20 overflow-hidden">
-                    <button
-                      onClick={() => {
-                        setNotificationStatus("Allow");
-                        setShowNotificationDropdown(false);
-                      }}
-                      className={`w-full text-left px-4 py-2.5 hover:bg-app-accent/20 transition-colors ${
-                        notificationStatus === "Allow" ? "bg-app-accent/30 text-app-primary font-medium" : "text-gray-700"
-                      }`}
-                    >
-                      Allow
-                    </button>
-                    <button
-                      onClick={() => {
-                        setNotificationStatus("Mute");
-                        setShowNotificationDropdown(false);
-                      }}
-                      className={`w-full text-left px-4 py-2.5 hover:bg-app-accent/20 transition-colors ${
-                        notificationStatus === "Mute" ? "bg-app-accent/30 text-app-primary font-medium" : "text-gray-700"
-                      }`}
-                    >
-                      Mute
-                    </button>
+                  <div>
+                    <h3 className="font-semibold text-lg">
+                      {user?.firstName} {user?.lastName}
+                    </h3>
+                    <p className="text-sm text-gray-600">{user?.email}</p>
                   </div>
-                )}
+                </div>
               </div>
 
-              <button
-                onClick={handleLogout}
-                className="flex items-center gap-3 p-3 rounded-lg text-gray-700 hover:bg-gray-100 transition-all duration-200 mt-4 hover:shadow-sm"
-              >
-                <LogOut className="w-5 h-5 text-gray-600" />
-                <span className="font-medium">Log Out</span>
-              </button>
-            </nav>
-          </div>
+              {/* Error/Success Messages */}
+              {error && (
+                <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+                  {error}
+                </div>
+              )}
+              {message && (
+                <div className="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded">
+                  {message}
+                </div>
+              )}
 
-          {/* Right Main Content */}
-          <div className="flex-1 p-6 overflow-y-auto bg-white min-h-0">
-            {activeView === "profile" ? (
-              <div className="h-full">
-                <h2 className="text-xl font-bold text-app-primary mb-6">My Profile</h2>
-
-                {/* Profile Header */}
-                <div className="flex items-center gap-4 mb-6 pb-6 border-b border-gray-200">
-                  <div className="relative">
-                    <div className="w-20 h-20 rounded-full bg-app-primary overflow-hidden flex items-center justify-center shadow-lg ring-2 ring-app-accent/20">
-                      <div className="w-full h-full flex items-center justify-center bg-app-primary text-app-accent font-bold text-2xl">
-                        {getUserInitials(formData.name || user?.name)}
-                      </div>
-                    </div>
-                    {isEditing && (
-                      <button
-                        onClick={() => {
-                          // Handle avatar edit
-                          console.log("Edit avatar");
-                        }}
-                        className="absolute bottom-0 right-0 w-6 h-6 bg-app-secondary rounded-full flex items-center justify-center border-2 border-white shadow-md hover:bg-app-secondary/90 transition-colors"
-                      >
-                        <Pencil className="w-3 h-3 text-white" />
-                      </button>
-                    )}
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-app-primary mb-1">
-                      {formData.name || user?.name || "Your name"}
-                    </h3>
-                    <p className="text-sm text-gray-600">
-                      {formData.email || user?.email || "yourname@gmail.com"}
-                    </p>
-                  </div>
+              {/* Profile Form */}
+              <form onSubmit={handleSubmit} className="space-y-4">
+                {/* First Name - Auto-populated from signup */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    First Name
+                  </label>
+                  <input
+                    type="text"
+                    name="firstName"
+                    value={formData.firstName}
+                    onChange={handleChange}
+                    disabled={!isEditing}
+                    className="w-full p-3 border rounded-lg disabled:bg-gray-50 disabled:text-gray-600"
+                    required
+                    placeholder="Enter first name"
+                  />
                 </div>
 
-                {/* Profile Form */}
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-semibold text-app-primary mb-2">
-                      Name
-                    </label>
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        value={formData.name}
-                        onChange={(e) => handleChange("name", e.target.value)}
-                        className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-app-primary focus:border-app-primary transition-all text-sm"
-                        placeholder="your name"
-                        required
-                      />
-                    ) : (
-                      <p className="p-2 bg-app-accent/30 rounded-lg text-gray-700 border border-gray-200 text-sm">
-                        {formData.name || "your name"}
-                      </p>
-                    )}
-                  </div>
+                {/* Last Name - Auto-populated from signup */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Last Name
+                  </label>
+                  <input
+                    type="text"
+                    name="lastName"
+                    value={formData.lastName}
+                    onChange={handleChange}
+                    disabled={!isEditing}
+                    className="w-full p-3 border rounded-lg disabled:bg-gray-50 disabled:text-gray-600"
+                    required
+                    placeholder="Enter last name"
+                  />
+                </div>
 
-                  <div>
-                    <label className="block text-sm font-semibold text-app-primary mb-2">
-                      Email account
-                    </label>
-                    {isEditing ? (
-                      <input
-                        type="email"
-                        value={formData.email}
-                        onChange={(e) => handleChange("email", e.target.value)}
-                        className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-app-primary focus:border-app-primary transition-all text-sm"
-                        placeholder="yourname@gmail.com"
-                        required
-                      />
-                    ) : (
-                      <p className="p-2 bg-app-accent/30 rounded-lg text-gray-700 border border-gray-200 text-sm">
-                        {formData.email || "yourname@gmail.com"}
-                      </p>
-                    )}
-                  </div>
+                {/* Email (Read-only) */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Email account
+                  </label>
+                  <input
+                    type="email"
+                    value={user?.email || ''}
+                    disabled
+                    className="w-full p-3 border rounded-lg bg-gray-50 text-gray-600 cursor-not-allowed"
+                    placeholder="email@example.com"
+                  />
+                </div>
 
-                  <div>
-                    <label className="block text-sm font-semibold text-app-primary mb-2">
-                      Mobile number
-                    </label>
-                    {isEditing ? (
-                      <input
-                        type="tel"
-                        value={formData.phone}
-                        onChange={(e) => handleChange("phone", e.target.value)}
-                        className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-app-primary focus:border-app-primary transition-all text-sm"
-                        placeholder="Add number"
-                      />
-                    ) : (
-                      <p className="p-2 bg-app-accent/30 rounded-lg text-gray-700 border border-gray-200 text-sm">
-                        {formData.phone || "Add number"}
-                      </p>
-                    )}
-                  </div>
+                {/* Mobile Number - Auto-populated from signup */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Mobile number
+                  </label>
+                  <input
+                    type="tel"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    disabled={!isEditing}
+                    className="w-full p-3 border rounded-lg disabled:bg-gray-50 disabled:text-gray-600"
+                    required
+                    placeholder="Enter phone number"
+                  />
+                </div>
 
-                  <div>
-                    <label className="block text-sm font-semibold text-app-primary mb-2">
-                      Location
-                    </label>
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        value={formData.location}
-                        onChange={(e) => handleChange("location", e.target.value)}
-                        className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-app-primary focus:border-app-primary transition-all text-sm"
-                        placeholder="USA"
-                      />
-                    ) : (
-                      <p className="p-2 bg-app-accent/30 rounded-lg text-gray-700 border border-gray-200 text-sm">
-                        {formData.location || "USA"}
-                      </p>
-                    )}
-                  </div>
+                {/* Location */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Location
+                  </label>
+                  <input
+                    type="text"
+                    name="location"
+                    value={formData.location}
+                    onChange={handleChange}
+                    disabled={!isEditing}
+                    placeholder="City, Country"
+                    className="w-full p-3 border rounded-lg disabled:bg-gray-50 disabled:text-gray-600"
+                  />
+                </div>
 
-                  <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-200">
-                    {isEditing ? (
-                      <>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          onClick={handleCancel}
-                          className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                          disabled={loading}
-                        >
-                          Cancel
-                        </Button>
-                        <Button
-                          type="submit"
-                          className="px-6 py-2 text-sm bg-app-primary hover:bg-app-primary/90 text-app-accent shadow-md hover:shadow-lg transition-all"
-                          disabled={loading}
-                        >
-                          {loading ? "Saving..." : "Save Change"}
-                        </Button>
-                      </>
-                    ) : (
+                {/* Action Buttons */}
+                <div className="flex justify-end gap-3 pt-4">
+                  {!isEditing ? (
+                    <Button
+                      type="button"
+                      onClick={() => setIsEditing(true)}
+                      className="bg-app-primary hover:opacity-90"
+                    >
+                      Edit Profile
+                    </Button>
+                  ) : (
+                    <>
                       <Button
                         type="button"
-                        onClick={() => setIsEditing(true)}
-                        className="px-6 py-2 text-sm bg-app-primary hover:bg-app-primary/90 text-app-accent shadow-md hover:shadow-lg transition-all"
+                        variant="ghost"
+                        onClick={handleCancel}
+                        disabled={loading}
                       >
-                        Edit Profile
+                        Cancel
                       </Button>
-                    )}
-                  </div>
-                </form>
-              </div>
-            ) : (
-              <div className="h-full">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl font-bold text-app-primary">Settings</h2>
+                      <Button
+                        type="submit"
+                        disabled={loading}
+                        className="bg-app-primary hover:opacity-90"
+                      >
+                        {loading ? 'Saving...' : 'Save Changes'}
+                      </Button>
+                    </>
+                  )}
                 </div>
-
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-semibold text-app-primary mb-2">
-                      Theme
-                    </label>
-                    <select
-                      value={theme}
-                      onChange={(e) => setTheme(e.target.value)}
-                      className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-app-primary focus:border-app-primary bg-white transition-all text-sm"
-                    >
-                      <option value="Light">Light</option>
-                      <option value="Dark">Dark</option>
-                      <option value="Auto">Auto</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-app-primary mb-2">
-                      Language
-                    </label>
-                    <select
-                      value={language}
-                      onChange={(e) => setLanguage(e.target.value)}
-                      className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-app-primary focus:border-app-primary bg-white transition-all text-sm"
-                    >
-                      <option value="Eng">English</option>
-                      <option value="Fr">French</option>
-                      <option value="Ar">Arabic</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-            )}
+              </form>
+            </div>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
 
 export default ProfileModal;
-

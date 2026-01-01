@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import UnifiedHeader from '../../components/layout/UnifiedHeader';
 import Footer from '../../components/layout/Footer';
@@ -7,33 +7,85 @@ import ActionCards from '../../components/client/ActionCards';
 import AppointmentsList from '../../components/client/AppointmentsList';
 import DocumentsList from '../../components/client/DocumentsList';
 import CaseProgress from '../../components/client/CaseProgress';
-import Book_model from '../../components/forms/BookAppointment'; // Import the booking modal
+import Book_model from '../../components/forms/BookAppointment';
+import LoginModal from '../../components/ui/LoginModal';
+import ProfileModal from '../../components/ui/ProfileModal';
 
 export default function ClientDashboard() {
   const [activeTab, setActiveTab] = useState('appointments');
-  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false); // Add state for modal
+  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
   const navigate = useNavigate();
 
+  // Check if user is logged in
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    const userData = localStorage.getItem('user');
+
+    console.log('Token:', token); // Debug
+    console.log('User data from localStorage:', userData); // Debug
+
+    if (token && userData) {
+      try {
+        const user = JSON.parse(userData);
+        console.log('Parsed user:', user); // Debug
+        setCurrentUser(user);
+      } catch (error) {
+        console.error('Error parsing user data:', error);
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        setIsLoginModalOpen(true);
+      }
+    } else {
+      console.log('No token or user data found'); // Debug
+      setIsLoginModalOpen(true);
+    }
+  }, []);
+
+  const handleLogin = (user) => {
+    console.log('User logged in:', user); // Debug
+    setCurrentUser(user);
+    setIsLoginModalOpen(false);
+  };
+
+  const handleProfileUpdate = (updatedUser) => {
+    console.log('Profile updated:', updatedUser); // Debug
+    setCurrentUser(updatedUser);
+  };
+
   const handleBookAppointment = () => {
-    setIsBookingModalOpen(true); //Open modal instead of navigating
+    if (!currentUser) {
+      setIsLoginModalOpen(true);
+      return;
+    }
+    setIsBookingModalOpen(true);
   };
 
   const handleUploadDocuments = () => {
+    if (!currentUser) {
+      setIsLoginModalOpen(true);
+      return;
+    }
     navigate('/client/documents');
   };
 
   const handleBookNew = () => {
-    setIsBookingModalOpen(true); //Open modal instead of navigating
+    if (!currentUser) {
+      setIsLoginModalOpen(true);
+      return;
+    }
+    setIsBookingModalOpen(true);
   };
 
   const handleReschedule = (id) => {
     console.log('Reschedule appointment:', id);
-    setIsBookingModalOpen(true); // Open modal for rescheduling
+    setIsBookingModalOpen(true);
   };
 
   const handleCancel = (id) => {
     console.log('Cancel appointment:', id);
-    // Add cancel logic here
   };
 
   const handleDocumentUpload = (id) => {
@@ -43,17 +95,14 @@ export default function ClientDashboard() {
 
   const handleDocumentDownload = (id) => {
     console.log('Download document:', id);
-    // Add download logic here
   };
 
   const handleDocumentView = (id) => {
     console.log('View document:', id);
-    // Add view logic here
   };
 
   const handleDocumentDelete = (id) => {
     console.log('Delete document:', id);
-    // Add delete logic here
   };
 
   const handleUploadNew = () => {
@@ -66,15 +115,15 @@ export default function ClientDashboard() {
     { label: "Client Reviews", active: false, href: '/#reviews' },
     { label: "How It Works", active: false, href: '/#how-it-works' },
   ];
-  
 
-  const testUser = {
-    name: "Sarah Smith",
-    email: "sarah.smith@example.com",
-    phone: "+213 123 456 789",
-    location: "Algiers, Algeria",
-    avatar: null
-  };
+  // Format user for header display
+  const headerUser = currentUser ? {
+    name: `${currentUser.firstName || ''} ${currentUser.lastName || ''}`.trim() || 'User',
+    email: currentUser.email,
+    phone: currentUser.phone,
+    location: currentUser.location || '',
+    avatar: currentUser.avatar
+  } : null;
 
   return (
     <div className="min-h-screen bg-app-accent">
@@ -91,8 +140,9 @@ export default function ClientDashboard() {
           logoOnClick={() => navigate('/')}
           ctaButtonText="Get Started"
           ctaButtonOnClick={() => navigate('/client/dashboard')}
-          showUser={true}
-          user={testUser}
+          showUser={!!currentUser}
+          user={headerUser}
+          onProfileClick={() => setIsProfileModalOpen(true)}
           navClassName="bg-transparent"
           contactBarClassName="bg-app-primary/90"
           showCtaButton={false}
@@ -134,11 +184,26 @@ export default function ClientDashboard() {
       
       <Footer />
       
-      {/*Add the booking modal component */}
+      {/* Modals */}
+      <LoginModal 
+        open={isLoginModalOpen} 
+        onClose={() => setIsLoginModalOpen(false)}
+        onLogin={handleLogin}
+      />
+
       <Book_model 
         isOpen={isBookingModalOpen} 
         onClose={() => setIsBookingModalOpen(false)} 
       />
+
+      {currentUser && (
+        <ProfileModal
+          open={isProfileModalOpen}
+          onClose={() => setIsProfileModalOpen(false)}
+          user={currentUser}
+          onUpdate={handleProfileUpdate}
+        />
+      )}
     </div>
   );
 }
