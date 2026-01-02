@@ -14,6 +14,8 @@ const UserSchema = new Schema({
 		min: 1,
 		max: 5
 	},
+	location: { type: String },
+	profileImage: { type: String },
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', UserSchema);

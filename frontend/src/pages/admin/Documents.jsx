@@ -1,8 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import AdminLayout from '../../components/layout/AdminLayout';
-import { getAllDocuments } from '../../services/adminDocumentService';
+import { getAllDocuments, downloadDocument } from '../../services/adminDocumentService';
 import { getAllUsers } from '../../services/adminUserService';
 import { searchArchives } from '../../services/adminArchiveService';
+import DocumentStatusModal from '../../components/admin/DocumentStatusModal';
 
 function fmtDate(value) {
 	if (!value) return '—';
@@ -25,6 +26,9 @@ export default function AdminDocuments() {
 
 	const [query, setQuery] = useState('');
 	const [searchField, setSearchField] = useState('all'); // all | docName | fileName | userName
+	const [downloadingId, setDownloadingId] = useState(null);
+	const [selectedDoc, setSelectedDoc] = useState(null);
+	const [showStatusModal, setShowStatusModal] = useState(false);
 	const pageSize = 10;
 	const [page, setPage] = useState(1);
 
@@ -74,6 +78,34 @@ export default function AdminDocuments() {
 		};
 	}, []);
 
+	const handleDownload = async (docId, fileName) => {
+		try {
+			setDownloadingId(docId);
+			await downloadDocument(docId, fileName);
+		} catch (error) {
+			console.error('Download failed:', error);
+			alert('Failed to download document. Please try again.');
+		} finally {
+			setDownloadingId(null);
+		}
+	};
+
+	const handleOpenStatusModal = (docId) => {
+		const doc = docs.find((d) => (d._id || d.id) === docId);
+		if (doc) {
+			setSelectedDoc(doc);
+			setShowStatusModal(true);
+		}
+	};
+
+	const handleStatusUpdated = (updatedDoc) => {
+		setDocs((prev) =>
+			prev.map((d) => ((d._id || d.id) === (updatedDoc._id || updatedDoc.id) ? updatedDoc : d))
+		);
+		setShowStatusModal(false);
+		setSelectedDoc(null);
+	};
+
 	const rows = useMemo(() => {
 		const q = safeLower(query);
 
@@ -94,13 +126,16 @@ export default function AdminDocuments() {
 
 				return {
 					id: doc._id || doc.id || fileNameRaw,
+					docId: doc._id || doc.id,
 					displayName: docNameRaw,
 					displayFile: fileNameRaw,
 					userName,
 					rawUserName: safeLower(userLabel),
 					createdAt,
-					status: doc.status || 'uploaded',
+					createdAt,
+					status: doc.status || 'pending',
 					downloadUrl,
+					rawDoc: doc,
 				};
 			})
 			.filter((row) => {
@@ -258,7 +293,8 @@ export default function AdminDocuments() {
 												<th className="py-3 pr-4 font-semibold">File</th>
 												<th className="py-3 pr-4 font-semibold">Uploader</th>
 												<th className="py-3 pr-4 font-semibold">Uploaded</th>
-												<th className="py-3 pr-4 font-semibold">Actions</th>
+												<th className="py-3 pr-4 font-semibold text-center">Status</th>
+												<th className="py-3 pr-4 font-semibold text-right">Actions</th>
 											</tr>
 										</thead>
 										<tbody>
@@ -268,19 +304,41 @@ export default function AdminDocuments() {
 													<td className="py-3 pr-4 text-gray-700">{row.displayFile}</td>
 													<td className="py-3 pr-4 text-gray-700">{row.userName}</td>
 													<td className="py-3 pr-4 text-gray-600">{fmtDate(row.createdAt)}</td>
-													<td className="py-3 pr-4 text-gray-700">
-														{row.downloadUrl ? (
-															<a
-																href={row.downloadUrl}
-																className="text-sm font-semibold text-blue-700 hover:underline"
-																target="_blank"
-																rel="noreferrer"
-															>
-																Download
-															</a>
-														) : (
-															<span className="text-gray-400">—</span>
-														)}
+													<td className="py-3 pr-4 text-center">
+														<span
+															className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+																row.status === 'approved'
+																	? 'bg-green-100 text-green-800'
+																	: row.status === 'rejected'
+																		? 'bg-red-100 text-red-800'
+																		: 'bg-yellow-100 text-yellow-800'
+															}`}
+														>
+															{row.status.charAt(0).toUpperCase() + row.status.slice(1)}
+														</span>
+													</td>
+													<td className="py-3 pr-4 text-right">
+														<div className="flex items-center justify-end gap-3">
+															{row.docId ? (
+																<>
+																	<button
+																		onClick={() => handleDownload(row.docId, row.displayFile)}
+																		disabled={downloadingId === row.docId}
+																		className="text-xs font-semibold text-blue-700 hover:text-blue-900 transition-colors disabled:opacity-50"
+																	>
+																		{downloadingId === row.docId ? '...' : 'Download'}
+																	</button>
+																	<button
+																		onClick={() => handleOpenStatusModal(row.docId)}
+																		className="text-xs font-semibold text-app-primary hover:text-black transition-colors"
+																	>
+																		Update
+																	</button>
+																</>
+															) : (
+																<span className="text-gray-400">—</span>
+															)}
+														</div>
 													</td>
 												</tr>
 											))}
@@ -394,6 +452,14 @@ export default function AdminDocuments() {
 					</div>
 				)}
 			</div>
+
+			{showStatusModal && selectedDoc && (
+				<DocumentStatusModal
+					document={selectedDoc}
+					onClose={() => setShowStatusModal(false)}
+					onStatusUpdated={handleStatusUpdated}
+				/>
+			)}
 		</AdminLayout>
 	);
 }

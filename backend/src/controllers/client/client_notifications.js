@@ -108,7 +108,50 @@ async function getUserNotifications(req, res) {
             }
         }
 
-        // 4. If no notifications at all, create a "Welcome" one (Seed logic)
+        // 4. CHECK FOR APPOINTMENT STATUS UPDATES (Lazy Notification Generation)
+        // Find appointments that are confirmed or cancelled
+        const statusAppts = await Appointment.find({
+            userId,
+            status: { $in: ['confirmed', 'cancelled'] }
+        });
+
+        for (const apt of statusAppts) {
+            const aptTitle = apt.status === 'confirmed' ? 'Appointment Confirmed' : 'Appointment Cancelled';
+            const bufferTime = new Date(apt.updatedAt.getTime() - 2000);
+
+            const existingNotification = await Notification.findOne({
+                userId,
+                title: aptTitle,
+                message: { $regex: new RegExp(apt.date) },
+                createdAt: { $gte: bufferTime }
+            });
+
+            if (!existingNotification) {
+                let messageBody = '';
+                let type = 'info';
+
+                if (apt.status === 'confirmed') {
+                    messageBody = `Your appointment on ${apt.date} at ${apt.timeSlot} has been confirmed.`;
+                    type = 'success';
+                } else if (apt.status === 'cancelled') {
+                    messageBody = `Your appointment on ${apt.date} at ${apt.timeSlot} has been cancelled.`;
+                    type = 'warning';
+                }
+
+                const newAptNotif = new Notification({
+                    userId,
+                    title: aptTitle,
+                    message: messageBody,
+                    type,
+                    createdAt: new Date()
+                });
+
+                await newAptNotif.save();
+                notifications.unshift(newAptNotif);
+            }
+        }
+
+        // 5. If no notifications at all, create a "Welcome" one (Seed logic)
         if (notifications.length === 0) {
             const welcomeNotif = new Notification({
                 userId,

@@ -12,6 +12,7 @@ import AdminAppointments from '../pages/admin/Appointments';
 import AdminAvailability from '../pages/admin/Availability';
 import AdminDocuments from '../pages/admin/Documents';
 import AdminClients from '../pages/admin/Clients';
+import AdminSettings from '../pages/admin/Settings';
 import PrivateRoute from './PrivateRoute';
 import AdminRoute from './AdminRoute';
 
@@ -35,6 +36,7 @@ export default function AppRoutes() {
         <Route path="/admin/availability" element={<AdminRoute><AdminAvailability /></AdminRoute>} />
         <Route path="/admin/documents" element={<AdminRoute><AdminDocuments /></AdminRoute>} />
         <Route path="/admin/clients" element={<AdminRoute><AdminClients /></AdminRoute>} />
+        <Route path="/admin/settings" element={<AdminRoute><AdminSettings /></AdminRoute>} />
       </Routes>
     </BrowserRouter>
   );

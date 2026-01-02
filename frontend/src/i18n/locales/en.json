@@ -146,6 +146,7 @@
     "pending": "Pending",
     "scheduled": "Scheduled",
     "inProgress": "In Progress",
+    "cancelled": "Cancelled",
     "passportCopy": "Passport Copy",
     "academicTranscripts": "Academic Transcripts",
     "motivationLetter": "Motivation Letter",

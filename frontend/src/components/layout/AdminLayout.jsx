@@ -31,8 +31,8 @@ export default function AdminLayout({ children }) {
         onLogout={handleLogout}
       />
 
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col">
+      {/* Main Content Area - offset by sidebar width (w-64 = 256px) */}
+      <div className="flex-1 flex flex-col ml-64">
         {/* Header */}
         <AdminHeader 
           user={user}

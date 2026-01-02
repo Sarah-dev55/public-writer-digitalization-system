@@ -10,7 +10,7 @@ export default function Appointments() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [editing, setEditing] = useState(null);
-  const [form, setForm] = useState({ date: '', timeSlot: '', notes: '' });
+  const [form, setForm] = useState({ date: '', timeSlot: '', notes: '', status: 'scheduled' });
 
   useEffect(() => {
     let mounted = true;
@@ -68,8 +68,26 @@ export default function Appointments() {
               <p className="text-sm text-gray-500">Client: {a.userName || '—'}</p>
             </div>
             <div className="text-right flex items-center gap-3">
-              <p className="text-sm text-gray-600">Status: <span className="font-medium">{a.status || 'scheduled'}</span></p>
-              <button onClick={() => { setEditing(a); setForm({ date: a.date || '', timeSlot: a.timeSlot || '', notes: a.notes || '' }); }} className="px-3 py-2 bg-[#31493d] text-white rounded-lg">Edit</button>
+              <p className="text-sm text-gray-600">Status: <span className="font-medium capitalize">{a.status || 'scheduled'}</span></p>
+              
+              {(a.status === 'scheduled' || a.status === 'confirmed' || !a.status) && (
+                <button 
+                  onClick={async () => {
+                    try {
+                      const res = await updateAppointment(a._id, { status: 'completed' });
+                      if (res && res.success) {
+                        setAppointments(prev => prev.map(it => it._id === a._id ? { ...it, status: 'completed' } : it));
+                      }
+                    } catch (err) { console.error(err); }
+                  }}
+                  className="px-3 py-2 bg-app-secondary text-white rounded-lg hover:bg-app-secondary/80 transition-colors"
+                  title="Mark as Completed"
+                >
+                  Complete
+                </button>
+              )}
+
+              <button onClick={() => { setEditing(a); setForm({ date: a.date || '', timeSlot: a.timeSlot || '', notes: a.notes || '', status: a.status || 'scheduled' }); }} className="px-3 py-2 bg-[#31493d] text-white rounded-lg">Edit</button>
             </div>
           </div>
         ))}
@@ -89,13 +107,30 @@ export default function Appointments() {
                   <label className="text-sm">Notes
                     <textarea value={form.notes} onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))} className="mt-1 block w-full border rounded p-2" />
                   </label>
+                  <label className="text-sm">Status
+                    <select 
+                      value={form.status} 
+                      onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))} 
+                      className="mt-1 block w-full border rounded p-2"
+                    >
+                      <option value="scheduled">Scheduled</option>
+                      <option value="confirmed">Confirmed</option>
+                      <option value="completed">Completed</option>
+                      <option value="cancelled">Cancelled</option>
+                    </select>
+                  </label>
                 </div>
 
                 <div className="mt-4 flex gap-3 justify-end">
                   <button onClick={() => setEditing(null)} className="px-4 py-2 bg-gray-200 rounded">Cancel</button>
                   <button onClick={async () => {
                     try {
-                      const res = await updateAppointment(editing._id, { date: form.date, timeSlot: form.timeSlot, notes: form.notes });
+                      const res = await updateAppointment(editing._id, { 
+                        date: form.date, 
+                        timeSlot: form.timeSlot, 
+                        notes: form.notes,
+                        status: form.status
+                      });
                       if (res && res.success) {
                       setAppointments((prev) => prev.map((it) => {
                         if (it._id !== editing._id) return it;

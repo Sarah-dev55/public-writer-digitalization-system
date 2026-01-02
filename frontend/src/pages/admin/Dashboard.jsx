@@ -5,7 +5,7 @@ import PendingDocuments from '../../components/admin/PendingDocuments';
 import DocumentReviewModal from '../../components/admin/DocumentReviewModal';
 import AdminHeader from '../../components/layout/AdminHeader';
 import AdminSidebar from '../../components/layout/AdminSidebar';
-import { getAllAppointments } from '../../services/adminAppointmentService';
+import { getAllAppointments, updateAppointment } from '../../services/adminAppointmentService';
 import { getPendingDocuments, updateDocument } from '../../services/adminDocumentService';
 import { getAllUsers } from '../../services/adminUserService';
 
@@ -46,6 +46,7 @@ export default function Dashboard() {
           .map((a) => {
             const user = userMap[a.userId];
             const userName = user?.fullName || user?.name || user?.email || 'Unknown user';
+            const userStatus = user?.currentStats || 1;
 
             const dateValue = a.date || a.appointmentDate;
             const timeValue = a.timeSlot || a.time || a.slot;
@@ -57,6 +58,7 @@ export default function Dashboard() {
             return {
               ...a,
               userName,
+              userStatus,
               date: dateValue,
               timeSlot: timeValue,
               reservationDateTime: dateTime?.getTime() || Number.MAX_SAFE_INTEGER,
@@ -153,8 +155,21 @@ export default function Dashboard() {
     }
   };
 
+  const handleAppointmentStatusUpdate = async (id, status) => {
+    try {
+      const res = await updateAppointment(id, { status });
+      if (res && res.success) {
+        setAppointments((prev) => 
+          prev.map(apt => (apt._id === id || apt.id === id) ? { ...apt, status } : apt)
+        );
+      }
+    } catch (err) {
+      console.error('Failed to update appointment status:', err);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-app-accent">
       <AdminHeader title="Dashboard" breadcrumb={["Homepage","Dashboard"]} />
 
       <div className="pt-20 lg:pl-64">{/* reserve header height */}
@@ -162,15 +177,18 @@ export default function Dashboard() {
 
         <main className="p-8 max-w-5xl mx-auto flex flex-col items-center gap-8">
           <div className="text-center space-y-2">
-            <h2 className="text-3xl font-extrabold tracking-tight">Dashboard</h2>
-            <p className="text-lg text-gray-600">Overview and quick actions for admins.</p>
+            <h2 className="text-3xl font-extrabold tracking-tight text-app-primary">Dashboard</h2>
+            <p className="text-lg text-app-primary/70">Overview and quick actions for admins.</p>
           </div>
 
           <div className="w-full space-y-8">
             <DashboardStats pendingCount={pendingCount} appointmentsCount={appointmentsCount} clientsCount={usersCount} />
 
             <div className="space-y-6">
-              <UpcomingAppointments appointments={appointments} />
+              <UpcomingAppointments 
+                appointments={appointments} 
+                onStatusUpdate={handleAppointmentStatusUpdate}
+              />
               <PendingDocuments
                 documents={documents}
                 onReview={handleReview}
@@ -186,8 +204,7 @@ export default function Dashboard() {
         <DocumentReviewModal
           document={selectedDocument}
           onClose={handleCloseModal}
-          onAccept={handleAccept}
-          onReject={handleReject}
+          onStatusUpdated={handleStatusUpdated}
         />
       )}
     </div>

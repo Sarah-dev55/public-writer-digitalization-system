@@ -46,7 +46,7 @@ async function seed() {
 
   // Documents (metadata)
   const docs = await Document.insertMany([
-    { checklistItemId: checklist.items[0]._id, fileName: 'passport_sample.png', storagePath: '/uploads/documents/passport_sample.png', type: 'passport', userId: user._id },
+    { checklistItemId: checklist.items[0]._id, fileName: 'passport_sample.png', storagePath: 'uploads/documents/passport_sample.png', type: 'passport', userId: user._id },
   ]);
 
   // No work days

@@ -2,8 +2,10 @@ const express = require('express');
 const router = express.Router();
 const Appointment = require('../../models/Appointment');
 const NoWorkDay = require('../../models/NoWorkDay');
+const User = require('../../models/User');
 const { v4: uuidv4 } = require('uuid');
-const clientAppointmentController = require('../../controllers/client/client_apointments');
+const clientAppointmentController = require('../../controllers/client/client_appointments');
+const { notifyAdmins } = require('../../utils/notificationHelper');
 
 // Get all appointments
 router.get('/', async (req, res) => {
@@ -62,6 +64,21 @@ router.post('/', async (req, res) => {
     });
 
     const newAppointment = await appointment.save();
+
+    // Notify admins about new appointment
+    try {
+      const user = await User.findById(userId);
+      const userName = user ? (user.fullName || user.email) : 'A client';
+      await notifyAdmins(
+        'New Appointment Booked',
+        `${userName} has booked an appointment for ${date} at ${timeSlot}`,
+        'info'
+      );
+    } catch (notifError) {
+      console.error('Error sending notification:', notifError);
+      // Don't fail the appointment creation if notification fails
+    }
+
     res.status(201).json(newAppointment);
 
   } catch (error) {

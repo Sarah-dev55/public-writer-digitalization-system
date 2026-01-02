@@ -6,7 +6,7 @@ const fs = require('fs');
 const clientDocumentController = require('../../controllers/client/client_documents');
 
 // Create uploads directory if it doesn't exist
-const uploadsDir = path.join(__dirname, '../../../uploads/documents');
+const uploadsDir = path.join(process.cwd(), 'uploads/documents');
 if (!fs.existsSync(uploadsDir)) {
     fs.mkdirSync(uploadsDir, { recursive: true });
 }

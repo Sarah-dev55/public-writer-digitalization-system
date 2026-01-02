@@ -146,6 +146,7 @@
     "pending": "En attente",
     "scheduled": "Programmé",
     "inProgress": "En cours",
+    "cancelled": "Annulé",
     "passportCopy": "Copie du passeport",
     "academicTranscripts": "Relevés universitaires",
     "motivationLetter": "Lettre de motivation",

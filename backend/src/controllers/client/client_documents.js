@@ -1,6 +1,8 @@
 const Document = require('../../models/Document');
 const path = require('path');
 const fs = require('fs').promises;
+const { notifyAdmins } = require('../../utils/notificationHelper');
+const User = require('../../models/User');
 
 /**
  * Get all documents for a specific user
@@ -60,13 +62,28 @@ async function uploadDocument(req, res) {
 
                 // Update document
                 existingDoc.fileName = req.file.filename;
-                existingDoc.storagePath = req.file.path;
+                existingDoc.storagePath = req.file.path.includes(process.cwd().replace(/\\/g, '/')) || req.file.path.includes(process.cwd())
+                    ? path.relative(process.cwd(), req.file.path)
+                    : req.file.path;
                 existingDoc.type = req.file.mimetype;
                 existingDoc.status = 'pending';
                 existingDoc.rejectionReason = undefined; // Clear rejection reason
                 existingDoc.uploadedAt = new Date();
                 if (checklistItemId) existingDoc.checklistItemId = checklistItemId;
                 await existingDoc.save();
+
+                // Notify admins about document upload
+                try {
+                    const user = await User.findById(userId);
+                    const userName = user ? (user.fullName || user.email) : 'A client';
+                    await notifyAdmins(
+                        'Document Updated',
+                        `${userName} has uploaded a new version of "${existingDoc.name}"`,
+                        'info'
+                    );
+                } catch (notifError) {
+                    console.error('Error sending notification:', notifError);
+                }
 
                 return res.status(200).json(existingDoc);
             }
@@ -77,7 +94,9 @@ async function uploadDocument(req, res) {
             userId,
             name: documentName || req.file.originalname,
             fileName: req.file.filename,
-            storagePath: req.file.path,
+            storagePath: req.file.path.includes(process.cwd().replace(/\\/g, '/')) || req.file.path.includes(process.cwd())
+                ? path.relative(process.cwd(), req.file.path)
+                : req.file.path,
             type: req.file.mimetype,
             status: 'pending',
             required: false,
@@ -85,6 +104,20 @@ async function uploadDocument(req, res) {
         });
 
         await document.save();
+
+        // Notify admins about new document upload
+        try {
+            const user = await User.findById(userId);
+            const userName = user ? (user.fullName || user.email) : 'A client';
+            await notifyAdmins(
+                'New Document Uploaded',
+                `${userName} has uploaded "${document.name}"`,
+                'info'
+            );
+        } catch (notifError) {
+            console.error('Error sending notification:', notifError);
+        }
+
         res.status(201).json(document);
     } catch (error) {
         console.error('Error uploading document:', error);
@@ -118,7 +151,10 @@ async function deleteDocument(req, res) {
         // Delete file from storage
         if (document.storagePath) {
             try {
-                await fs.unlink(document.storagePath);
+                const fullPath = path.isAbsolute(document.storagePath)
+                    ? document.storagePath
+                    : path.join(process.cwd(), document.storagePath);
+                await fs.unlink(fullPath);
             } catch (err) {
                 console.log('File not found or already deleted:', err.message);
             }
@@ -160,7 +196,10 @@ async function viewDocument(req, res) {
 
         // Check if file exists
         try {
-            await fs.access(document.storagePath);
+            const fullPath = path.isAbsolute(document.storagePath)
+                ? document.storagePath
+                : path.join(process.cwd(), document.storagePath);
+            await fs.access(fullPath);
             // Return URL for viewing (frontend can open in new tab)
             const fileUrl = `/uploads/documents/${document.fileName}`;
             res.json({ url: fileUrl, document });
@@ -188,8 +227,11 @@ async function downloadDocument(req, res) {
 
         // Check if file exists
         try {
-            await fs.access(document.storagePath);
-            res.download(document.storagePath, document.fileName);
+            const fullPath = path.isAbsolute(document.storagePath)
+                ? document.storagePath
+                : path.join(process.cwd(), document.storagePath);
+            await fs.access(fullPath);
+            res.download(fullPath, document.fileName);
         } catch (err) {
             return res.status(404).json({ message: 'File not found on server' });
         }

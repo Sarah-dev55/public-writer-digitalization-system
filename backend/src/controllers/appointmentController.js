@@ -31,6 +31,13 @@ async function create(req, res) {
 
 async function update(req, res) {
 	try {
+		const { status } = req.body;
+		if (status) {
+			const validStatuses = ['scheduled', 'confirmed', 'completed', 'cancelled'];
+			if (!validStatuses.includes(status)) {
+				return res.status(400).json({ success: false, message: 'Invalid status' });
+			}
+		}
 		const appt = await Appointment.findByIdAndUpdate(req.params.id, req.body, { new: true });
 		if (!appt) return res.status(404).json({ success: false, message: 'Not found' });
 		res.json({ success: true, data: appt });

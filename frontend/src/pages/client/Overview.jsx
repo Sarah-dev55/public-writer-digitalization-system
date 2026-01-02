@@ -272,6 +272,7 @@ export default function ClientDashboard() {
           notifications={notifications}
           onMarkAsRead={handleMarkAsRead}
           onMarkAllAsRead={handleMarkAllAsRead}
+          user={user}
         />
       </div>
       

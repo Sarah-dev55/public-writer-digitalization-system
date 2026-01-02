@@ -2,6 +2,9 @@ import React, { useState, useEffect } from "react";
 import { X, User, Settings, Bell, LogOut, ChevronRight, Pencil } from "lucide-react";
 import { Button } from "./button";
 import { getErrorMessage } from "../../utils/errorUtils";
+import { uploadProfileImage } from "../../services/userService";
+
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
 
 export const ProfileModal = ({ open, onClose, user, onUpdate, onLogout, reloadUser }) => {
   const [activeView, setActiveView] = useState("profile"); // "profile" or "settings"
@@ -95,6 +98,35 @@ export const ProfileModal = ({ open, onClose, user, onUpdate, onLogout, reloadUs
     onClose();
   };
 
+  const handleImageChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Optional: add client-side size check
+    if (file.size > 5 * 1024 * 1024) {
+      setError('File size must be less than 5MB');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    try {
+      const userId = user._id || user.id;
+      const res = await uploadProfileImage(userId, file);
+      if (res.success) {
+        if (onUpdate) {
+          // Trigger a refresh/update in the parent context
+          await onUpdate(res.data);
+        }
+      }
+    } catch (error) {
+      console.error('Image upload failed', error);
+      setError('Failed to upload profile image.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Helper function to get user initials
   const getUserInitials = (name) => {
     if (!name) return "?";
@@ -130,9 +162,17 @@ export const ProfileModal = ({ open, onClose, user, onUpdate, onLogout, reloadUs
             {/* User Info Section */}
             <div className="mb-6">
               <div className="w-20 h-20 rounded-full bg-app-primary overflow-hidden flex items-center justify-center mx-auto mb-4 shadow-lg ring-2 ring-app-accent/20">
-                <div className="w-full h-full flex items-center justify-center bg-app-primary text-app-accent font-bold text-2xl">
-                  {getUserInitials(user?.name || user?.fullName)}
-                </div>
+                {user?.profileImage ? (
+                  <img 
+                    src={user.profileImage.startsWith('http') ? user.profileImage : `${API_BASE.replace('/api', '')}${user.profileImage}`} 
+                    alt="Profile" 
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-app-primary text-app-accent font-bold text-2xl">
+                    {getUserInitials(user?.fullName || user?.name || user?.fullname)}
+                  </div>
+                )}
               </div>
               <h3 className="text-center font-semibold text-app-primary text-lg mb-1">
                 {user?.name || user?.fullName || "Your name"}
@@ -250,20 +290,35 @@ export const ProfileModal = ({ open, onClose, user, onUpdate, onLogout, reloadUs
                 <div className="flex items-center gap-4 mb-6 pb-6 border-b border-gray-200">
                   <div className="relative">
                     <div className="w-20 h-20 rounded-full bg-app-primary overflow-hidden flex items-center justify-center shadow-lg ring-2 ring-app-accent/20">
-                      <div className="w-full h-full flex items-center justify-center bg-app-primary text-app-accent font-bold text-2xl">
-                        {getUserInitials(formData.name || user?.name || user?.fullName)}
-                      </div>
+                      {user?.profileImage ? (
+                        <img 
+                          src={user.profileImage.startsWith('http') ? user.profileImage : `${API_BASE.replace('/api', '')}${user.profileImage}`} 
+                          alt="Profile" 
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-app-primary text-app-accent font-bold text-2xl">
+                          {getUserInitials(formData.name || user?.fullName || user?.name || user?.fullname)}
+                        </div>
+                      )}
                     </div>
                     {isEditing && (
-                      <button
-                        onClick={() => {
-                          // Handle avatar edit
-                          console.log("Edit avatar");
-                        }}
-                        className="absolute bottom-0 right-0 w-6 h-6 bg-app-secondary rounded-full flex items-center justify-center border-2 border-white shadow-md hover:bg-app-secondary/90 transition-colors"
-                      >
-                        <Pencil className="w-3 h-3 text-white" />
-                      </button>
+                      <>
+                        <input
+                          type="file"
+                          id="profileImageInput"
+                          className="hidden"
+                          accept="image/*"
+                          onChange={handleImageChange}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => document.getElementById('profileImageInput').click()}
+                          className="absolute bottom-0 right-0 w-6 h-6 bg-app-secondary rounded-full flex items-center justify-center border-2 border-white shadow-md hover:bg-app-secondary/90 transition-colors"
+                        >
+                          <Pencil className="w-3 h-3 text-white" />
+                        </button>
+                      </>
                     )}
                   </div>
                   <div>

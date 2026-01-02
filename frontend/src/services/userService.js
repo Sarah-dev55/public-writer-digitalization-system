@@ -20,3 +20,12 @@ export async function updateUser(userId, payload) {
     return res.data;
   }
 }
+
+export async function uploadProfileImage(userId, file) {
+  const formData = new FormData();
+  formData.append('image', file);
+  const res = await api.post(`/client/users/${userId}/upload-image`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  });
+  return res.data;
+}

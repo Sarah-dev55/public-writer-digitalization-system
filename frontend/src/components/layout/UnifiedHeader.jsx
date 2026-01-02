@@ -7,6 +7,8 @@ import { AuthContext } from "../../context/AuthContext";
 import ProfileModal from "../ui/ProfileModal";
 import LanguageSwitcher from "../common/LanguageSwitcher";
 
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+
 const contactInfo = [
   {
     icon: MailIcon,
@@ -124,7 +126,15 @@ export const UnifiedHeader = ({
                   aria-label="View Profile"
                 >
                   <div className="w-full h-full flex items-center justify-center bg-app-primary text-app-accent font-semibold text-xs sm:text-sm">
-                    {getUserInitials(user.name)}
+                    {user?.profileImage ? (
+                      <img 
+                        src={user.profileImage.startsWith('http') ? user.profileImage : `${API_BASE.replace('/api', '')}${user.profileImage}`} 
+                        alt="Profile" 
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      getUserInitials(user.fullName || user.name || user.fullname)
+                    )}
                   </div>
                 </button>
               </div>

@@ -62,9 +62,9 @@ export default function AppointmentsList({ appointments = [], loading = false, o
             </button>
           </div>
         );
+      case 'cancelled':
+        return null;
       default:
-        // Default fallthrough for any unhandled status, treating it as scheduled for availability of actions if needed, 
-        // or just null. Since we enforce two statuses, usually null is fine, but if we want to be safe we can return null.
         return null;
     }
   };
@@ -76,6 +76,8 @@ export default function AppointmentsList({ appointments = [], loading = false, o
         return <span className={`${base} bg-app-secondary text-app-primary`}>{t('dashboard.completed')}</span>;
       case 'scheduled':
         return <span className={`${base} bg-app-primary text-app-text-light`}>{t('dashboard.scheduled')}</span>;
+      case 'cancelled':
+        return <span className={base} style={{ backgroundColor: '#D4A369', color: 'white' }}>{t('dashboard.cancelled')}</span>;
       default:
         // Even 'pending' should be intercepted by mapAppointmentData, but if it slips through:
         return <span className={`${base} bg-app-primary text-app-text-light`}>{status}</span>;
