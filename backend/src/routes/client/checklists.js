@@ -17,8 +17,8 @@ router.get('/', async (req, res) => {
 router.get('/user/:userId', async (req, res) => {
   try {
     const checklist = await Checklist.findOne({ userId: req.params.userId });
-    if (!checklist) return res.status(404).json({ message: 'Checklist not found' });
-    res.json(checklist);
+    // Return null if no checklist found (frontend handles gracefully)
+    res.json(checklist || null);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

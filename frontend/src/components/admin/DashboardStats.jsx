@@ -4,7 +4,7 @@ import React from 'react';
  * DashboardStats Component
  * Displays summary statistics on the admin dashboard
  */
-export default function DashboardStats({ pendingCount = 0 }) {
+export default function DashboardStats({ pendingCount = 0, appointmentsCount = 0, clientsCount = 0 }) {
   const stats = [
     {
       label: 'Pending Documents',
@@ -18,7 +18,7 @@ export default function DashboardStats({ pendingCount = 0 }) {
     },
     {
       label: 'Total Appointments',
-      value: '—',
+      value: appointmentsCount,
       color: 'bg-blue-500',
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -28,7 +28,7 @@ export default function DashboardStats({ pendingCount = 0 }) {
     },
     {
       label: 'Active Clients',
-      value: '—',
+      value: clientsCount,
       color: 'bg-green-500',
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

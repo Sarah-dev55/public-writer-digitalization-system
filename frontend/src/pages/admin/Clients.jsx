@@ -1,5 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import AdminLayout from '../../components/layout/AdminLayout';
 import { deleteUser, getAllUsers, updateUser } from '../../services/adminUserService';
+import { getChecklistByUser, createChecklist, updateChecklist, updateChecklistItem } from '../../services/adminChecklistService';
 
 function fmtDate(value) {
   if (!value) return '—';
@@ -23,6 +25,14 @@ export default function AdminClients() {
   const [deletingId, setDeletingId] = useState('');
 
   const [form, setForm] = useState({ fullName: '', email: '', phone: '', role: '' });
+
+  // Checklist modal state
+  const [checklistUser, setChecklistUser] = useState(null);
+  const [checklist, setChecklist] = useState(null);
+  const [checklistLoading, setChecklistLoading] = useState(false);
+  const [checklistError, setChecklistError] = useState('');
+  const [newItemLabel, setNewItemLabel] = useState('');
+  const [newItemRequired, setNewItemRequired] = useState(false);
 
   const pageSize = 10;
   const [page, setPage] = useState(1);
@@ -108,6 +118,104 @@ export default function AdminClients() {
     }
   }
 
+  async function openChecklist(u) {
+    setChecklistUser(u);
+    setChecklist(null);
+    setChecklistError('');
+    setChecklistLoading(true);
+    setNewItemLabel('');
+    setNewItemRequired(false);
+    try {
+      const res = await getChecklistByUser(u._id);
+      const data = res?.data || res;
+      setChecklist(data || null);
+    } catch (e) {
+      if (e?.response?.status === 404) {
+        setChecklist(null);
+      } else {
+        setChecklistError(e?.response?.data?.message || e?.message || 'Failed to load checklist');
+      }
+    } finally {
+      setChecklistLoading(false);
+    }
+  }
+
+  function closeChecklist() {
+    setChecklistUser(null);
+    setChecklist(null);
+    setChecklistError('');
+    setNewItemLabel('');
+    setNewItemRequired(false);
+  }
+
+  async function createNewChecklist() {
+    if (!checklistUser?._id) return;
+    setChecklistLoading(true);
+    setChecklistError('');
+    try {
+      const res = await createChecklist({
+        userId: checklistUser._id,
+        title: `Checklist for ${checklistUser.fullName || checklistUser.email}`,
+        items: [],
+      });
+      const data = res?.data || res;
+      setChecklist(data);
+    } catch (e) {
+      setChecklistError(e?.response?.data?.message || e?.message || 'Failed to create checklist');
+    } finally {
+      setChecklistLoading(false);
+    }
+  }
+
+  async function addChecklistItem() {
+    if (!checklist?._id || !newItemLabel.trim()) return;
+    setChecklistLoading(true);
+    setChecklistError('');
+    try {
+      const newItem = {
+        itemId: `item_${Date.now()}`,
+        label: newItemLabel.trim(),
+        required: newItemRequired,
+        isCompleted: false,
+      };
+      const updatedItems = [...(checklist.items || []), newItem];
+      const res = await updateChecklist(checklist._id, { items: updatedItems });
+      const data = res?.data || res;
+      setChecklist(data);
+      setNewItemLabel('');
+      setNewItemRequired(false);
+    } catch (e) {
+      setChecklistError(e?.response?.data?.message || e?.message || 'Failed to add item');
+    } finally {
+      setChecklistLoading(false);
+    }
+  }
+
+  async function toggleItemComplete(item) {
+    if (!checklist?._id) return;
+    const itemId = item._id || item.itemId;
+    try {
+      const res = await updateChecklistItem(checklist._id, itemId, { isCompleted: !item.isCompleted });
+      const data = res?.data || res;
+      setChecklist(data);
+    } catch (e) {
+      setChecklistError(e?.response?.data?.message || e?.message || 'Failed to update item');
+    }
+  }
+
+  async function removeChecklistItem(item) {
+    if (!checklist?._id) return;
+    const itemId = item._id || item.itemId;
+    const updatedItems = (checklist.items || []).filter((i) => (i._id || i.itemId) !== itemId);
+    try {
+      const res = await updateChecklist(checklist._id, { items: updatedItems });
+      const data = res?.data || res;
+      setChecklist(data);
+    } catch (e) {
+      setChecklistError(e?.response?.data?.message || e?.message || 'Failed to remove item');
+    }
+  }
+
   const rows = useMemo(() => {
     const q = safeLower(query).trim();
     if (!q) return users;
@@ -127,19 +235,44 @@ export default function AdminClients() {
     return rows.slice(start, start + pageSize);
   }, [rows, page]);
 
-  return (
-    <div className="p-6">
-      <div className="max-w-7xl mx-auto">
-        <div className="rounded-2xl border bg-white p-6 shadow-sm">
-          <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-            <div>
-              <h2 className="text-2xl font-extrabold tracking-tight">Clients</h2>
-              <p className="text-gray-600 mt-1">All accounts created in the database — edit details or remove accounts.</p>
-              <div className="mt-4 inline-flex items-center rounded-full border px-2.5 py-1 text-xs bg-white text-gray-700">
-                {users.length} total users
-              </div>
-            </div>
+  function Chip({ children }) {
+    return (
+      <span className="inline-flex items-center rounded-full border px-2.5 py-1 text-xs text-gray-700 bg-white">
+        {children}
+      </span>
+    );
+  }
 
+  function Button({ children, onClick, variant = 'primary', disabled }) {
+    const base =
+      'inline-flex items-center justify-center rounded-lg px-3 py-2 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-offset-2';
+    const styles =
+      variant === 'ghost'
+        ? 'border bg-white hover:bg-gray-50 text-gray-900'
+        : variant === 'danger'
+          ? 'border border-red-200 bg-white text-red-700 hover:bg-red-50 focus:ring-red-600'
+          : 'bg-black text-white hover:opacity-90 focus:ring-black';
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        disabled={disabled}
+        className={`${base} ${styles} ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+      >
+        {children}
+      </button>
+    );
+  }
+
+  return (
+    <AdminLayout>
+      <div className="max-w-6xl mx-auto px-4 py-6 space-y-6">
+        <div className="rounded-2xl border bg-white p-6 shadow-sm space-y-4">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h1 className="text-3xl font-extrabold tracking-tight">Clients</h1>
+              <p className="text-gray-600">All accounts in the system — search, edit, or remove.</p>
+            </div>
             <div className="w-full md:w-96">
               <input
                 value={query}
@@ -147,12 +280,16 @@ export default function AdminClients() {
                 placeholder="Search name, email, phone, role…"
                 className="border rounded-lg px-3 py-2 text-sm w-full"
               />
-              <div className="mt-2 text-xs text-gray-500">Tip: try “admin”, “public_writer”, or an email.</div>
+              <div className="mt-2 text-xs text-gray-500">Try “admin”, “public_writer”, or an email.</div>
             </div>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Chip>{users.length} total users</Chip>
+            <Chip>{rows.length} match current search</Chip>
           </div>
         </div>
 
-        <div className="mt-6 rounded-2xl border bg-white shadow-sm">
+        <div className="rounded-2xl border bg-white shadow-sm">
           <div className="p-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="text-sm text-gray-600">
               Showing <span className="font-semibold">{pagedRows.length}</span> of{' '}
@@ -160,25 +297,15 @@ export default function AdminClients() {
             </div>
 
             <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page <= 1}
-                className="rounded-lg border bg-white px-3 py-2 text-sm font-semibold hover:bg-gray-50 disabled:opacity-50"
-              >
+              <Button variant="ghost" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page <= 1}>
                 Prev
-              </button>
+              </Button>
               <span className="inline-flex items-center rounded-full border px-2.5 py-1 text-xs bg-white text-gray-700">
                 Page {page} / {totalPages}
               </span>
-              <button
-                type="button"
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                disabled={page >= totalPages}
-                className="rounded-lg border bg-white px-3 py-2 text-sm font-semibold hover:bg-gray-50 disabled:opacity-50"
-              >
+              <Button variant="ghost" onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page >= totalPages}>
                 Next
-              </button>
+              </Button>
             </div>
           </div>
 
@@ -222,21 +349,15 @@ export default function AdminClients() {
                         <td className="px-4 py-3 text-gray-700">{fmtDate(u.createdAt)}</td>
                         <td className="px-4 py-3 text-right">
                           <div className="inline-flex gap-2">
-                            <button
-                              type="button"
-                              onClick={() => openEdit(u)}
-                              className="rounded-lg border bg-white px-3 py-2 text-xs font-semibold hover:bg-gray-50"
-                            >
-                              Edit
-                            </button>
-                            <button
-                              type="button"
+                            <Button variant="ghost" onClick={() => openChecklist(u)}>Checklist</Button>
+                            <Button variant="ghost" onClick={() => openEdit(u)}>Edit</Button>
+                            <Button
+                              variant="danger"
                               onClick={() => onDelete(u)}
                               disabled={deletingId === (u._id || '')}
-                              className="rounded-lg border border-red-200 bg-white px-3 py-2 text-xs font-semibold text-red-700 hover:bg-red-50 disabled:opacity-50"
                             >
                               {deletingId === (u._id || '') ? 'Deleting…' : 'Delete'}
-                            </button>
+                            </Button>
                           </div>
                         </td>
                       </tr>
@@ -256,7 +377,6 @@ export default function AdminClients() {
           </div>
         </div>
 
-        {/* Edit modal */}
         {editing && (
           <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
             <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden">
@@ -265,14 +385,9 @@ export default function AdminClients() {
                   <div className="text-lg font-bold">Edit client</div>
                   <div className="text-xs text-gray-500 break-all mt-1">{editing._id}</div>
                 </div>
-                <button
-                  type="button"
-                  onClick={closeEdit}
-                  className="rounded-lg border bg-white px-3 py-2 text-sm font-semibold hover:bg-gray-50"
-                  disabled={saving}
-                >
+                <Button variant="ghost" onClick={closeEdit} disabled={saving}>
                   ✕
-                </button>
+                </Button>
               </div>
 
               <div className="p-5 grid grid-cols-1 gap-3">
@@ -322,27 +437,122 @@ export default function AdminClients() {
               </div>
 
               <div className="p-5 border-t flex items-center justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={closeEdit}
-                  className="rounded-lg border bg-white px-4 py-2 text-sm font-semibold hover:bg-gray-50 disabled:opacity-50"
-                  disabled={saving}
-                >
+                <Button variant="ghost" onClick={closeEdit} disabled={saving}>
                   Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={onSave}
-                  className="rounded-lg bg-black text-white px-4 py-2 text-sm font-semibold hover:opacity-90 disabled:opacity-50"
-                  disabled={saving}
-                >
+                </Button>
+                <Button onClick={onSave} disabled={saving}>
                   {saving ? 'Saving…' : 'Save changes'}
-                </button>
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Checklist Modal */}
+        {checklistUser && (
+          <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden max-h-[90vh] flex flex-col">
+              <div className="p-5 border-b flex items-start justify-between gap-4">
+                <div>
+                  <div className="text-lg font-bold">Checklist</div>
+                  <div className="text-sm text-gray-600 mt-1">
+                    {checklistUser.fullName || checklistUser.email}
+                  </div>
+                </div>
+                <Button variant="ghost" onClick={closeChecklist}>
+                  ✕
+                </Button>
+              </div>
+
+              <div className="p-5 flex-1 overflow-auto space-y-4">
+                {checklistLoading && <div className="text-gray-600">Loading…</div>}
+
+                {checklistError && (
+                  <div className="border border-red-200 bg-red-50 text-red-800 rounded-xl p-3 text-sm">
+                    {checklistError}
+                  </div>
+                )}
+
+                {!checklistLoading && !checklist && (
+                  <div className="text-center py-6 space-y-3">
+                    <p className="text-gray-600">No checklist exists for this user yet.</p>
+                    <Button onClick={createNewChecklist}>Create Checklist</Button>
+                  </div>
+                )}
+
+                {!checklistLoading && checklist && (
+                  <>
+                    <div className="text-sm text-gray-700 font-medium">
+                      {checklist.title || 'Checklist'}
+                    </div>
+
+                    {(!checklist.items || checklist.items.length === 0) && (
+                      <div className="text-gray-500 text-sm border border-dashed rounded-lg p-4 text-center">
+                        No items yet. Add one below.
+                      </div>
+                    )}
+
+                    <div className="space-y-2">
+                      {(checklist.items || []).map((item) => (
+                        <div
+                          key={item._id || item.itemId}
+                          className="flex items-center gap-3 p-3 border rounded-lg bg-gray-50"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={item.isCompleted || false}
+                            onChange={() => toggleItemComplete(item)}
+                            className="w-4 h-4 accent-black"
+                          />
+                          <div className="flex-1">
+                            <span className={item.isCompleted ? 'line-through text-gray-500' : 'text-gray-900'}>
+                              {item.label}
+                            </span>
+                            {item.required && (
+                              <span className="ml-2 text-xs text-red-600">Required</span>
+                            )}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeChecklistItem(item)}
+                            className="text-red-600 hover:text-red-800 text-sm"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="border-t pt-4 space-y-3">
+                      <div className="text-sm font-medium text-gray-700">Add new item</div>
+                      <div className="flex gap-2">
+                        <input
+                          value={newItemLabel}
+                          onChange={(e) => setNewItemLabel(e.target.value)}
+                          placeholder="Item label…"
+                          className="border rounded-lg px-3 py-2 text-sm flex-1"
+                        />
+                        <label className="flex items-center gap-1 text-sm text-gray-700">
+                          <input
+                            type="checkbox"
+                            checked={newItemRequired}
+                            onChange={(e) => setNewItemRequired(e.target.checked)}
+                            className="w-4 h-4"
+                          />
+                          Required
+                        </label>
+                      </div>
+                      <Button onClick={addChecklistItem} disabled={!newItemLabel.trim()}>
+                        Add Item
+                      </Button>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </div>
         )}
       </div>
-    </div>
+    </AdminLayout>
   );
 }

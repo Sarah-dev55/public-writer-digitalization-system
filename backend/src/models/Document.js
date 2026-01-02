@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
 const DocumentSchema = new Schema({
-	checklistItemId: { type: Schema.Types.ObjectId, ref: 'Checklist.items' },
+	checklistItemId: { type: String }, // Links to checklist item's itemId
 	name: { type: String, required: true }, // Document name (e.g., "Passport Copy")
 	fileName: { type: String, required: false }, // Actual file name
 	storagePath: { type: String, required: false }, // File storage path

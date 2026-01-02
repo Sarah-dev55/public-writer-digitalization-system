@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Download, Eye, Upload, Trash2, RefreshCw } from 'lucide-react';
+import { Download, Eye, Upload, Trash2, RefreshCw, CheckCircle, Circle } from 'lucide-react';
 import { uploadDocument, updateDocument, listDocumentsByUser, deleteDocument } from '../../services/documentService';
+import { getChecklistByUser } from '../../services/clientChecklistService';
 import api from '../../services/api';
 import ConfirmationDialog from '../common/ConfirmationDialog';
 import useAuth from '../../hooks/useAuth';
@@ -159,6 +160,135 @@ const DocumentCard = ({ document, onView, onDownload, onUpload, onDelete, onReup
   );
 };
 
+// Checklist Item Card Component - shows each checklist item with upload capability
+const ChecklistItemCard = ({ item, document: doc, onUpload, onView, onDownload, onDelete, onReupload, uploading, userId }) => {
+  const fileInputRef = useRef(null);
+  const itemId = item._id || item.itemId;
+  const hasDocument = !!doc;
+  const status = doc?.reviewStatus || null;
+
+  const handleFileSelect = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      onUpload(file);
+    }
+    e.target.value = '';
+  };
+
+  const triggerFileInput = () => {
+    fileInputRef.current?.click();
+  };
+
+  const getCardStyles = () => {
+    if (hasDocument && status === 'approved') return 'border-2 border-[#1E4D3D] bg-[#DADCC8]';
+    if (hasDocument && status === 'rejected') return 'border-2 border-[#bf4b4b] bg-[#fff1f1]';
+    if (hasDocument && status === 'pending') return 'border-2 border-[#d4b94a] bg-[#fffbe6]';
+    return 'border-2 border-gray-300 bg-white';
+  };
+
+  return (
+    <div className={`p-4 rounded-lg ${getCardStyles()} transition-all hover:shadow-md`}>
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileSelect}
+        accept=".pdf,.jpg,.jpeg,.png"
+        className="hidden"
+      />
+      <div className="flex items-start justify-between">
+        <div className="flex items-start gap-3 flex-1">
+          {hasDocument ? (
+            <CheckCircle className="w-5 h-5 text-app-primary mt-0.5" />
+          ) : (
+            <Circle className="w-5 h-5 text-gray-400 mt-0.5" />
+          )}
+          <div className="flex-1">
+            <div className="flex items-center gap-3 mb-1">
+              <span className="font-medium text-app-primary">{item.label}</span>
+              {item.required && (
+                <span className="text-xs text-red-600 font-medium">Required</span>
+              )}
+              {hasDocument && (
+                <StatusBadge status={status ? status.charAt(0).toUpperCase() + status.slice(1) : 'Pending'} />
+              )}
+            </div>
+            {hasDocument && doc.uploadedAt && (
+              <div className="text-sm text-gray-500">
+                Uploaded: {new Date(doc.uploadedAt).toLocaleDateString()}
+              </div>
+            )}
+            {hasDocument && doc.rejectionReason && status === 'rejected' && (
+              <div className="mt-2 text-sm text-red-600 bg-red-50 p-2 rounded border border-red-200">
+                <strong>Rejection Reason:</strong> {doc.rejectionReason}
+              </div>
+            )}
+            {!hasDocument && (
+              <div className="text-sm text-gray-500">No document uploaded yet</div>
+            )}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 ml-4">
+          {hasDocument && (status === 'approved' || status === 'pending') && (
+            <>
+              <button
+                onClick={() => onView(doc)}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                title="View"
+              >
+                <Eye className="w-4 h-4 text-app-primary" />
+              </button>
+              <button
+                onClick={() => onDownload(doc)}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                title="Download"
+              >
+                <Download className="w-4 h-4 text-app-primary" />
+              </button>
+            </>
+          )}
+          {hasDocument && status === 'pending' && (
+            <>
+              <button
+                onClick={() => onReupload(doc)}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                title="Replace"
+              >
+                <RefreshCw className="w-4 h-4 text-app-primary" />
+              </button>
+              <button
+                onClick={() => onDelete(doc)}
+                className="p-2 hover:bg-red-50 rounded-lg transition-colors"
+                title="Delete"
+              >
+                <Trash2 className="w-4 h-4 text-red-600" />
+              </button>
+            </>
+          )}
+          {hasDocument && status === 'rejected' && (
+            <button
+              onClick={triggerFileInput}
+              disabled={uploading[itemId] === 'uploading'}
+              className="px-4 py-2 bg-app-primary text-app-text-light text-sm rounded-lg hover:bg-app-primary/90 transition-colors font-medium disabled:opacity-50"
+            >
+              {uploading[itemId] === 'uploading' ? 'Uploading...' : 'Re-Upload'}
+            </button>
+          )}
+          {!hasDocument && (
+            <button
+              onClick={triggerFileInput}
+              disabled={uploading[itemId] === 'uploading'}
+              className="px-4 py-2 bg-app-primary text-app-text-light text-sm rounded-lg hover:bg-app-primary/90 transition-colors font-medium disabled:opacity-50"
+            >
+              {uploading[itemId] === 'uploading' ? 'Uploading...' : 'Upload'}
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // Status Card Component
 const StatusCard = ({ title, count, color }) => {
   const getColorClasses = () => {
@@ -185,13 +315,29 @@ const DocumentManagement = () => {
   const userId = (user && (user._id || user.id)) || null;
   
   const [documents, setDocuments] = useState([]);
+  const [checklist, setChecklist] = useState(null);
+  const [checklistLoading, setChecklistLoading] = useState(true);
   const [loading, setLoading] = useState(true);
 
-  // Fetch documents on mount (after auth)
+  // Fetch documents and checklist on mount (after auth)
   useEffect(() => {
     if (!userId) return;
     fetchDocuments();
+    fetchChecklist();
   }, [userId]);
+
+  const fetchChecklist = async () => {
+    try {
+      setChecklistLoading(true);
+      const data = await getChecklistByUser(userId);
+      setChecklist(data || null);
+    } catch (error) {
+      console.error('Error fetching checklist:', error);
+      setChecklist(null);
+    } finally {
+      setChecklistLoading(false);
+    }
+  };
 
   const fetchDocuments = async () => {
     try {
@@ -238,6 +384,92 @@ const DocumentManagement = () => {
     onConfirm: null,
     isLoading: false,
   });
+
+  // Handle upload for a checklist item
+  const handleChecklistUpload = async (item, file) => {
+    const itemId = item._id || item.itemId;
+
+    // Validate file type
+    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
+    if (!allowedTypes.includes(file.type)) {
+      setConfirmationDialog({
+        isOpen: true,
+        title: 'Invalid File Type',
+        message: 'Please upload PDF, JPG, or PNG files only.',
+        type: 'warning',
+        onConfirm: () => setConfirmationDialog(prev => ({ ...prev, isOpen: false })),
+        confirmText: 'OK',
+        cancelText: '',
+      });
+      return;
+    }
+
+    // Validate file size (10MB max)
+    const maxSize = 10 * 1024 * 1024;
+    if (file.size > maxSize) {
+      setConfirmationDialog({
+        isOpen: true,
+        title: 'File Too Large',
+        message: 'File size exceeds 10MB limit. Please upload a smaller file.',
+        type: 'warning',
+        onConfirm: () => setConfirmationDialog(prev => ({ ...prev, isOpen: false })),
+        confirmText: 'OK',
+        cancelText: '',
+      });
+      return;
+    }
+
+    // Confirm upload
+    setConfirmationDialog({
+      isOpen: true,
+      title: 'Upload Document',
+      message: `Upload "${file.name}" for "${item.label}"?`,
+      type: 'info',
+      onConfirm: async () => {
+        try {
+          setConfirmationDialog(prev => ({ ...prev, isLoading: true }));
+          setUploading(prev => ({ ...prev, [itemId]: 'uploading' }));
+
+          const formData = new FormData();
+          formData.append('file', file);
+          formData.append('documentName', item.label);
+          formData.append('userId', userId);
+          formData.append('checklistItemId', itemId);
+
+          await uploadDocument(formData);
+          await fetchDocuments();
+
+          setConfirmationDialog({
+            isOpen: true,
+            title: 'Success',
+            message: `Document "${item.label}" has been uploaded successfully!`,
+            type: 'success',
+            onConfirm: () => setConfirmationDialog(prev => ({ ...prev, isOpen: false })),
+            confirmText: 'OK',
+            cancelText: '',
+            isLoading: false,
+          });
+        } catch (err) {
+          console.error('Error uploading document:', err);
+          setConfirmationDialog({
+            isOpen: true,
+            title: 'Upload Failed',
+            message: err.response?.data?.message || err.message || 'Please try again.',
+            type: 'danger',
+            onConfirm: () => setConfirmationDialog(prev => ({ ...prev, isOpen: false })),
+            confirmText: 'OK',
+            cancelText: '',
+            isLoading: false,
+          });
+        } finally {
+          setUploading(prev => ({ ...prev, [itemId]: null }));
+        }
+      },
+      confirmText: 'Upload',
+      cancelText: 'Cancel',
+      isLoading: false,
+    });
+  };
 
   const handleView = async (doc) => {
     try {
@@ -533,29 +765,84 @@ const DocumentManagement = () => {
           <StatusCard title="Missing" count={statusCounts.missing} color="white" />
         </div>
 
-        {/* Document List Section */}
+        {/* Checklist-based Document Upload Section */}
         <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
           <div className="mb-4">
             <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wider">
-              REQUIRED DOCUMENTS FOR STUDENT - STUDY VISA
+              {checklist?.title || 'REQUIRED DOCUMENTS'}
             </h2>
+            <p className="text-sm text-gray-600 mt-1">
+              Upload documents for each item in your checklist. The admin has set these requirements for you.
+            </p>
           </div>
 
-          {/* Documents */}
-          <div className="grid grid-cols-1 gap-4">
-            {documents.map((doc) => (
-              <DocumentCard
-                key={doc.id}
-                document={doc}
-                onView={handleView}
-                onDownload={handleDownload}
-                onUpload={handleUpload}
-                onDelete={handleDelete}
-                onReupload={handleReupload}
-                uploading={uploading}
-              />
-            ))}
-          </div>
+          {/* Checklist Items with Upload */}
+          {checklistLoading && (
+            <div className="text-gray-600 py-4">Loading your checklist...</div>
+          )}
+
+          {!checklistLoading && !checklist && (
+            <div className="text-center py-8 text-gray-500 border border-dashed rounded-lg bg-gray-50">
+              <p>No checklist has been assigned to you yet.</p>
+              <p className="text-sm mt-1">Please contact the admin to set up your document requirements.</p>
+            </div>
+          )}
+
+          {!checklistLoading && checklist && checklist.items && checklist.items.length === 0 && (
+            <div className="text-center py-8 text-gray-500 border border-dashed rounded-lg bg-gray-50">
+              <p>Your checklist is empty.</p>
+              <p className="text-sm mt-1">Please contact the admin to add document requirements.</p>
+            </div>
+          )}
+
+          {!checklistLoading && checklist && checklist.items && checklist.items.length > 0 && (
+            <div className="grid grid-cols-1 gap-4">
+              {checklist.items.map((item) => {
+                // Find if there's a document uploaded for this checklist item
+                const itemId = item._id || item.itemId;
+                const matchedDoc = documents.find(
+                  (d) => d.checklistItemId === itemId || d.name === item.label
+                );
+
+                return (
+                  <ChecklistItemCard
+                    key={itemId}
+                    item={item}
+                    document={matchedDoc}
+                    onUpload={(file) => handleChecklistUpload(item, file)}
+                    onView={handleView}
+                    onDownload={handleDownload}
+                    onDelete={handleDelete}
+                    onReupload={handleReupload}
+                    uploading={uploading}
+                    userId={userId}
+                  />
+                );
+              })}
+            </div>
+          )}
+
+          {/* Separator */}
+          {documents.length > 0 && (
+            <>
+              <hr className="my-6 border-gray-200" />
+              <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-4">ALL UPLOADED DOCUMENTS</h3>
+              <div className="grid grid-cols-1 gap-4">
+                {documents.map((doc) => (
+                  <DocumentCard
+                    key={doc._id || doc.id}
+                    document={doc}
+                    onView={handleView}
+                    onDownload={handleDownload}
+                    onUpload={handleUpload}
+                    onDelete={handleDelete}
+                    onReupload={handleReupload}
+                    uploading={uploading}
+                  />
+                ))}
+              </div>
+            </>
+          )}
 
           {/* File Format Notice */}
           <div className="mt-6 p-4 bg-app-accent border border-gray-200 rounded-lg">

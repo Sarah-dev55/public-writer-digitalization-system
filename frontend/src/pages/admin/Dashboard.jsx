@@ -2,15 +2,12 @@ import React, { useState, useMemo, useEffect } from 'react';
 import DashboardStats from '../../components/admin/DashboardStats';
 import UpcomingAppointments from '../../components/admin/UpcomingAppointments';
 import PendingDocuments from '../../components/admin/PendingDocuments';
-import AvailabilityCalendar from '../../components/admin/AvailabilityCalendar';
 import DocumentReviewModal from '../../components/admin/DocumentReviewModal';
 import AdminHeader from '../../components/layout/AdminHeader';
 import AdminSidebar from '../../components/layout/AdminSidebar';
-import { getAppointmentsByDate } from '../../services/adminAppointmentService';
-import { getDocumentsByUser, getPendingDocuments, updateDocument } from '../../services/adminDocumentService';
-import { getAllAvailability } from '../../services/adminAvailabilityService';
-import { getAllNoWorkDays, createNoWorkDay, deleteNoWorkDay } from '../../services/clientNoWorkDayService';
-import api from '../../services/api';
+import { getAllAppointments } from '../../services/adminAppointmentService';
+import { getPendingDocuments, updateDocument } from '../../services/adminDocumentService';
+import { getAllUsers } from '../../services/adminUserService';
 
 export default function Dashboard() {
   const [documents, setDocuments] = useState([
@@ -21,7 +18,7 @@ export default function Dashboard() {
   ]);
 
   const [appointments, setAppointments] = useState([]);
-  const [availability, setAvailability] = useState([]);
+  const [usersCount, setUsersCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -29,29 +26,51 @@ export default function Dashboard() {
     async function load() {
       setLoading(true);
       try {
-        const today = new Date().toISOString().slice(0, 10);
+        const [apptRes, usersRes, pendingRes] = await Promise.all([
+          getAllAppointments(),
+          getAllUsers(),
+          getPendingDocuments(),
+        ]);
 
-        // fetch appointments for today
-        const apptRes = await getAppointmentsByDate(today);
-        if (apptRes && apptRes.success) setAppointments(apptRes.data || []);
+        const apptList = Array.isArray(apptRes?.data) ? apptRes.data : Array.isArray(apptRes) ? apptRes : [];
+        const users = Array.isArray(usersRes?.data) ? usersRes.data : Array.isArray(usersRes) ? usersRes : [];
 
-        // fetch first user to use for listing documents (seed creates one user)
-        const usersRes = await api.get('/users');
-        let userId = null;
-        if (usersRes && usersRes.data && usersRes.data.success && usersRes.data.data && usersRes.data.data.length > 0) {
-          userId = usersRes.data.data[0]._id;
-        }
+        const userMap = users.reduce((acc, u) => {
+          if (u?._id) acc[u._id] = u;
+          return acc;
+        }, {});
 
-        // fetch pending documents (admin)
-        const pendingRes = await getPendingDocuments();
+        setUsersCount(users.length);
+
+        const mappedAppts = apptList
+          .map((a) => {
+            const user = userMap[a.userId];
+            const userName = user?.fullName || user?.name || user?.email || 'Unknown user';
+
+            const dateValue = a.date || a.appointmentDate;
+            const timeValue = a.timeSlot || a.time || a.slot;
+            let dateTime = null;
+            if (dateValue && timeValue) {
+              dateTime = new Date(`${dateValue} ${timeValue}`);
+            }
+
+            return {
+              ...a,
+              userName,
+              date: dateValue,
+              timeSlot: timeValue,
+              reservationDateTime: dateTime?.getTime() || Number.MAX_SAFE_INTEGER,
+            };
+          })
+          .sort((a, b) => a.reservationDateTime - b.reservationDateTime);
+
+        setAppointments(mappedAppts);
+
         if (pendingRes && pendingRes.success) {
           const list = (pendingRes.data || []).map((d) => ({ id: d._id || d.id, title: d.fileName || d.title || 'Document', clientName: d.userId || 'Client', submittedDate: d.uploadedAt || d.createdAt || '' , ...d }));
           setDocuments(list);
         }
 
-        // availability
-        const availRes = await getAllAvailability();
-        if (availRes && availRes.success) setAvailability(availRes.data || []);
       } catch (err) {
         setError(err.message || 'Failed to load data');
       } finally {
@@ -65,6 +84,7 @@ export default function Dashboard() {
   const [selectedDocument, setSelectedDocument] = useState(null);
 
   const pendingCount = useMemo(() => documents.length, [documents]);
+  const appointmentsCount = useMemo(() => appointments.length, [appointments]);
 
   const handleReview = (doc) => {
     setSelectedDocument(doc);
@@ -140,44 +160,23 @@ export default function Dashboard() {
       <div className="pt-20 lg:pl-64">{/* reserve header height */}
         <AdminSidebar />
 
-        <main className="p-6 max-w-7xl mx-auto">
-          <div className="mb-6">
-            <h2 className="text-2xl font-bold">Dashboard</h2>
-            <p className="text-gray-600">Overview and quick actions for admins.</p>
+        <main className="p-8 max-w-5xl mx-auto flex flex-col items-center gap-8">
+          <div className="text-center space-y-2">
+            <h2 className="text-3xl font-extrabold tracking-tight">Dashboard</h2>
+            <p className="text-lg text-gray-600">Overview and quick actions for admins.</p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2 space-y-6">
-              <DashboardStats pendingCount={pendingCount} />
+          <div className="w-full space-y-8">
+            <DashboardStats pendingCount={pendingCount} appointmentsCount={appointmentsCount} clientsCount={usersCount} />
 
-              <div className="space-y-6">
-                <UpcomingAppointments appointments={appointments} />
-                <PendingDocuments documents={documents} onReview={handleReview} onAccept={handleInlineAccept} onReject={handleInlineReject} />
-              </div>
-            </div>
-
-            <div>
-              <AvailabilityCalendar availability={availability} onToggleDay={async (dateStr, makeBlocked) => {
-                try {
-                  if (makeBlocked) {
-                    // create no-work-day (block)
-                    const res = await createNoWorkDay({ date: dateStr, isRecurring: false, reason: 'Blocked via admin' });
-                    if (res && res.success) setAvailability((prev) => [ ...(prev || []), res.data ]);
-                  } else {
-                    // remove existing no-work-day for that date
-                    const found = (availability || []).find((a) => a.date && a.date.startsWith(dateStr));
-                    // find by exact match
-                    const exact = (availability || []).find((a) => a.date === dateStr);
-                    const target = exact || found;
-                    if (target && target._id) {
-                      const rem = await deleteNoWorkDay(target._id);
-                      if (rem && rem.success) setAvailability((prev) => (prev || []).filter((p) => p._id !== target._id));
-                    }
-                  }
-                } catch (err) {
-                  console.error('Availability toggle error', err);
-                }
-              }} />
+            <div className="space-y-6">
+              <UpcomingAppointments appointments={appointments} />
+              <PendingDocuments
+                documents={documents}
+                onReview={handleReview}
+                onAccept={handleInlineAccept}
+                onReject={handleInlineReject}
+              />
             </div>
           </div>
         </main>

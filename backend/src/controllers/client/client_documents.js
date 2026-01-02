@@ -32,7 +32,7 @@ async function uploadDocument(req, res) {
             return res.status(400).json({ message: 'No file uploaded' });
         }
 
-        const { userId, documentName, documentId } = req.body;
+        const { userId, documentName, documentId, checklistItemId } = req.body;
 
         if (!userId) {
             return res.status(400).json({ message: 'User ID is required' });
@@ -65,6 +65,7 @@ async function uploadDocument(req, res) {
                 existingDoc.reviewStatus = 'pending';
                 existingDoc.rejectionReason = undefined; // Clear rejection reason
                 existingDoc.uploadedAt = new Date();
+                if (checklistItemId) existingDoc.checklistItemId = checklistItemId;
                 await existingDoc.save();
 
                 return res.status(200).json(existingDoc);
@@ -80,6 +81,7 @@ async function uploadDocument(req, res) {
             type: req.file.mimetype,
             reviewStatus: 'pending',
             required: false,
+            checklistItemId: checklistItemId || undefined,
         });
 
         await document.save();

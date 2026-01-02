@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 /**
  * UpcomingAppointments Component
  * Displays a list of upcoming appointments on the admin dashboard
  */
 export default function UpcomingAppointments({ appointments = [] }) {
+  const [showAll, setShowAll] = useState(false);
   if (appointments.length === 0) {
     return (
       <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
@@ -26,7 +27,7 @@ export default function UpcomingAppointments({ appointments = [] }) {
         <span className="text-sm text-gray-500">{appointments.length} total</span>
       </div>
       <div className="space-y-3">
-        {appointments.slice(0, 5).map((apt, idx) => (
+        {(showAll ? appointments : appointments.slice(0, 5)).map((apt, idx) => (
           <div
             key={apt._id || apt.id || idx}
             className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100 hover:bg-gray-100 transition-colors"
@@ -34,12 +35,11 @@ export default function UpcomingAppointments({ appointments = [] }) {
             <div className="flex items-center gap-3">
               <div className="w-2 h-2 rounded-full bg-blue-500"></div>
               <div>
-                <p className="font-medium text-gray-900">
-                  {apt.notes || apt.appointmentType || 'Appointment'}
-                </p>
-                <p className="text-sm text-gray-600">
-                  {apt.date} • {apt.timeSlot}
-                </p>
+                <p className="font-semibold text-gray-900">{apt.userName || 'Unknown user'}</p>
+                <p className="text-sm text-gray-600">{apt.date} • {apt.timeSlot}</p>
+                {apt.notes ? (
+                  <p className="text-sm text-gray-700 truncate">Notes: {apt.notes}</p>
+                ) : null}
               </div>
             </div>
             <div className="text-right">
@@ -56,8 +56,12 @@ export default function UpcomingAppointments({ appointments = [] }) {
       </div>
       {appointments.length > 5 && (
         <div className="mt-4 text-center">
-          <button className="text-sm text-blue-600 hover:text-blue-700 font-medium">
-            View all appointments ({appointments.length})
+          <button
+            type="button"
+            className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+            onClick={() => setShowAll((v) => !v)}
+          >
+            {showAll ? 'Show less' : `View all appointments (${appointments.length})`}
           </button>
         </div>
       )}

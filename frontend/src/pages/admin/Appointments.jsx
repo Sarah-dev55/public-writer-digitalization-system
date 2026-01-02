@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { getAllAppointments, updateAppointment, deleteAppointment } from '../../services/adminAppointmentService';
+import { getAllUsers } from '../../services/adminUserService';
 import AdminHeader from '../../components/layout/AdminHeader';
 import AdminSidebar from '../../components/layout/AdminSidebar';
 
 export default function Appointments() {
   const [appointments, setAppointments] = useState([]);
+  const [usersById, setUsersById] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [editing, setEditing] = useState(null);
@@ -15,8 +17,25 @@ export default function Appointments() {
     async function load() {
       setLoading(true);
       try {
-        const res = await getAllAppointments();
-        if (res && res.success && mounted) setAppointments(res.data || []);
+        const [apptRes, usersRes] = await Promise.all([getAllAppointments(), getAllUsers()]);
+
+        const appts = Array.isArray(apptRes?.data) ? apptRes.data : Array.isArray(apptRes) ? apptRes : [];
+        const users = Array.isArray(usersRes?.data) ? usersRes.data : Array.isArray(usersRes) ? usersRes : [];
+
+        const map = users.reduce((acc, u) => {
+          if (u?._id) acc[u._id] = u;
+          return acc;
+        }, {});
+
+        if (mounted) {
+          setUsersById(map);
+          const enriched = appts.map((a) => {
+            const user = map[a.userId];
+            const userName = user?.fullName || user?.name || user?.email || '—';
+            return { ...a, userName };
+          });
+          setAppointments(enriched);
+        }
       } catch (err) {
         setError(err.message || 'Failed to load');
       } finally {
@@ -46,7 +65,7 @@ export default function Appointments() {
             <div>
               <p className="text-gray-900 font-medium">{a.notes || 'Appointment'}</p>
               <p className="text-sm text-gray-500">{a.date} — {a.timeSlot}</p>
-              <p className="text-sm text-gray-500">Client: {a.clientName || (a.userId && a.userId.fullName) || '—'}</p>
+              <p className="text-sm text-gray-500">Client: {a.userName || '—'}</p>
             </div>
             <div className="text-right flex items-center gap-3">
               <p className="text-sm text-gray-600">Status: <span className="font-medium">{a.status || 'scheduled'}</span></p>
@@ -78,7 +97,13 @@ export default function Appointments() {
                     try {
                       const res = await updateAppointment(editing._id, { date: form.date, timeSlot: form.timeSlot, notes: form.notes });
                       if (res && res.success) {
-                      setAppointments((prev) => prev.map((it) => it._id === editing._id ? res.data : it));
+                      setAppointments((prev) => prev.map((it) => {
+                        if (it._id !== editing._id) return it;
+                        const updated = res.data || res;
+                        const user = usersById[updated.userId];
+                        const userName = user?.fullName || user?.name || user?.email || it.userName || '—';
+                        return { ...it, ...updated, userName };
+                      }));
                       setEditing(null);
                     }
                   } catch (err) {

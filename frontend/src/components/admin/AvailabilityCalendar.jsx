@@ -1,5 +1,24 @@
 import React, { useState, useMemo } from 'react';
 
+function normalizeDate(value) {
+  if (!value) return null;
+
+  // Accept either 'YYYY-MM-DD' or ISO-ish strings like 'YYYY-MM-DDTHH:mm:ss...'
+  if (typeof value === 'string') {
+    const m = value.match(/^(\d{4}-\d{2}-\d{2})/);
+    return m ? m[1] : null;
+  }
+
+  // If someone stored a Date or number, normalize to YYYY-MM-DD
+  try {
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return null;
+    return d.toISOString().slice(0, 10);
+  } catch {
+    return null;
+  }
+}
+
 export default function AvailabilityCalendar({ availability = [], onToggleDay = () => {} }) {
   // availability: array of { _id, date: 'YYYY-MM-DD', isRecurring, reason }
   const today = new Date();
@@ -24,7 +43,8 @@ export default function AvailabilityCalendar({ availability = [], onToggleDay = 
   const availableSet = useMemo(() => {
     const s = new Set();
     availability.forEach((a) => {
-      if (a && a.date) s.add(a.date);
+      const normalized = normalizeDate(a?.date);
+      if (normalized) s.add(normalized);
     });
     return s;
   }, [availability]);

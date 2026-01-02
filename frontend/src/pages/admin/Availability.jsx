@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { getAllAvailability } from '../../services/adminAvailabilityService';
-import { createNoWorkDay, deleteNoWorkDay } from '../../services/clientNoWorkDayService';
+import { getAllAvailability, createAvailability, deleteAvailability } from '../../services/adminAvailabilityService';
 import AdminHeader from '../../components/layout/AdminHeader';
 import AdminSidebar from '../../components/layout/AdminSidebar';
 import AvailabilityCalendar from '../../components/admin/AvailabilityCalendar';
@@ -31,18 +30,21 @@ export default function Availability() {
   const handleToggleDay = async (dateStr, makeBlocked) => {
     try {
       if (makeBlocked) {
-        const res = await createNoWorkDay({ date: dateStr, isRecurring: false, reason: 'Admin blocked' });
-        if (res && res.success) {
-          setAvailability((prev) => [...prev, { date: dateStr, isRecurring: false, reason: 'Admin blocked' }]);
+        // Create a new NoWorkDay (block the date)
+        const res = await createAvailability({ date: dateStr, isRecurring: false, reason: 'Admin blocked' });
+        if (res && res.success && res.data) {
+          // Use the returned data (includes _id) so deletion will work later
+          setAvailability((prev) => [...prev, res.data]);
           setSuccessMsg('Day blocked successfully');
           setTimeout(() => setSuccessMsg(null), 3000);
         }
       } else {
+        // Find the blocked day by date and delete it
         const found = availability.find((a) => a.date === dateStr);
         if (found && found._id) {
-          const res = await deleteNoWorkDay(found._id);
+          const res = await deleteAvailability(found._id);
           if (res && res.success) {
-            setAvailability((prev) => prev.filter((a) => a.date !== dateStr));
+            setAvailability((prev) => prev.filter((a) => a._id !== found._id));
             setSuccessMsg('Day unblocked successfully');
             setTimeout(() => setSuccessMsg(null), 3000);
           }
