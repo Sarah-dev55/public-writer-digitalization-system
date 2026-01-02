@@ -44,7 +44,7 @@ async function signup(req, res) {
       passwordHash
     });
 
-    // create a checklist and link it (since User.checklistId is ObjectId)
+    // Create default checklist for new user
     const checklist = await Checklist.create({
       title: `Checklist - ${user.fullName}`,
       userId: user._id,
@@ -70,19 +70,16 @@ async function signin(req, res) {
     const user = await User.findOne({ email: String(email).toLowerCase().trim() });
     if (!user) return res.status(401).json({ success: false, message: 'Invalid credentials' });
 
-    // If passwordHash exists, require password check.
     if (user.passwordHash) {
       if (!password) return res.status(400).json({ success: false, message: 'password is required' });
       const ok = await bcrypt.compare(String(password), user.passwordHash);
       if (!ok) return res.status(401).json({ success: false, message: 'Invalid credentials' });
     } else {
-      // Backwards-compat: allow first-time password set on signin if provided
+      // Allow first login password setup
       if (password && String(password).length >= 6) {
         user.passwordHash = await bcrypt.hash(String(password), 10);
         await user.save();
       }
-      // If no password provided and no passwordHash, allow login (DEV mode)
-      // You can disable this by setting REQUIRE_PASSWORD=true
       if (process.env.REQUIRE_PASSWORD === 'true') {
         return res.status(400).json({ success: false, message: 'password is required' });
       }
@@ -97,19 +94,11 @@ async function signin(req, res) {
 
 
 async function login(req, res) {
-  // Use existing signin logic for login to keep behavior consistent
   return signin(req, res);
 }
 
-/**
- * Logout controller
- * POST /api/auth/logout
- * Note: For JWT-based auth, logout is typically handled client-side by removing the token
- */
 async function logout(req, res) {
   try {
-    // In a JWT-based system, logout is usually client-side
-    // If you implement token blacklisting, you would handle it here
     res.json({
       success: true,
       message: 'Logout successful'
@@ -123,4 +112,45 @@ async function logout(req, res) {
   }
 }
 
-module.exports = { login, logout, signup, signin };
+async function changePassword(req, res) {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({ success: false, message: 'Unauthorized' });
+    }
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ success: false, message: 'currentPassword and newPassword are required' });
+    }
+
+    if (String(newPassword).length < 6) {
+      return res.status(400).json({ success: false, message: 'New password must be at least 6 characters' });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    // Verify current password
+    if (user.passwordHash) {
+      const isValid = await bcrypt.compare(String(currentPassword), user.passwordHash);
+      if (!isValid) {
+        return res.status(400).json({ success: false, message: 'Current password is incorrect' });
+      }
+    }
+
+    // Hash and save new password
+    user.passwordHash = await bcrypt.hash(String(newPassword), 10);
+    await user.save();
+
+    return res.json({ success: true, message: 'Password changed successfully' });
+  } catch (err) {
+    console.error('Change password error:', err);
+    return res.status(500).json({ success: false, message: err.message });
+  }
+}
+
+module.exports = { login, logout, signup, signin, changePassword };
