@@ -45,10 +45,10 @@ export default function SignUp() {
           {/* Header */}
           <div className="mb-8">
             <h2 className="text-3xl font-bold text-app-primary mb-2">
-              {t('auth.signupTitle') || 'Create Account'}
+              {t('auth.signupTitle')}
             </h2>
             <p className="text-app-primary/80 text-sm">
-              {t('auth.registrationFormPlaceholder') || 'Join us to get started with our services.'}
+              {t('auth.signupSubtitle')}
             </p>
           </div>
 
@@ -86,7 +86,7 @@ export default function SignUp() {
           {loading && (
             <div className="mt-4 p-3 bg-white/50 text-app-primary rounded-lg text-center text-sm flex items-center justify-center gap-2">
               <div className="w-4 h-4 border-2 border-app-primary border-t-transparent rounded-full animate-spin"></div>
-              {t('auth.creatingAccount') || 'Creating your account...'}
+              {t('auth.creatingAccount')}
             </div>
           )}
 
@@ -97,7 +97,7 @@ export default function SignUp() {
             </div>
             <div className="relative flex justify-center text-sm">
               <span className="px-3 bg-white text-app-primary/80">
-                {t('auth.haveAccount') || 'Already have an account?'}
+                {t('auth.haveAccount')}
               </span>
             </div>
           </div>
@@ -108,8 +108,7 @@ export default function SignUp() {
               onClick={() => navigate('/login')}
               className="w-full py-3 px-4 bg-app-primary hover:bg-app-secondary text-white font-semibold rounded-lg transition duration-200 flex items-center justify-center gap-2"
             >
-              {t('navigation.login') || 'Sign In'}
-              <span>→</span>
+              {t('navigation.login')}
             </button>
           </div>
 
@@ -119,7 +118,7 @@ export default function SignUp() {
               onClick={() => navigate('/')}
               className="text-sm text-app-primary/70 hover:text-app-primary transition"
             >
-              ← Back Home
+              {t('auth.backHome')}
             </button>
           </div>
         </div>
