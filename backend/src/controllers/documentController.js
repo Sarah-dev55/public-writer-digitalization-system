@@ -1,6 +1,6 @@
 const Document = require('../models/Document');
 const path = require('path');
-const fs = require('fs');
+const fs = require('fs').promises;
 
 async function listByUser(req, res) {
 	const { userId } = req.params;
@@ -58,20 +58,20 @@ async function download(req, res) {
 			return res.status(404).json({ success: false, message: 'Document not found' });
 		}
 
-		// Get the file path from the document
-		const filePath = path.join(process.cwd(), doc.storagePath);
-
-		// Check if file exists
-		if (!fs.existsSync(filePath)) {
-			return res.status(404).json({ success: false, message: 'File not found on server' });
+		// Handle both absolute and relative paths
+		let filePath = doc.storagePath;
+		if (!path.isAbsolute(filePath)) {
+			// If it's a relative path, make it absolute
+			filePath = path.join(process.cwd(), filePath);
 		}
 
-		// Set appropriate headers for file download
-		res.setHeader('Content-Type', 'application/octet-stream');
-		res.setHeader('Content-Disposition', `attachment; filename="${doc.fileName}"`);
-
-		// Send the file
-		res.sendFile(filePath);
+		// Check if file exists
+		try {
+			await fs.access(filePath);
+			res.download(filePath, doc.fileName);
+		} catch (err) {
+			return res.status(404).json({ success: false, message: 'File not found on server' });
+		}
 	} catch (err) {
 		res.status(500).json({ success: false, message: err.message });
 	}
@@ -91,10 +91,20 @@ async function updateStatus(req, res) {
 			});
 		}
 
+		// Map status to reviewStatus for client side compatibility
+		const statusToReviewStatus = {
+			'pending': 'pending',
+			'accepted': 'approved',
+			'rejected': 'rejected',
+			'needs_correction': 'pending' // Needs correction means still pending review
+		};
+
 		// Find and update the document
 		const updateData = {
 			status,
+			reviewStatus: statusToReviewStatus[status],
 			statusNotes: statusNotes || '',
+			rejectionReason: status === 'rejected' ? (statusNotes || 'Document rejected') : undefined,
 			reviewedAt: new Date(),
 			reviewedBy: req.user ? req.user.id : null // Assuming auth middleware sets req.user
 		};

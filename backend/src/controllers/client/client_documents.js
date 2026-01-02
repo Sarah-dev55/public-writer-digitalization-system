@@ -1,6 +1,8 @@
 const Document = require('../../models/Document');
 const path = require('path');
 const fs = require('fs').promises;
+const { notifyAdmins } = require('../../utils/notificationHelper');
+const User = require('../../models/User');
 
 /**
  * Get all documents for a specific user
@@ -68,6 +70,19 @@ async function uploadDocument(req, res) {
                 if (checklistItemId) existingDoc.checklistItemId = checklistItemId;
                 await existingDoc.save();
 
+                // Notify admins about document upload
+                try {
+                    const user = await User.findById(userId);
+                    const userName = user ? (user.fullName || user.email) : 'A client';
+                    await notifyAdmins(
+                        'Document Updated',
+                        `${userName} has uploaded a new version of "${existingDoc.name}"`,
+                        'info'
+                    );
+                } catch (notifError) {
+                    console.error('Error sending notification:', notifError);
+                }
+
                 return res.status(200).json(existingDoc);
             }
         }
@@ -85,6 +100,20 @@ async function uploadDocument(req, res) {
         });
 
         await document.save();
+
+        // Notify admins about new document upload
+        try {
+            const user = await User.findById(userId);
+            const userName = user ? (user.fullName || user.email) : 'A client';
+            await notifyAdmins(
+                'New Document Uploaded',
+                `${userName} has uploaded "${document.name}"`,
+                'info'
+            );
+        } catch (notifError) {
+            console.error('Error sending notification:', notifError);
+        }
+
         res.status(201).json(document);
     } catch (error) {
         console.error('Error uploading document:', error);

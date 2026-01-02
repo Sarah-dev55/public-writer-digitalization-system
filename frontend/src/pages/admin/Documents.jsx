@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import AdminLayout from '../../components/layout/AdminLayout';
-import { getAllDocuments } from '../../services/adminDocumentService';
+import { getAllDocuments, downloadDocument } from '../../services/adminDocumentService';
 import { getAllUsers } from '../../services/adminUserService';
 import { searchArchives } from '../../services/adminArchiveService';
 
@@ -25,6 +25,7 @@ export default function AdminDocuments() {
 
 	const [query, setQuery] = useState('');
 	const [searchField, setSearchField] = useState('all'); // all | docName | fileName | userName
+	const [downloadingId, setDownloadingId] = useState(null);
 	const pageSize = 10;
 	const [page, setPage] = useState(1);
 
@@ -74,6 +75,18 @@ export default function AdminDocuments() {
 		};
 	}, []);
 
+	const handleDownload = async (docId, fileName) => {
+		try {
+			setDownloadingId(docId);
+			await downloadDocument(docId, fileName);
+		} catch (error) {
+			console.error('Download failed:', error);
+			alert('Failed to download document. Please try again.');
+		} finally {
+			setDownloadingId(null);
+		}
+	};
+
 	const rows = useMemo(() => {
 		const q = safeLower(query);
 
@@ -94,6 +107,7 @@ export default function AdminDocuments() {
 
 				return {
 					id: doc._id || doc.id || fileNameRaw,
+					docId: doc._id || doc.id,
 					displayName: docNameRaw,
 					displayFile: fileNameRaw,
 					userName,
@@ -269,15 +283,14 @@ export default function AdminDocuments() {
 													<td className="py-3 pr-4 text-gray-700">{row.userName}</td>
 													<td className="py-3 pr-4 text-gray-600">{fmtDate(row.createdAt)}</td>
 													<td className="py-3 pr-4 text-gray-700">
-														{row.downloadUrl ? (
-															<a
-																href={row.downloadUrl}
-																className="text-sm font-semibold text-blue-700 hover:underline"
-																target="_blank"
-																rel="noreferrer"
+														{row.docId ? (
+															<button
+																onClick={() => handleDownload(row.docId, row.displayFile)}
+																disabled={downloadingId === row.docId}
+																className="text-sm font-semibold text-blue-700 hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
 															>
-																Download
-															</a>
+																{downloadingId === row.docId ? 'Downloading...' : 'Download'}
+															</button>
 														) : (
 															<span className="text-gray-400">—</span>
 														)}

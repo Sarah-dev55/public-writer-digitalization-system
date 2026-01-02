@@ -58,16 +58,16 @@ export default function AdminSidebar({ user }) {
   ];
 
   return (
-    <aside className="w-64 bg-gradient-to-b from-slate-800 to-slate-900 text-white min-h-screen flex flex-col fixed h-full left-0 top-0 shadow-xl z-40">
+    <aside className="w-64 bg-gradient-to-b from-app-primary to-app-primary/95 text-white min-h-screen flex flex-col fixed h-full left-0 top-0 shadow-xl z-40">
       {/* Logo Section */}
-      <div className="p-6 border-b border-slate-700">
+      <div className="p-6 border-b border-white/10">
         <h2 className="text-xl font-bold text-white flex items-center gap-2">
-          <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center text-white font-bold">
+          <div className="w-8 h-8 bg-app-secondary rounded-lg flex items-center justify-center text-white font-bold">
             A
           </div>
           Admin Panel
         </h2>
-        <p className="text-sm text-slate-400 mt-2">
+        <p className="text-sm text-app-accent/80 mt-2">
           {user?.fullName || 'Administrator'}
         </p>
       </div>
@@ -84,8 +84,8 @@ export default function AdminSidebar({ user }) {
               href={item.href}
               className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
                 active
-                  ? 'bg-blue-600 text-white shadow-md font-semibold'
-                  : 'text-slate-300 hover:bg-slate-700 hover:text-white'
+                  ? 'bg-app-secondary text-white shadow-md font-semibold'
+                  : 'text-app-accent/80 hover:bg-app-secondary/30 hover:text-white'
               }`}
             >
               <Icon className="w-5 h-5" />
@@ -96,7 +96,7 @@ export default function AdminSidebar({ user }) {
       </nav>
 
       {/* Logout Section */}
-      <div className="p-4 border-t border-slate-700">
+      <div className="p-4 border-t border-white/10">
         <button
           onClick={async () => {
             try {
@@ -106,7 +106,7 @@ export default function AdminSidebar({ user }) {
               console.error('Logout failed', error);
             }
           }}
-          className="flex items-center gap-3 w-full px-4 py-3 rounded-lg text-slate-300 hover:bg-slate-700 hover:text-white transition-all duration-200"
+          className="flex items-center gap-3 w-full px-4 py-3 rounded-lg text-app-accent/80 hover:bg-app-secondary/30 hover:text-white transition-all duration-200"
         >
           <LogOut className="w-5 h-5" />
           <span>{t('common.logout') || 'Logout'}</span>

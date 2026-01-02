@@ -24,7 +24,7 @@ export default function AdminClients() {
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState('');
 
-  const [form, setForm] = useState({ fullName: '', email: '', phone: '', role: '' });
+  const [form, setForm] = useState({ fullName: '', email: '', phone: '', role: '', currentStats: 1 });
 
   // Checklist modal state
   const [checklistUser, setChecklistUser] = useState(null);
@@ -70,12 +70,13 @@ export default function AdminClients() {
       email: u.email || '',
       phone: u.phone || '',
       role: u.role || 'public_writer',
+      currentStats: u.currentStats || 1,
     });
   }
 
   function closeEdit() {
     setEditing(null);
-    setForm({ fullName: '', email: '', phone: '', role: '' });
+    setForm({ fullName: '', email: '', phone: '', role: '', currentStats: 1 });
   }
 
   async function onSave() {
@@ -88,6 +89,7 @@ export default function AdminClients() {
         email: form.email,
         phone: form.phone,
         role: form.role,
+        currentStats: form.currentStats,
       };
       const res = await updateUser(editing._id, payload);
       const updated = res?.data || res;
@@ -378,8 +380,8 @@ export default function AdminClients() {
         </div>
 
         {editing && (
-          <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden">
+          <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50 overflow-y-auto">
+            <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg my-8">
               <div className="p-5 border-b flex items-start justify-between gap-4">
                 <div>
                   <div className="text-lg font-bold">Edit client</div>
@@ -390,7 +392,7 @@ export default function AdminClients() {
                 </Button>
               </div>
 
-              <div className="p-5 grid grid-cols-1 gap-3">
+              <div className="p-5 grid grid-cols-1 gap-3 max-h-[60vh] overflow-y-auto">
                 <label className="text-sm">
                   <div className="text-gray-700 mb-1">Full name</div>
                   <input
@@ -433,6 +435,22 @@ export default function AdminClients() {
                     <option value="client">client</option>
                   </select>
                   <div className="text-xs text-gray-500 mt-1">If you have other roles, you can still type them in later.</div>
+                </label>
+
+                <label className="text-sm">
+                  <div className="text-gray-700 mb-1">Status</div>
+                  <select
+                    value={form.currentStats}
+                    onChange={(e) => setForm((f) => ({ ...f, currentStats: parseInt(e.target.value) }))}
+                    className="border rounded-lg px-3 py-2 w-full bg-white"
+                  >
+                    <option value={1}>Step 1 - Initial Consultation</option>
+                    <option value={2}>Step 2 - Document Collection</option>
+                    <option value={3}>Step 3 - Document Review</option>
+                    <option value={4}>Step 4 - Document Preparation</option>
+                    <option value={5}>Step 5 - Complete</option>
+                  </select>
+                  <div className="text-xs text-gray-500 mt-1">Current status in the digitalization process</div>
                 </label>
               </div>
 

@@ -46,6 +46,7 @@ export default function Dashboard() {
           .map((a) => {
             const user = userMap[a.userId];
             const userName = user?.fullName || user?.name || user?.email || 'Unknown user';
+            const userStatus = user?.currentStats || 1;
 
             const dateValue = a.date || a.appointmentDate;
             const timeValue = a.timeSlot || a.time || a.slot;
@@ -57,6 +58,7 @@ export default function Dashboard() {
             return {
               ...a,
               userName,
+              userStatus,
               date: dateValue,
               timeSlot: timeValue,
               reservationDateTime: dateTime?.getTime() || Number.MAX_SAFE_INTEGER,
@@ -92,40 +94,34 @@ export default function Dashboard() {
 
   const handleCloseModal = () => setSelectedDocument(null);
 
-  const handleAccept = () => {
-    if (!selectedDocument) return;
-    (async () => {
-      try {
-        const res = await updateDocument(selectedDocument._id || selectedDocument.id, { status: 'accepted' });
-        if (res && res.data && res.data.success) {
-          setDocuments((prev) => prev.filter((d) => (d._id || d.id) !== (selectedDocument._id || selectedDocument.id)));
-          setSelectedDocument(null);
-        } else if (res && res.success) {
-          setDocuments((prev) => prev.filter((d) => (d._id || d.id) !== (selectedDocument._id || selectedDocument.id)));
-          setSelectedDocument(null);
-        }
-      } catch (err) {
-        console.error('Accept error', err);
-      }
-    })();
-  };
-
-  const handleReject = () => {
-    if (!selectedDocument) return;
-    (async () => {
-      try {
-        const res = await updateDocument(selectedDocument._id || selectedDocument.id, { status: 'rejected' });
-        if (res && res.data && res.data.success) {
-          setDocuments((prev) => prev.filter((d) => (d._id || d.id) !== (selectedDocument._id || selectedDocument.id)));
-          setSelectedDocument(null);
-        } else if (res && res.success) {
-          setDocuments((prev) => prev.filter((d) => (d._id || d.id) !== (selectedDocument._id || selectedDocument.id)));
-          setSelectedDocument(null);
-        }
-      } catch (err) {
-        console.error('Reject error', err);
-      }
-    })();
+  const handleStatusUpdated = (updatedDocument) => {
+    console.log('Status updated:', updatedDocument);
+    console.log('Updated status:', updatedDocument.status);
+    
+    // Close the modal
+    setSelectedDocument(null);
+    
+    // Immediately update the local state - remove document if status is not pending
+    if (updatedDocument.status !== 'pending') {
+      console.log('Removing document from list');
+      setDocuments((prev) => {
+        const filtered = prev.filter((d) => {
+          const docId = d._id || d.id;
+          const updatedId = updatedDocument._id || updatedDocument.id;
+          return docId !== updatedId;
+        });
+        console.log('Filtered documents:', filtered);
+        return filtered;
+      });
+    } else {
+      // If still pending, update the document in the list
+      console.log('Updating document in list');
+      setDocuments((prev) => prev.map((d) => {
+        const docId = d._id || d.id;
+        const updatedId = updatedDocument._id || updatedDocument.id;
+        return docId === updatedId ? { ...d, ...updatedDocument } : d;
+      }));
+    }
   };
 
   // quick handlers for inline buttons
@@ -154,7 +150,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-app-accent">
       <AdminHeader title="Dashboard" breadcrumb={["Homepage","Dashboard"]} />
 
       <div className="pt-20 lg:pl-64">{/* reserve header height */}
@@ -162,8 +158,8 @@ export default function Dashboard() {
 
         <main className="p-8 max-w-5xl mx-auto flex flex-col items-center gap-8">
           <div className="text-center space-y-2">
-            <h2 className="text-3xl font-extrabold tracking-tight">Dashboard</h2>
-            <p className="text-lg text-gray-600">Overview and quick actions for admins.</p>
+            <h2 className="text-3xl font-extrabold tracking-tight text-app-primary">Dashboard</h2>
+            <p className="text-lg text-app-primary/70">Overview and quick actions for admins.</p>
           </div>
 
           <div className="w-full space-y-8">
@@ -186,8 +182,7 @@ export default function Dashboard() {
         <DocumentReviewModal
           document={selectedDocument}
           onClose={handleCloseModal}
-          onAccept={handleAccept}
-          onReject={handleReject}
+          onStatusUpdated={handleStatusUpdated}
         />
       )}
     </div>
