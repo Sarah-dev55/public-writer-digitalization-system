@@ -1,8 +1,5 @@
 import React from 'react';
 
-/**
- * cn utility - Combines classes
- */
 function cn(...classes) {
   return classes.filter(Boolean).join(' ');
 }

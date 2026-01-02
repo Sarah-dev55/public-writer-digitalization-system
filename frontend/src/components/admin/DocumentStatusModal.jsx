@@ -63,7 +63,6 @@ export default function DocumentStatusModal({ document: doc = null, onClose = ()
         </div>
 
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6">
-          {/* Document Info */}
           <div className="mb-6 p-4 bg-gray-50 rounded-lg">
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -95,7 +94,6 @@ export default function DocumentStatusModal({ document: doc = null, onClose = ()
             </div>
           </div>
 
-          {/* Status Selection */}
           <div className="mb-6">
             <label className="block text-sm font-medium text-gray-700 mb-3">
               Select New Status
@@ -123,7 +121,6 @@ export default function DocumentStatusModal({ document: doc = null, onClose = ()
             </div>
           </div>
 
-          {/* Status Notes */}
           <div className="mb-6">
             <label htmlFor="statusNotes" className="block text-sm font-medium text-gray-700 mb-2">
               Notes {selectedStatus === 'rejected' && (
@@ -149,14 +146,12 @@ export default function DocumentStatusModal({ document: doc = null, onClose = ()
             </p>
           </div>
 
-          {/* Error Message */}
           {error && (
             <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
               <p className="text-sm text-red-800">{error}</p>
             </div>
           )}
 
-          {/* Previous Status Notes */}
           {doc.statusNotes && doc.status !== 'pending' && (
             <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
               <p className="text-sm font-medium text-blue-900 mb-1">Previous Notes:</p>

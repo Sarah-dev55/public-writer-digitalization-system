@@ -1,9 +1,5 @@
 import api from './api';
 
-/**
- * Fetch all notifications for a user
- * @param {string} userId
- */
 export async function getUserNotifications(userId) {
     try {
         const response = await api.get(`/client/notifications/user/${userId}`);
@@ -14,10 +10,6 @@ export async function getUserNotifications(userId) {
     }
 }
 
-/**
- * Mark a notification as read
- * @param {string} id - Notification ID
- */
 export async function markNotificationAsRead(id) {
     try {
         const response = await api.put(`/client/notifications/${id}/read`);
@@ -28,10 +20,6 @@ export async function markNotificationAsRead(id) {
     }
 }
 
-/**
- * Mark ALL notifications as read
- * @param {string} userId
- */
 export async function markAllNotificationsAsRead(userId) {
     try {
         const response = await api.put(`/client/notifications/user/${userId}/read-all`);

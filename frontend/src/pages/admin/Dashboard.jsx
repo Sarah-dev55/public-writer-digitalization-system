@@ -9,9 +9,10 @@ import { getAllAppointments, updateAppointment } from '../../services/adminAppoi
 import { getPendingDocuments, updateDocument } from '../../services/adminDocumentService';
 import { getAllUsers } from '../../services/adminUserService';
 
+// Admin dashboard - overview of users, appointments, and pending documents
 export default function Dashboard() {
   const [documents, setDocuments] = useState([
-    // initial placeholder until data loads
+    // Initial placeholder data shown while loading
     { id: 'd1', title: 'Passport Scan', clientName: 'A. Johnson', submittedDate: '2 days ago', fileUrl: '' },
     { id: 'd2', title: 'Driver License', clientName: 'B. Williams', submittedDate: '3 days ago', fileUrl: '' },
     { id: 'd3', title: 'Tax Document', clientName: 'C. Brown', submittedDate: '5 days ago', fileUrl: '' }

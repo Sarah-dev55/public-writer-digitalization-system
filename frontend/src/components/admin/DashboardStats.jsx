@@ -1,9 +1,5 @@
 import React from 'react';
 
-/**
- * DashboardStats Component
- * Displays summary statistics on the admin dashboard
- */
 export default function DashboardStats({ pendingCount = 0, appointmentsCount = 0, clientsCount = 0 }) {
   const stats = [
     {

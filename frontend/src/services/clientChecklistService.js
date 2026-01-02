@@ -1,15 +1,5 @@
 import api from './api';
 
-/**
- * Client Checklist Service
- * Handles all client-facing checklist operations
- * Base URL: /api/client/checklists
- */
-
-/**
- * Get all checklists
- * @returns {Promise} List of checklists
- */
 export async function getAllChecklists() {
     try {
         const res = await api.get('/client/checklists');
@@ -20,11 +10,6 @@ export async function getAllChecklists() {
     }
 }
 
-/**
- * Get checklist by user ID
- * @param {string} userId - User ID
- * @returns {Promise} Checklist for the specified user
- */
 export async function getChecklistByUser(userId) {
     try {
         const res = await api.get(`/client/checklists/user/${userId}`);
@@ -35,11 +20,6 @@ export async function getChecklistByUser(userId) {
     }
 }
 
-/**
- * Get checklist by ID
- * @param {string} id - Checklist ID
- * @returns {Promise} Checklist details
- */
 export async function getChecklistById(id) {
     try {
         const res = await api.get(`/client/checklists/${id}`);
@@ -50,11 +30,6 @@ export async function getChecklistById(id) {
     }
 }
 
-/**
- * Create a new checklist
- * @param {Object} payload - Checklist data (userId, title, items)
- * @returns {Promise} Created checklist
- */
 export async function createChecklist(payload) {
     try {
         const res = await api.post('/client/checklists', payload);
@@ -65,12 +40,6 @@ export async function createChecklist(payload) {
     }
 }
 
-/**
- * Update a checklist
- * @param {string} id - Checklist ID
- * @param {Object} payload - Updated checklist data
- * @returns {Promise} Updated checklist
- */
 export async function updateChecklist(id, payload) {
     try {
         const res = await api.put(`/client/checklists/${id}`, payload);
@@ -81,13 +50,6 @@ export async function updateChecklist(id, payload) {
     }
 }
 
-/**
- * Update a checklist item
- * @param {string} checklistId - Checklist ID
- * @param {string} itemId - Item ID
- * @param {Object} payload - Updated item data (isCompleted, etc.)
- * @returns {Promise} Updated checklist
- */
 export async function updateChecklistItem(checklistId, itemId, payload) {
     try {
         const res = await api.patch(`/client/checklists/${checklistId}/items/${itemId}`, payload);
@@ -98,11 +60,6 @@ export async function updateChecklistItem(checklistId, itemId, payload) {
     }
 }
 
-/**
- * Delete a checklist
- * @param {string} id - Checklist ID
- * @returns {Promise} Deletion confirmation
- */
 export async function deleteChecklist(id) {
     try {
         const res = await api.delete(`/client/checklists/${id}`);
