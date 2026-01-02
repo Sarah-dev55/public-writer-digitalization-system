@@ -6,6 +6,7 @@ const Appointment = require('../../models/Appointment');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const { verifyToken } = require('../../middleware/auth');
 
 // Create uploads directory for profiles if it doesn't exist
 const profilesDir = path.join(process.cwd(), 'uploads/profiles');
@@ -169,6 +170,41 @@ router.get('/', async (req, res) => {
     res.json(users);
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+});
+
+// Update authenticated user's profile (must be before /:id route)
+router.put('/me', verifyToken, async (req, res) => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      return res.status(401).json({ success: false, message: 'Unauthorized' });
+    }
+
+    const allowedFields = ['fullName', 'email', 'phone'];
+    const updates = {};
+    for (const field of allowedFields) {
+      if (req.body.hasOwnProperty(field)) {
+        updates[field] = req.body[field];
+      }
+    }
+
+    const user = await User.findByIdAndUpdate(
+      userId,
+      updates,
+      { new: true, runValidators: true }
+    ).select('-passwordHash');
+    
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    res.json({ success: true, data: user });
+  } catch (error) {
+    if (error.code === 11000) {
+      return res.status(400).json({ success: false, message: 'Email already exists' });
+    }
+    res.status(400).json({ success: false, message: error.message });
   }
 });
 

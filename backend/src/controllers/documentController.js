@@ -96,7 +96,7 @@ async function updateStatus(req, res) {
 			'pending': 'pending',
 			'approved': 'approved',
 			'rejected': 'rejected',
-			'needs_correction': 'pending' // Needs correction means still pending review
+			'needs_correction': 'pending'
 		};
 
 		// Find and update the document
@@ -106,7 +106,7 @@ async function updateStatus(req, res) {
 			statusNotes: statusNotes || '',
 			rejectionReason: status === 'rejected' ? (statusNotes || 'Document rejected') : undefined,
 			reviewedAt: new Date(),
-			reviewedBy: req.user ? req.user.id : null // Assuming auth middleware sets req.user
+			reviewedBy: req.user ? req.user.id : null
 		};
 
 		const doc = await Document.findByIdAndUpdate(
