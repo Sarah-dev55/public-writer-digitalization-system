@@ -132,7 +132,6 @@ export default function AdminDocuments() {
 					userName,
 					rawUserName: safeLower(userLabel),
 					createdAt,
-					createdAt,
 					status: doc.status || 'pending',
 					downloadUrl,
 					rawDoc: doc,
