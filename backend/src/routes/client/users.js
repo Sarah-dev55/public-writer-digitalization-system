@@ -56,9 +56,9 @@ router.get('/case-status/:userId', async (req, res) => {
     // Logic: Complete if at least 1 document uploaded and ALL required docs are approved
     // Simplified: If > 0 documents and 0 are missing/rejected
     const hasDocuments = documents.length > 0;
-    const pendingDocs = documents.some(d => d.reviewStatus === 'pending');
-    const rejectedDocs = documents.some(d => d.reviewStatus === 'rejected');
-    const missingDocs = documents.some(d => d.reviewStatus === 'missing');
+    const pendingDocs = documents.some(d => d.status === 'pending');
+    const rejectedDocs = documents.some(d => d.status === 'rejected');
+    const missingDocs = documents.some(d => d.status === 'missing');
 
     // If hard override from user.currentStats
     if (user.currentStats > 1) {

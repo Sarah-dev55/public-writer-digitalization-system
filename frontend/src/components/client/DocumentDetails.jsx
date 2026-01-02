@@ -15,6 +15,7 @@ const StatusBadge = ({ status }) => {
       case 'Required': return 'bg-[#fff1f0] text-[#9b2c2c] border-[#ffd6d9]';
       case 'Rejected': return 'bg-[#ffecec] text-[#7a1f1f] border-[#ffd6d6]';
       case 'Pending': return 'bg-[#fff9e6] text-[#7a5a1f] border-[#fff1b3]';
+      case 'Needs Correction': return 'bg-orange-50 text-orange-800 border-orange-200';
       case 'Missing': return 'bg-[#f5f5f0] text-[#6b6b6b] border-[#e9e3d6]';
       default: return 'bg-gray-100 text-gray-700 border-gray-200';
     }
@@ -30,12 +31,13 @@ const StatusBadge = ({ status }) => {
 // Document Card Component
 const DocumentCard = ({ document, onView, onDownload, onUpload, onDelete, onReupload, uploading = {} }) => {
   // Map backend fields to component expectation
-  const { _id, name, reviewStatus, uploadedAt, rejectionReason } = document;
+  const { _id, name, status: docStatus, uploadedAt, rejectionReason } = document;
   const id = _id;
   
   // Normalize status to Title Case for UI consistency if it comes lowercase from backend
-  const status = reviewStatus 
-    ? reviewStatus.charAt(0).toUpperCase() + reviewStatus.slice(1) 
+  // Normalize status to Title Case for UI consistency
+  const status = docStatus 
+    ? docStatus.replace(/_/g, ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ')
     : 'Pending';
     
   const displayDate = uploadedAt 
@@ -45,6 +47,7 @@ const DocumentCard = ({ document, onView, onDownload, onUpload, onDelete, onReup
   const getStatusIcon = () => {
     if (status === 'Approved') return '✓';
     if (status === 'Rejected') return '○';
+    if (status === 'Needs Correction') return '⚠';
     if (status === 'Required' || status === 'Missing') return '○';
     return '○';
   };
@@ -53,6 +56,7 @@ const DocumentCard = ({ document, onView, onDownload, onUpload, onDelete, onReup
     if (status === 'Approved') return 'border-2 border-[#1E4D3D] bg-[#DADCC8]';
     if (status === 'Rejected') return 'border-2 border-[#bf4b4b] bg-[#fff1f1]';
     if (status === 'Pending') return 'border-2 border-[#d4b94a] bg-[#fffbe6]';
+    if (status === 'Needs Correction') return 'border-2 border-orange-400 bg-orange-50';
     return 'border-2 border-gray-300 bg-transparent';
   };
 
@@ -74,9 +78,14 @@ const DocumentCard = ({ document, onView, onDownload, onUpload, onDelete, onReup
             {status === 'Missing' && (
               <div className="text-sm text-gray-500">Missing</div>
             )}
-            {rejectionReason && status === 'Rejected' && (
+            {status === 'Rejected' && rejectionReason && (
               <div className="mt-2 text-sm text-red-600 bg-red-50 p-2 rounded border border-red-200">
                 <strong>Rejection Reason:</strong> {rejectionReason}
+              </div>
+            )}
+            {status === 'Needs Correction' && statusNotes && (
+              <div className="mt-2 text-sm text-orange-700 bg-orange-50 p-2 rounded border border-orange-200">
+                <strong>Corrections Needed:</strong> {statusNotes}
               </div>
             )}
           </div>
@@ -145,6 +154,15 @@ const DocumentCard = ({ document, onView, onDownload, onUpload, onDelete, onReup
               {uploading[document.id] === 'uploading' ? 'Uploading...' : 'Re-Upload'}
             </button>
           )}
+          {status === 'Needs Correction' && (
+            <button 
+              onClick={() => onReupload(document)}
+              disabled={uploading[document.id] === 'uploading'}
+              className="px-4 py-2 bg-orange-600 text-white text-sm rounded-lg hover:bg-orange-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {uploading[document.id] === 'uploading' ? 'Uploading...' : 'Fix & Upload'}
+            </button>
+          )}
           {(status === 'Required' || status === 'Missing') && (
             <button 
               onClick={() => onUpload(document)}
@@ -165,7 +183,7 @@ const ChecklistItemCard = ({ item, document: doc, onUpload, onView, onDownload, 
   const fileInputRef = useRef(null);
   const itemId = item._id || item.itemId;
   const hasDocument = !!doc;
-  const status = doc?.reviewStatus || null;
+  const status = doc?.status || null;
 
   const handleFileSelect = (e) => {
     const file = e.target.files[0];
@@ -183,6 +201,7 @@ const ChecklistItemCard = ({ item, document: doc, onUpload, onView, onDownload, 
     if (hasDocument && status === 'approved') return 'border-2 border-[#1E4D3D] bg-[#DADCC8]';
     if (hasDocument && status === 'rejected') return 'border-2 border-[#bf4b4b] bg-[#fff1f1]';
     if (hasDocument && status === 'pending') return 'border-2 border-[#d4b94a] bg-[#fffbe6]';
+    if (hasDocument && status === 'needs_correction') return 'border-2 border-orange-400 bg-orange-50';
     return 'border-2 border-gray-300 bg-white';
   };
 
@@ -209,7 +228,7 @@ const ChecklistItemCard = ({ item, document: doc, onUpload, onView, onDownload, 
                 <span className="text-xs text-red-600 font-medium">Required</span>
               )}
               {hasDocument && (
-                <StatusBadge status={status ? status.charAt(0).toUpperCase() + status.slice(1) : 'Pending'} />
+                <StatusBadge status={status ? status.replace(/_/g, ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ') : 'Pending'} />
               )}
             </div>
             {hasDocument && doc.uploadedAt && (
@@ -217,9 +236,9 @@ const ChecklistItemCard = ({ item, document: doc, onUpload, onView, onDownload, 
                 Uploaded: {new Date(doc.uploadedAt).toLocaleDateString()}
               </div>
             )}
-            {hasDocument && doc.rejectionReason && status === 'rejected' && (
-              <div className="mt-2 text-sm text-red-600 bg-red-50 p-2 rounded border border-red-200">
-                <strong>Rejection Reason:</strong> {doc.rejectionReason}
+            {hasDocument && (doc.statusNotes || doc.rejectionReason) && (status === 'rejected' || status === 'needs_correction') && (
+              <div className={`mt-2 text-sm p-2 rounded border ${status === 'rejected' ? 'text-red-600 bg-red-50 border-red-200' : 'text-orange-700 bg-orange-50 border-orange-200'}`}>
+                <strong>{status === 'rejected' ? 'Rejection Reason:' : 'Corrections Needed:'}</strong> {doc.statusNotes || doc.rejectionReason}
               </div>
             )}
             {!hasDocument && (
@@ -229,7 +248,7 @@ const ChecklistItemCard = ({ item, document: doc, onUpload, onView, onDownload, 
         </div>
 
         <div className="flex items-center gap-2 ml-4">
-          {hasDocument && (status === 'approved' || status === 'pending') && (
+          {hasDocument && (status === 'approved' || status === 'pending' || status === 'needs_correction') && (
             <>
               <button
                 onClick={() => onView(doc)}
@@ -247,7 +266,7 @@ const ChecklistItemCard = ({ item, document: doc, onUpload, onView, onDownload, 
               </button>
             </>
           )}
-          {hasDocument && status === 'pending' && (
+          {hasDocument && (status === 'pending' || status === 'needs_correction') && (
             <>
               <button
                 onClick={() => onReupload(doc)}
@@ -296,6 +315,7 @@ const StatusCard = ({ title, count, color }) => {
       case 'white': return 'bg-white border-gray-200';
       case 'green': return 'bg-[#eef7ee] border-[#cfe5cf]';
       case 'yellow': return 'bg-[#fffbe6] border-[#fff1b3]';
+      case 'orange': return 'bg-orange-50 border-orange-200';
       case 'pink': return 'bg-[#fff1f1] border-[#ffd6dc]';
       default: return 'bg-white border-gray-200';
     }
@@ -360,17 +380,30 @@ const DocumentManagement = () => {
     }
   };
 
+  const checklistItems = checklist?.items || [];
+  const totalChecklistItems = checklistItems.length;
+  const missingChecklistItems = checklistItems.filter(item => {
+    if (item.isCompleted) return false;
+    
+    const itemId = item._id || item.itemId;
+    const hasMatchedDoc = documents.some(
+      (d) => d.checklistItemId === itemId || d.name === item.label
+    );
+    
+    return !hasMatchedDoc;
+  }).length;
   const statusCounts = {
-    total: documents.length,
-    approved: documents.filter(d => d.reviewStatus === 'approved').length,
-    pendingReview: documents.filter(d => d.reviewStatus === 'pending').length,
-    rejected: documents.filter(d => d.reviewStatus === 'rejected').length,
-    missing: documents.filter(d => d.reviewStatus === 'required' || d.reviewStatus === 'missing').length
+    total: totalChecklistItems,
+    approved: documents.filter(d => d.status === 'approved').length,
+    pendingReview: documents.filter(d => d.status === 'pending').length,
+    rejected: documents.filter(d => d.status === 'rejected').length,
+    needsCorrection: documents.filter(d => d.status === 'needs_correction').length,
+    missing: documents.filter(d => d.status === 'missing').length + missingChecklistItems
   };
 
-  const completedCount = statusCounts.approved + statusCounts.pendingReview;
-  const completionPercentage = statusCounts.total > 0 
-    ? Math.round((completedCount / statusCounts.total) * 100) 
+  
+  const completionPercentage = totalChecklistItems > 0 
+    ? Math.round((statusCounts.approved / totalChecklistItems) * 100) 
     : 0;
 
   const fileInputRefs = useRef({});
@@ -756,12 +789,11 @@ const DocumentManagement = () => {
         {/* Title */}
         <h1 className="text-3xl font-semibold text-app-primary mb-6">Document Management</h1>
 
-        {/* Status Cards */}
         <div className="grid grid-cols-5 gap-4 mb-8 p-4 bg-white rounded-lg border-2 border-app-secondary shadow-sm">
-          <StatusCard title="Total Documents" count={statusCounts.total} color="white" />
+          <StatusCard title="Total" count={statusCounts.total} color="white" />
           <StatusCard title="Approved" count={statusCounts.approved} color="green" />
-          <StatusCard title="Pending Review" count={statusCounts.pendingReview} color="yellow" />
-          <StatusCard title="Rejected" count={statusCounts.rejected} color="pink" />
+          <StatusCard title="Pending" count={statusCounts.pendingReview} color="yellow" />
+          <StatusCard title="Action Needed" count={statusCounts.needsCorrection + statusCounts.rejected} color="pink" />
           <StatusCard title="Missing" count={statusCounts.missing} color="white" />
         </div>
 

@@ -15,7 +15,7 @@ export default function DocumentsList({ documents = [], onUpload, onView, onDown
       required: true,
       updatedAt: '2025-11-10',
       uploaded: true,
-      reviewStatus: 'approved',
+      status: 'approved',
     },
     {
       id: 2,
@@ -23,7 +23,7 @@ export default function DocumentsList({ documents = [], onUpload, onView, onDown
       required: true,
       updatedAt: '2025-11-12',
       uploaded: true,
-      reviewStatus: 'approved',
+      status: 'approved',
     },
     {
       id: 3,
@@ -31,7 +31,7 @@ export default function DocumentsList({ documents = [], onUpload, onView, onDown
       required: true,
       updatedAt: '2025-11-18',
       uploaded: true,
-      reviewStatus: 'pending',
+      status: 'pending',
     },
     {
       id: 4,
@@ -39,7 +39,7 @@ export default function DocumentsList({ documents = [], onUpload, onView, onDown
       required: true,
       updatedAt: null,
       uploaded: false,
-      reviewStatus: 'missing',
+      status: 'missing',
     },
     {
       id: 5,
@@ -47,7 +47,7 @@ export default function DocumentsList({ documents = [], onUpload, onView, onDown
       required: false,
       updatedAt: '2025-11-15',
       uploaded: true,
-      reviewStatus: 'rejected',
+      status: 'rejected',
     },
   ];
 
@@ -59,7 +59,7 @@ export default function DocumentsList({ documents = [], onUpload, onView, onDown
         required: doc.required || false,
         updatedAt: doc.uploadedAt ? new Date(doc.uploadedAt).toLocaleDateString() : null,
         uploaded: true,
-        reviewStatus: doc.reviewStatus || 'pending'
+        status: doc.status || 'pending'
       }))
     : []; // Don't show static data if empty, show empty state (or keep default if you prefer fallback)
     // Actually, user wants "Replace all mocked or static document data." so I should defaults to empty.
@@ -67,9 +67,9 @@ export default function DocumentsList({ documents = [], onUpload, onView, onDown
   // Helper to normalize status for comparison
   const normalizeStatus = (status) => status?.toLowerCase();
 
-  const getStatusBadge = (reviewStatus) => {
+  const getStatusBadge = (statusValue) => {
     const base = 'px-3 py-1 rounded-full text-xs font-semibold';
-    const status = normalizeStatus(reviewStatus);
+    const status = normalizeStatus(statusValue);
     switch (status) {
       case 'approved':
         return <span className={`${base} bg-[#A3B18A] text-[#3A4D42]`}>Approved</span>;
@@ -82,12 +82,12 @@ export default function DocumentsList({ documents = [], onUpload, onView, onDown
       case 'missing':
         return <span className={`${base} bg-[#8B5A2B] text-white`}>{t('dashboard.missing')}</span>;
       default:
-        return <span className={`${base} bg-gray-400 text-white`}>{reviewStatus}</span>;
+        return <span className={`${base} bg-gray-400 text-white`}>{statusValue}</span>;
     }
   };
 
   const getActionButtons = (document) => {
-    const status = normalizeStatus(document.reviewStatus);
+    const status = normalizeStatus(document.status);
     switch (status) {
       case 'approved':
         return (
@@ -171,8 +171,8 @@ export default function DocumentsList({ documents = [], onUpload, onView, onDown
     }
   };
 
-  const getDocumentIcon = (reviewStatus) => {
-    const status = normalizeStatus(reviewStatus);
+  const getDocumentIcon = (statusValue) => {
+    const status = normalizeStatus(statusValue);
     const iconColor = status === 'approved' ? 'text-[#588157]' : 
                       status === 'rejected' ? 'text-[#BC6C25]' :
                       status === 'pending' ? 'text-[#DDA15E]' :
@@ -209,7 +209,7 @@ export default function DocumentsList({ documents = [], onUpload, onView, onDown
           >
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div className="flex items-start gap-4 flex-1">
-                {getDocumentIcon(document.reviewStatus)}
+                {getDocumentIcon(document.status)}
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-1">
                     <h3 className="text-lg font-bold text-app-primary">{document.name}</h3>
@@ -227,13 +227,13 @@ export default function DocumentsList({ documents = [], onUpload, onView, onDown
                         <span className="text-[#BC6C25]">Not uploaded</span>
                       )}
                     </p>
-                    {getStatusBadge(document.reviewStatus)}
+                    {getStatusBadge(document.status)}
                   </div>
                   {/* Display status notes if they exist */}
-                  {document.statusNotes && (document.reviewStatus === 'rejected' || document.reviewStatus === 'needs_correction') && (
+                  {document.statusNotes && (document.status === 'rejected' || document.status === 'needs_correction') && (
                     <div className="mt-3 p-3 bg-orange-50 border border-orange-200 rounded-lg">
                       <p className="text-sm font-semibold text-orange-900 mb-1">
-                        {document.reviewStatus === 'rejected' ? '⚠ Reason for rejection:' : '⚠ Corrections needed:'}
+                        {document.status === 'rejected' ? '⚠ Reason for rejection:' : '⚠ Corrections needed:'}
                       </p>
                       <p className="text-sm text-orange-800">{document.statusNotes}</p>
                     </div>

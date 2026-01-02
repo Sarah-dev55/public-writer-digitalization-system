@@ -138,7 +138,7 @@ export async function downloadDocument(id, fileName) {
         const res = await api.get(`/admin/documents/${id}/download`, {
             responseType: 'blob'
         });
-        
+
         // Create a blob URL and trigger download
         const url = window.URL.createObjectURL(new Blob([res.data]));
         const link = document.createElement('a');
@@ -148,7 +148,7 @@ export async function downloadDocument(id, fileName) {
         link.click();
         link.remove();
         window.URL.revokeObjectURL(url);
-        
+
         return { success: true };
     } catch (error) {
         console.error(`Error downloading document ${id}:`, error);
@@ -159,7 +159,7 @@ export async function downloadDocument(id, fileName) {
 /**
  * Update document status
  * @param {string} id - Document ID
- * @param {string} status - New status ('pending', 'accepted', 'rejected', 'needs_correction')
+ * @param {string} status - New status ('pending', 'approved', 'rejected')
  * @param {string} statusNotes - Optional notes about the status change
  * @returns {Promise} Updated document
  */

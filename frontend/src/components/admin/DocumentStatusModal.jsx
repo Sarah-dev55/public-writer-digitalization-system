@@ -11,18 +11,17 @@ export default function DocumentStatusModal({ document: doc = null, onClose = ()
 
   const statusOptions = [
     { value: 'pending', label: 'Pending', color: 'yellow', icon: '⏳' },
-    { value: 'accepted', label: 'Accepted', color: 'green', icon: '✓' },
-    { value: 'rejected', label: 'Rejected', color: 'red', icon: '✗' },
-    { value: 'needs_correction', label: 'Needs Correction', color: 'orange', icon: '⚠' }
+    { value: 'approved', label: 'Approved', color: 'green', icon: '✓' },
+    { value: 'rejected', label: 'Rejected', color: 'red', icon: '✗' }
   ];
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     
-    // Validate that notes are provided for rejected or needs_correction status
-    if ((selectedStatus === 'rejected' || selectedStatus === 'needs_correction') && !statusNotes.trim()) {
-      setError('Please provide notes explaining why the document is being rejected or what corrections are needed.');
+    // Validate that notes are provided for rejected status
+    if (selectedStatus === 'rejected' && !statusNotes.trim()) {
+      setError('Please provide notes explaining why the document is being rejected.');
       return;
     }
 
@@ -127,7 +126,7 @@ export default function DocumentStatusModal({ document: doc = null, onClose = ()
           {/* Status Notes */}
           <div className="mb-6">
             <label htmlFor="statusNotes" className="block text-sm font-medium text-gray-700 mb-2">
-              Notes {(selectedStatus === 'rejected' || selectedStatus === 'needs_correction') && (
+              Notes {selectedStatus === 'rejected' && (
                 <span className="text-red-500">*</span>
               )}
             </label>
@@ -139,14 +138,12 @@ export default function DocumentStatusModal({ document: doc = null, onClose = ()
               placeholder={
                 selectedStatus === 'rejected'
                   ? 'Explain why this document is being rejected...'
-                  : selectedStatus === 'needs_correction'
-                  ? 'Specify what corrections are needed...'
                   : 'Add any additional notes (optional)...'
               }
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#31493d] focus:border-transparent resize-none"
             />
             <p className="text-xs text-gray-500 mt-1">
-              {selectedStatus === 'rejected' || selectedStatus === 'needs_correction'
+              {selectedStatus === 'rejected'
                 ? 'The client will see these notes to understand what needs to be fixed.'
                 : 'Optional notes for internal tracking or client communication.'}
             </p>

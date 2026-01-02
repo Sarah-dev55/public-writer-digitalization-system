@@ -57,7 +57,7 @@ async function getUserNotifications(req, res) {
         // Find documents that are approved or rejected for this user
         const statusDocs = await Document.find({
             userId,
-            reviewStatus: { $in: ['approved', 'rejected'] }
+            status: { $in: ['approved', 'rejected'] }
         });
 
         for (const doc of statusDocs) {
@@ -66,7 +66,7 @@ async function getUserNotifications(req, res) {
             // We verify by matching the document ID in the list or message context if stored, 
             // but simplified here by checking title/content + creation time vs doc update time.
 
-            const docTitle = doc.reviewStatus === 'approved' ? 'Document Approved' : 'Document Rejected';
+            const docTitle = doc.status === 'approved' ? 'Document Approved' : 'Document Rejected';
 
             // Allow a small buffer (e.g., 2 seconds) for execution time differences
             const bufferTime = new Date(doc.updatedAt.getTime() - 2000);
@@ -83,10 +83,10 @@ async function getUserNotifications(req, res) {
                 let messageBody = '';
                 let type = 'info';
 
-                if (doc.reviewStatus === 'approved') {
+                if (doc.status === 'approved') {
                     messageBody = `Your document "${doc.name}" has been approved.`;
                     type = 'success';
-                } else if (doc.reviewStatus === 'rejected') {
+                } else if (doc.status === 'rejected') {
                     messageBody = `Your document "${doc.name}" was rejected.`;
                     if (doc.rejectionReason) {
                         messageBody += ` Reason: ${doc.rejectionReason}`;

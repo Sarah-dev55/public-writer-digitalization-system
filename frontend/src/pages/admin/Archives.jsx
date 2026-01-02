@@ -171,7 +171,7 @@ export default function AdminArchives() {
                         <td className="px-3 py-2">{fmtDate(d.uploadedAt || d.createdAt)}</td>
                         <td className="px-3 py-2">
                           <span className="inline-flex items-center px-2 py-1 rounded border text-xs">
-                            {d.status || d.reviewStatus || '—'}
+                            {d.status || '—'}
                           </span>
                         </td>
                         <td className="px-3 py-2 text-right">

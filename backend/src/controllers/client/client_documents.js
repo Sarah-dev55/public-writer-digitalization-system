@@ -62,7 +62,7 @@ async function uploadDocument(req, res) {
                 existingDoc.fileName = req.file.filename;
                 existingDoc.storagePath = req.file.path;
                 existingDoc.type = req.file.mimetype;
-                existingDoc.reviewStatus = 'pending';
+                existingDoc.status = 'pending';
                 existingDoc.rejectionReason = undefined; // Clear rejection reason
                 existingDoc.uploadedAt = new Date();
                 if (checklistItemId) existingDoc.checklistItemId = checklistItemId;
@@ -79,7 +79,7 @@ async function uploadDocument(req, res) {
             fileName: req.file.filename,
             storagePath: req.file.path,
             type: req.file.mimetype,
-            reviewStatus: 'pending',
+            status: 'pending',
             required: false,
             checklistItemId: checklistItemId || undefined,
         });
@@ -129,7 +129,7 @@ async function deleteDocument(req, res) {
             document.fileName = undefined;
             document.storagePath = undefined;
             document.type = undefined;
-            document.reviewStatus = 'missing';
+            document.status = 'missing';
             document.uploadedAt = undefined;
 
             await document.save();

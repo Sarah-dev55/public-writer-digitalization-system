@@ -96,7 +96,7 @@ export default function Dashboard() {
     if (!selectedDocument) return;
     (async () => {
       try {
-        const res = await updateDocument(selectedDocument._id || selectedDocument.id, { status: 'accepted' });
+        const res = await updateDocument(selectedDocument._id || selectedDocument.id, { status: 'approved' });
         if (res && res.data && res.data.success) {
           setDocuments((prev) => prev.filter((d) => (d._id || d.id) !== (selectedDocument._id || selectedDocument.id)));
           setSelectedDocument(null);
@@ -132,7 +132,7 @@ export default function Dashboard() {
   const handleInlineAccept = async (doc) => {
     try {
       const id = doc._id || doc.id;
-      const res = await updateDocument(id, { status: 'accepted' });
+      const res = await updateDocument(id, { status: 'approved' });
       if ((res && res.data && res.data.success) || (res && res.success)) {
         setDocuments((prev) => prev.filter((d) => (d._id || d.id) !== id));
       }

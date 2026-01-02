@@ -39,7 +39,7 @@ export default function PendingDocuments({ documents = [], onReview = () => {}, 
   const getStatusBadge = (status) => {
     const statusConfig = {
       pending: { label: 'Pending', color: 'bg-yellow-100 text-yellow-800' },
-      accepted: { label: 'Accepted', color: 'bg-green-100 text-green-800' },
+      approved: { label: 'Approved', color: 'bg-green-100 text-green-800' },
       rejected: { label: 'Rejected', color: 'bg-red-100 text-red-800' },
       needs_correction: { label: 'Needs Correction', color: 'bg-orange-100 text-orange-800' }
     };

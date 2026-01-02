@@ -83,11 +83,11 @@ async function updateStatus(req, res) {
 		const { status, statusNotes } = req.body;
 
 		// Validate status
-		const validStatuses = ['pending', 'accepted', 'rejected', 'needs_correction'];
+		const validStatuses = ['pending', 'approved', 'rejected', 'needs_correction', 'missing', 'required'];
 		if (!validStatuses.includes(status)) {
-			return res.status(400).json({ 
-				success: false, 
-				message: 'Invalid status. Must be one of: pending, accepted, rejected, needs_correction' 
+			return res.status(400).json({
+				success: false,
+				message: `Invalid status. Must be one of: ${validStatuses.join(', ')}`
 			});
 		}
 
