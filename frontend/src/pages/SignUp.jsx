@@ -21,6 +21,7 @@ export default function SignUp() {
     { label: t('navigation.services'), active: false, href: '/#about' },
   ];
 
+  // Go to the login page
   const handleCtaClick = () => {
     navigate('/login');
   };

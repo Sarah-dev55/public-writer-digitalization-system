@@ -4,10 +4,7 @@ const fs = require('fs').promises;
 const { notifyAdmins } = require('../../utils/notificationHelper');
 const User = require('../../models/User');
 
-/**
- * Get all documents for a specific user
- * @route GET /api/client/documents/user/:userId
- */
+// Get all documents for one person
 async function getUserDocuments(req, res) {
     try {
         const { userId } = req.params;
@@ -24,10 +21,7 @@ async function getUserDocuments(req, res) {
     }
 }
 
-/**
- * Upload a document
- * @route POST /api/client/documents/upload
- */
+// Put a new document in the system
 async function uploadDocument(req, res) {
     try {
         if (!req.file) {
@@ -40,18 +34,18 @@ async function uploadDocument(req, res) {
             return res.status(400).json({ message: 'User ID is required' });
         }
 
-        // If updating existing document
+        // If we want to change an old document
         if (documentId) {
             const existingDoc = await Document.findById(documentId);
             if (existingDoc) {
-                // Validate ownership before update
+                // Check if the user really owns this document
                 if (existingDoc.userId.toString() !== userId) {
-                    // Prevent orphaned file
+                    // Delete the file if something is wrong
                     try { await fs.unlink(req.file.path); } catch (e) { }
                     return res.status(403).json({ message: 'You do not have permission to modify this document' });
                 }
 
-                // Delete old file if exists
+                // Delete the old file first
                 if (existingDoc.storagePath) {
                     try {
                         await fs.unlink(existingDoc.storagePath);
@@ -60,19 +54,19 @@ async function uploadDocument(req, res) {
                     }
                 }
 
-                // Update document
+                // Update the document info
                 existingDoc.fileName = req.file.filename;
                 existingDoc.storagePath = req.file.path.includes(process.cwd().replace(/\\/g, '/')) || req.file.path.includes(process.cwd())
                     ? path.relative(process.cwd(), req.file.path)
                     : req.file.path;
                 existingDoc.type = req.file.mimetype;
                 existingDoc.status = 'pending';
-                existingDoc.rejectionReason = undefined; // Clear rejection reason
+                existingDoc.rejectionReason = undefined; // Remove the "No" reason
                 existingDoc.uploadedAt = new Date();
                 if (checklistItemId) existingDoc.checklistItemId = checklistItemId;
                 await existingDoc.save();
 
-                // Notify admins about document upload
+                // Tell the admins someone uploaded a file
                 try {
                     const user = await User.findById(userId);
                     const userName = user ? (user.fullName || user.email) : 'A client';
@@ -89,7 +83,7 @@ async function uploadDocument(req, res) {
             }
         }
 
-        // Create new document
+        // Make a brand new document
         const document = new Document({
             userId,
             name: documentName || req.file.originalname,
@@ -105,7 +99,7 @@ async function uploadDocument(req, res) {
 
         await document.save();
 
-        // Notify admins about new document upload
+        // Tell the admins about the new file
         try {
             const user = await User.findById(userId);
             const userName = user ? (user.fullName || user.email) : 'A client';
@@ -125,10 +119,7 @@ async function uploadDocument(req, res) {
     }
 }
 
-/**
- * Delete a document with ownership validation
- * @route DELETE /api/client/documents/:id
- */
+// Delete a document
 async function deleteDocument(req, res) {
     try {
         const { id } = req.params;
@@ -143,12 +134,12 @@ async function deleteDocument(req, res) {
             return res.status(404).json({ message: 'Document not found' });
         }
 
-        // Validate ownership
+        // Check if the user owns this file
         if (document.userId.toString() !== userId) {
             return res.status(403).json({ message: 'You do not have permission to delete this document' });
         }
 
-        // Delete file from storage
+        // Remove the file from the server
         if (document.storagePath) {
             try {
                 const fullPath = path.isAbsolute(document.storagePath)
@@ -160,7 +151,7 @@ async function deleteDocument(req, res) {
             }
         }
 
-        // If document is required, reset to missing instead of deleting
+        // If the file is needed, just say it's missing instead of deleting everything
         if (document.required) {
             document.fileName = undefined;
             document.storagePath = undefined;
@@ -172,7 +163,7 @@ async function deleteDocument(req, res) {
             return res.json({ message: 'Document reset to missing', status: 'missing' });
         }
 
-        // Delete optional document from database
+        // If it's extra, just delete it from the database
         await Document.findByIdAndDelete(id);
         res.json({ message: 'Document deleted successfully', status: 'deleted' });
     } catch (error) {
@@ -181,10 +172,7 @@ async function deleteDocument(req, res) {
     }
 }
 
-/**
- * View document (return file path/URL)
- * @route GET /api/client/documents/:id/view
- */
+// Open and look at a document
 async function viewDocument(req, res) {
     try {
         const { id } = req.params;
@@ -200,7 +188,7 @@ async function viewDocument(req, res) {
                 ? document.storagePath
                 : path.join(process.cwd(), document.storagePath);
             await fs.access(fullPath);
-            // Return URL for viewing (frontend can open in new tab)
+            // Give back the link so the user can see it
             const fileUrl = `/uploads/documents/${document.fileName}`;
             res.json({ url: fileUrl, document });
         } catch (err) {
@@ -212,10 +200,7 @@ async function viewDocument(req, res) {
     }
 }
 
-/**
- * Download document
- * @route GET /api/client/documents/:id/download
- */
+// Download the document file
 async function downloadDocument(req, res) {
     try {
         const { id } = req.params;

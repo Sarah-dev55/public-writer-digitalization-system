@@ -1,15 +1,8 @@
 import api from './api';
 
-/**
- * Admin Document Service
- * Handles all admin-facing document operations
- * Base URL: /api/admin/documents
- */
+// This file helps the admin manage papers sent by clients
 
-/**
- * Get all documents
- * @returns {Promise} List of all documents
- */
+// Get every paper in the system
 export async function getAllDocuments() {
     try {
         const res = await api.get('/admin/documents');
@@ -20,11 +13,7 @@ export async function getAllDocuments() {
     }
 }
 
-/**
- * Get documents by user ID
- * @param {string} userId - User ID
- * @returns {Promise} List of documents for the specified user
- */
+// Get the papers belonging to a specific user
 export async function getDocumentsByUser(userId) {
     try {
         const res = await api.get(`/admin/documents/user/${userId}`);
@@ -35,10 +24,7 @@ export async function getDocumentsByUser(userId) {
     }
 }
 
-/**
- * Get pending documents
- * @returns {Promise} List of pending documents
- */
+// Get the papers that are waiting to be checked
 export async function getPendingDocuments() {
     try {
         const res = await api.get('/admin/documents/pending');
@@ -49,11 +35,7 @@ export async function getPendingDocuments() {
     }
 }
 
-/**
- * Get document by ID
- * @param {string} id - Document ID
- * @returns {Promise} Document details
- */
+// Get information about one specific paper
 export async function getDocumentById(id) {
     try {
         const res = await api.get(`/admin/documents/${id}`);
@@ -64,11 +46,7 @@ export async function getDocumentById(id) {
     }
 }
 
-/**
- * Create a new document
- * @param {Object} payload - Document data (userId, documentType, status, etc.)
- * @returns {Promise} Created document
- */
+// Add a new paper to the system
 export async function createDocument(payload) {
     try {
         const res = await api.post('/admin/documents', payload);
@@ -79,12 +57,7 @@ export async function createDocument(payload) {
     }
 }
 
-/**
- * Update a document
- * @param {string} id - Document ID
- * @param {Object} payload - Updated document data (status, etc.)
- * @returns {Promise} Updated document
- */
+// Update the information of a paper
 export async function updateDocument(id, payload) {
     try {
         const res = await api.put(`/admin/documents/${id}`, payload);
@@ -95,11 +68,7 @@ export async function updateDocument(id, payload) {
     }
 }
 
-/**
- * Delete a document
- * @param {string} id - Document ID
- * @returns {Promise} Deletion confirmation
- */
+// Delete a paper
 export async function deleteDocument(id) {
     try {
         const res = await api.delete(`/admin/documents/${id}`);
@@ -110,11 +79,7 @@ export async function deleteDocument(id) {
     }
 }
 
-/**
- * Upload a document file
- * @param {FormData} formData - Form data containing the file
- * @returns {Promise} Upload result
- */
+// Upload a new paper file
 export async function uploadDocument(formData) {
     try {
         const res = await api.post('/admin/uploads', formData, {
@@ -127,12 +92,7 @@ export async function uploadDocument(formData) {
     }
 }
 
-/**
- * Download a document file
- * @param {string} id - Document ID
- * @param {string} fileName - Name of the file for download
- * @returns {Promise} Download result
- */
+// Download a paper file to your computer
 export async function downloadDocument(id, fileName) {
     try {
         const res = await api.get(`/admin/documents/${id}/download`, {
@@ -156,13 +116,7 @@ export async function downloadDocument(id, fileName) {
     }
 }
 
-/**
- * Update document status
- * @param {string} id - Document ID
- * @param {string} status - New status ('pending', 'approved', 'rejected')
- * @param {string} statusNotes - Optional notes about the status change
- * @returns {Promise} Updated document
- */
+// Change the status of a paper (like "accepted" or "rejected")
 export async function updateDocumentStatus(id, status, statusNotes = '') {
     try {
         const res = await api.put(`/admin/documents/${id}/status`, {

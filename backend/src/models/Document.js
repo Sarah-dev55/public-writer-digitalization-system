@@ -2,12 +2,12 @@ const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
 const DocumentSchema = new Schema({
-	checklistItemId: { type: String }, // Links to checklist item's itemId
-	name: { type: String, required: true }, // Document name (e.g., "Passport Copy")
-	fileName: { type: String, required: false }, // Actual file name
-	storagePath: { type: String, required: false }, // File storage path
-	type: { type: String }, // File type (pdf, jpg, etc.)
-	required: { type: Boolean, default: false }, // Is this document required?
+	checklistItemId: { type: String }, // Link to an item in the checklist
+	name: { type: String, required: true }, // The name of the paper
+	fileName: { type: String, required: false }, // The name of the file
+	storagePath: { type: String, required: false }, // Where the file is stored
+	type: { type: String }, // What kind of file it is
+	required: { type: Boolean, default: false }, // Do we need this?
 	uploadedAt: { type: Date, default: Date.now },
 	userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
 	status: {
@@ -15,8 +15,8 @@ const DocumentSchema = new Schema({
 		enum: ['pending', 'approved', 'rejected', 'needs_correction', 'missing', 'required'],
 		default: 'pending'
 	},
-	statusNotes: { type: String }, // Notes from public writer about why rejected or what needs correction
-	rejectionReason: { type: String }, // Reason if rejected (legacy, consider using statusNotes)
+	statusNotes: { type: String }, // Notes about why it's rejected or needs a fix
+	rejectionReason: { type: String }, // Why it was rejected
 	reviewedAt: { type: Date },
 	reviewedBy: { type: Schema.Types.ObjectId, ref: 'User' },
 

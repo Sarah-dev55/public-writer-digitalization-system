@@ -1,10 +1,7 @@
 const Appointment = require('../../models/Appointment');
 const NoWorkDay = require('../../models/NoWorkDay');
 
-/**
- * Get all appointments for a specific user
- * @route GET /api/client/appointments/user/:userId
- */
+// Get all the meetings for one user
 async function getUserAppointments(req, res) {
     try {
         const { userId } = req.params;
@@ -21,10 +18,7 @@ async function getUserAppointments(req, res) {
     }
 }
 
-/**
- * Update/Reschedule an appointment
- * @route PUT /api/client/appointments/:id
- */
+// Change a meeting time or info
 async function updateAppointment(req, res) {
     try {
         const { id } = req.params;
@@ -46,15 +40,15 @@ async function updateAppointment(req, res) {
             return res.status(403).json({ message: 'You do not have permission to modify this appointment' });
         }
 
-        // If date is being changed, validate it
+        // If the date changes, check if it's okay
         if (date && date !== appointment.date) {
-            // Validate date format
+            // Check if the date is written correctly
             const dateObj = new Date(date);
             if (isNaN(dateObj.getTime())) {
                 return res.status(400).json({ message: 'Invalid date format. Use YYYY-MM-DD.' });
             }
 
-            // Check for non-working days
+            // Check if it is a holiday or weekend
             const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
             const weekday = days[dateObj.getDay()];
 
@@ -70,7 +64,7 @@ async function updateAppointment(req, res) {
             }
         }
 
-        // If date or timeSlot is being changed, check for conflicts
+        // Check if someone else already has this time
         if ((date && date !== appointment.date) || (timeSlot && timeSlot !== appointment.timeSlot)) {
             const newDate = date || appointment.date;
             const newTimeSlot = timeSlot || appointment.timeSlot;
@@ -86,7 +80,7 @@ async function updateAppointment(req, res) {
             }
         }
 
-        // Update appointment fields
+        // Update the meeting info
         if (date !== undefined) appointment.date = date;
         if (timeSlot !== undefined) appointment.timeSlot = timeSlot;
         if (notes !== undefined) appointment.notes = notes;
@@ -101,10 +95,7 @@ async function updateAppointment(req, res) {
     }
 }
 
-/**
- * Delete an appointment with ownership validation
- * @route DELETE /api/client/appointments/:id
- */
+// Cancel or delete a meeting
 async function deleteAppointment(req, res) {
     try {
         const { id } = req.params;
@@ -126,7 +117,7 @@ async function deleteAppointment(req, res) {
             return res.status(403).json({ message: 'You do not have permission to delete this appointment' });
         }
 
-        // Delete the appointment
+        // Remove the meeting
         await Appointment.findByIdAndDelete(id);
         res.json({ message: 'Appointment deleted successfully' });
     } catch (error) {

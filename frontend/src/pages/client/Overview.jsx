@@ -41,19 +41,20 @@ export default function ClientDashboard() {
   const { user } = useAuth();
   const userId = (user && (user._id || user.id)) || null;
 
-  // Fetch data on component mount
+  // Get data when the page first opens
   useEffect(() => {
-    if (!userId) return; // wait for authenticated user
+    if (!userId) return; // wait for the user to be ready
     fetchAppointments();
     fetchDocuments();
     fetchCaseStatus();
     fetchNotifications();
 
-    // Poll for notifications every 60 seconds
+    // Check for new messages every 60 seconds
     const interval = setInterval(fetchNotifications, 60000);
     return () => clearInterval(interval);
   }, []);
 
+  // Get the messages for this user
   const fetchNotifications = async () => {
     try {
       const data = await getUserNotifications(userId);
@@ -63,6 +64,7 @@ export default function ClientDashboard() {
     }
   };
 
+  // Mark one message as read
   const handleMarkAsRead = async (id) => {
     try {
       await markNotificationAsRead(id);
@@ -72,6 +74,7 @@ export default function ClientDashboard() {
     }
   };
 
+  // Mark every message as read
   const handleMarkAllAsRead = async () => {
     try {
       await markAllNotificationsAsRead(userId);
@@ -81,6 +84,7 @@ export default function ClientDashboard() {
     }
   };
 
+  // Get the status of the user's case
   const fetchCaseStatus = async () => {
     try {
       const data = await getCaseStatus(userId);
@@ -90,6 +94,7 @@ export default function ClientDashboard() {
     }
   };
 
+  // Get the files for this user
   const fetchDocuments = async () => {
     try {
       const data = await listDocumentsByUser(userId);
@@ -100,6 +105,7 @@ export default function ClientDashboard() {
     }
   };
 
+  // Get all the meetings for this user
   const fetchAppointments = async () => {
     try {
       setLoading(true);
@@ -113,6 +119,7 @@ export default function ClientDashboard() {
     }
   };
 
+  // Open the window to book a meeting
   const handleBookAppointment = () => {
     setSelectedAppointmentData(null);
     setModalMode('create');
@@ -129,6 +136,7 @@ export default function ClientDashboard() {
     setIsBookingModalOpen(true);
   };
 
+  // Open the window to change a meeting time
   const handleReschedule = (id) => {
     const appointment = appointments.find(apt => apt._id === id);
     if (appointment) {
@@ -138,6 +146,7 @@ export default function ClientDashboard() {
     }
   };
 
+  // Look at the details of a meeting
   const handleView = (id) => {
     const appointment = appointments.find(apt => apt._id === id);
     if (appointment) {
@@ -147,6 +156,7 @@ export default function ClientDashboard() {
     }
   };
 
+  // Stop a meeting from happening
   const handleCancel = async (id) => {
     if (!window.confirm('Are you sure you want to cancel this appointment?')) {
       return;
@@ -162,6 +172,7 @@ export default function ClientDashboard() {
     }
   };
 
+  // Close the booking window
   const handleBookingClose = () => {
     setIsBookingModalOpen(false);
     fetchAppointments();
@@ -217,6 +228,7 @@ export default function ClientDashboard() {
     });
   };
 
+  // Look at a file in a new tab
   const handleDocumentView = async (id) => {
     try {
       const response = await api.get(`/client/documents/${id}/view`);
@@ -236,7 +248,7 @@ export default function ClientDashboard() {
     navigate('/client/documents');
   };
 
-  // Navigation items - using translation from second version
+  // Items for the top menu
   const navItems = [
     { label: t('navigation.home'), active: false, href: '/#home' },
     { label: t('navigation.services'), active: false, href: '/#about' },
@@ -283,7 +295,7 @@ export default function ClientDashboard() {
           onUploadDocuments={handleUploadDocuments}
         />
         
-        {/* Tab Content */}
+        {/* Show different things based on the tab selected */}
         {activeTab === 'appointments' && (
           <AppointmentsList
             appointments={appointments}

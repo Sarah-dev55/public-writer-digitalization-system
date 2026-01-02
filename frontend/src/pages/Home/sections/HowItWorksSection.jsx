@@ -27,6 +27,8 @@ export const HowItWorksSection = () => {
       description: t('howItWorks.completeSuccessfully'),
     },
   ];
+
+  // This part shows the steps for using the website
   return (
     <section id="how-it-works" className="w-full bg-app-accent py-12 px-6 sm:py-16 md:py-20 lg:py-24">
       <div className="mx-auto max-w-5xl">

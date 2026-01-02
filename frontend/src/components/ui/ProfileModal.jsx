@@ -23,6 +23,7 @@ export const ProfileModal = ({ open, onClose, user, onUpdate, onLogout, reloadUs
   const [theme, setTheme] = useState("Light");
   const [language, setLanguage] = useState("Eng");
 
+  // Fill the form with user info when the window opens
   useEffect(() => {
     if (user && open) {
       setFormData({
@@ -34,7 +35,7 @@ export const ProfileModal = ({ open, onClose, user, onUpdate, onLogout, reloadUs
     }
   }, [user, open]);
 
-  // Fetch fresh data when opened
+  // Get the latest info from the server when the window opens
   useEffect(() => {
     if (open && user?.id || user?._id) {
       const fetchFreshData = async () => {
@@ -55,13 +56,15 @@ export const ProfileModal = ({ open, onClose, user, onUpdate, onLogout, reloadUs
 
   if (!open) return null;
 
+  // When the user clicks the save button
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
+      // Wait a tiny bit to show the loading icon
       await new Promise((resolve) => setTimeout(resolve, 700));
       if (onUpdate) {
-        // Map 'name' to 'fullName' for backend compatibility if needed
+        // Send the new info to the parent component
         const payload = { ...formData, fullName: formData.name };
         await onUpdate(payload);
       }
@@ -75,6 +78,7 @@ export const ProfileModal = ({ open, onClose, user, onUpdate, onLogout, reloadUs
     }
   };
 
+  // When the user types in a box
   const handleChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
@@ -91,6 +95,7 @@ export const ProfileModal = ({ open, onClose, user, onUpdate, onLogout, reloadUs
     setIsEditing(false);
   };
 
+  // When the user logs out
   const handleLogout = () => {
     if (onLogout) {
       onLogout();
@@ -98,11 +103,12 @@ export const ProfileModal = ({ open, onClose, user, onUpdate, onLogout, reloadUs
     onClose();
   };
 
+  // When the user picks a new profile picture
   const handleImageChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Optional: add client-side size check
+    // Check if the file is too big (max 5mb)
     if (file.size > 5 * 1024 * 1024) {
       setError('File size must be less than 5MB');
       return;
@@ -112,10 +118,11 @@ export const ProfileModal = ({ open, onClose, user, onUpdate, onLogout, reloadUs
     setError(null);
     try {
       const userId = user._id || user.id;
+      // Send the picture to the server
       const res = await uploadProfileImage(userId, file);
       if (res.success) {
         if (onUpdate) {
-          // Trigger a refresh/update in the parent context
+          // Tell the rest of the app about the new picture
           await onUpdate(res.data);
         }
       }
@@ -127,13 +134,15 @@ export const ProfileModal = ({ open, onClose, user, onUpdate, onLogout, reloadUs
     }
   };
 
-  // Helper function to get user initials
+  // Get the first letters of the user's name
   const getUserInitials = (name) => {
     if (!name) return "?";
     const nameParts = name.trim().split(/\s+/);
     if (nameParts.length >= 2) {
+      // Use first letter of first and last name
       return (nameParts[0].charAt(0) + nameParts[nameParts.length - 1].charAt(0)).toUpperCase();
     }
+    // Use just the first letter
     return name.charAt(0).toUpperCase();
   };
 

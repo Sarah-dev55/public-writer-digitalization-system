@@ -1,9 +1,8 @@
-import React, { useState, useContext } from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import LoginForm from '../components/forms/LoginForm';
 import useAuth from '../hooks/useAuth';
-import { AuthContext } from '../context/AuthContext';
 import UnifiedHeader from '../components/layout/UnifiedHeader';
 import Footer from '../components/layout/Footer';
 import { getErrorMessage } from '../utils/errorUtils';
@@ -11,28 +10,31 @@ import { getErrorMessage } from '../utils/errorUtils';
 export default function Login() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { requireAuth, isAuthenticated, user } = useContext(AuthContext);
+  const { login, requireAuth, isAuthenticated, user } = useAuth();
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
   
   const navItems = [
     { label: t('navigation.home'), active: false, href: '/' },
     { label: t('navigation.services'), active: false, href: '/#about' },
   ];
 
+  // Go to the signup page when the button is clicked
   const handleCtaClick = () => {
     navigate('/signup');
   };
 
+  // When the user clicks the login button
   const handleSubmit = async (creds) => {
     try {
       setError('');
       setLoading(true);
       
+      // Send the info to the login script
       const response = await login(creds);
       if (response && response.success) {
         const user = response.data;
+        // Go to the right dashboard based on the user's role
         if (user && user.role === 'admin') {
           navigate('/admin/dashboard');
         } else {

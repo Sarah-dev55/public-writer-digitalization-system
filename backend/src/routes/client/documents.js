@@ -5,19 +5,19 @@ const path = require('path');
 const fs = require('fs');
 const clientDocumentController = require('../../controllers/client/client_documents');
 
-// Create uploads directory if it doesn't exist
+// Make a folder for uploads if it's not there
 const uploadsDir = path.join(process.cwd(), 'uploads/documents');
 if (!fs.existsSync(uploadsDir)) {
     fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
-// Configure multer storage
+// Setup where to save the files
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         cb(null, uploadsDir);
     },
     filename: function (req, file, cb) {
-        // Create unique filename: timestamp-originalname
+        // Give the file a special name so it doesn't get mixed up
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
         const ext = path.extname(file.originalname);
         const nameWithoutExt = path.basename(file.originalname, ext);
@@ -25,7 +25,7 @@ const storage = multer.diskStorage({
     }
 });
 
-// File filter to accept only specific file types
+// Only allow certain types of files
 const fileFilter = (req, file, cb) => {
     const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
     if (allowedTypes.includes(file.mimetype)) {
@@ -35,7 +35,7 @@ const fileFilter = (req, file, cb) => {
     }
 };
 
-// Configure multer
+// Setup the file uploader
 const upload = multer({
     storage: storage,
     limits: {
@@ -44,19 +44,19 @@ const upload = multer({
     fileFilter: fileFilter
 });
 
-// Get all documents for a specific user
+// Get all the papers for one user
 router.get('/user/:userId', clientDocumentController.getUserDocuments);
 
-// Upload a document
+// Put a paper into the system
 router.post('/upload', upload.single('file'), clientDocumentController.uploadDocument);
 
-// Delete a document with ownership validation
+// Delete a paper (check if user owns it)
 router.delete('/:id', clientDocumentController.deleteDocument);
 
-// View document
+// Look at a paper
 router.get('/:id/view', clientDocumentController.viewDocument);
 
-// Download document
+// Download the paper file
 router.get('/:id/download', clientDocumentController.downloadDocument);
 
 module.exports = router;

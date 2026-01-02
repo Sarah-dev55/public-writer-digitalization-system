@@ -9,6 +9,7 @@ export default function SignUpForm({ onSubmit }) {
 
   const submit = (e) => {
     e.preventDefault();
+    // Send the user info to the signup function
     onSubmit?.({ fullName, email, password });
   };
 

@@ -3,7 +3,7 @@ const router = express.Router();
 const Checklist = require('../../models/Checklist');
 const { v4: uuidv4 } = require('uuid');
 
-// Get all checklists
+// Get all the checklists
 router.get('/', async (req, res) => {
   try {
     const checklists = await Checklist.find();
@@ -13,7 +13,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Get checklist by user ID
+// Get a checklist for one user
 router.get('/user/:userId', async (req, res) => {
   try {
     const checklist = await Checklist.findOne({ userId: req.params.userId });
@@ -24,7 +24,7 @@ router.get('/user/:userId', async (req, res) => {
   }
 });
 
-// Create new checklist
+// Make a new checklist
 router.post('/', async (req, res) => {
   const checklist = new Checklist({
     _id: uuidv4(),
@@ -41,7 +41,7 @@ router.post('/', async (req, res) => {
   }
 });
 
-// Update checklist item status
+// Change if a checklist item is done or not
 router.patch('/:id/items/:itemId', async (req, res) => {
   try {
     const checklist = await Checklist.findById(req.params.id);
@@ -59,7 +59,7 @@ router.patch('/:id/items/:itemId', async (req, res) => {
   }
 });
 
-// Delete checklist
+// Delete a checklist
 router.delete('/:id', async (req, res) => {
   try {
     const checklist = await Checklist.findByIdAndDelete(req.params.id);

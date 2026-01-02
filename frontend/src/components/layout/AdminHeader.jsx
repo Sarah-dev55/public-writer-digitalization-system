@@ -23,15 +23,17 @@ export default function AdminHeader({ title = 'Dashboard', breadcrumb = ['Homepa
     return name.charAt(0).toUpperCase();
   };
 
+  // Check for new messages when the user is known
   useEffect(() => {
     if (userId) {
       fetchNotifications();
-      // Poll for notifications every 30 seconds
+      // Check every 30 seconds
       const interval = setInterval(fetchNotifications, 30000);
       return () => clearInterval(interval);
     }
   }, [userId]);
 
+  // Get the messages for this user
   const fetchNotifications = async () => {
     try {
       const data = await getUserNotifications(userId);
@@ -41,6 +43,7 @@ export default function AdminHeader({ title = 'Dashboard', breadcrumb = ['Homepa
     }
   };
 
+  // Mark one message as read
   const handleMarkAsRead = async (id) => {
     try {
       await markNotificationAsRead(id);
@@ -50,6 +53,7 @@ export default function AdminHeader({ title = 'Dashboard', breadcrumb = ['Homepa
     }
   };
 
+  // Mark every message as read
   const handleMarkAllAsRead = async () => {
     try {
       await markAllNotificationsAsRead(userId);

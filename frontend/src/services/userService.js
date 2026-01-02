@@ -1,5 +1,6 @@
 import api from './api';
 
+// Get a user's information from the server
 export async function getUser(userId) {
   try {
     const res = await api.get(`/client/users/${userId}`);
@@ -10,6 +11,7 @@ export async function getUser(userId) {
   }
 }
 
+// Update a user's information on the server
 export async function updateUser(userId, payload) {
   try {
     const res = await api.put(`/client/users/${userId}`, payload);
@@ -20,6 +22,7 @@ export async function updateUser(userId, payload) {
   }
 }
 
+// Send a profile picture to the server
 export async function uploadProfileImage(userId, file) {
   const formData = new FormData();
   formData.append('image', file);
@@ -29,11 +32,13 @@ export async function uploadProfileImage(userId, file) {
   return res.data;
 }
 
+// Change the password
 export async function changePassword(passwordData) {
   const res = await api.put('/auth/change-password', passwordData);
   return res.data;
 }
 
+// Update the profile of the person logged in
 export async function updateCurrentUserProfile(payload) {
   const res = await api.put('/client/users/me', payload);
   return res.data;

@@ -10,7 +10,7 @@ const UserSchema = new Schema({
 	checklistId: { type: Schema.Types.ObjectId, ref: 'Checklist' },
 	currentStats: {
 		type: Number,
-		default: 1, // Starts at Step 1 (Initial Consultation)
+		default: 1, // Start at the first step
 		min: 1,
 		max: 5
 	},

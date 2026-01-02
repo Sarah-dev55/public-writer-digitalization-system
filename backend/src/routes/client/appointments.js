@@ -7,7 +7,7 @@ const { v4: uuidv4 } = require('uuid');
 const clientAppointmentController = require('../../controllers/client/client_appointments');
 const { notifyAdmins } = require('../../utils/notificationHelper');
 
-// Get all appointments
+// Get all meetings
 router.get('/', async (req, res) => {
   try {
     const appointments = await Appointment.find();
@@ -17,26 +17,21 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Create new appointment (with validation)
+// Make a new meeting and check if it's okay
 router.post('/', async (req, res) => {
   const { date, timeSlot, notes, appointmentType } = req.body;
 
-  // USER ID (use provided one or fallback to default until auth is implemented)
-  // Defaulting to existing DB user ObjectId string
+  // Use a default user ID if none is given
   const userId = req.body.userId || '692cb332a4ba90e0b2dcb02f';
 
   try {
-    // Validate date format (expecting YYYY-MM-DD)
-    const dateObj = new Date(date);
-    if (isNaN(dateObj.getTime())) {
-      return res.status(400).json({ message: 'Invalid date format. Use YYYY-MM-DD.' });
-    }
+    // Check if the date is written correctly
 
-    // weekday name for recurring checks
+    // Get the name of the day
     const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     const weekday = days[dateObj.getDay()];
 
-    // 1️⃣ Check if day is non-working (exact date OR recurring weekday)
+    // 1. Check if the office is closed that day
     const nonWorking = await NoWorkDay.findOne({
       $or: [
         { date },
@@ -47,13 +42,13 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ message: 'This day is unavailable (non-working day).' });
     }
 
-    // 2️⃣ Check if time slot already booked
+    // 2. Check if someone else already has this time
     const alreadyBooked = await Appointment.findOne({ date, timeSlot });
     if (alreadyBooked) {
       return res.status(400).json({ message: "This time slot is already booked." });
     }
 
-    // 3️⃣ Create appointment
+    // 3. Save the new meeting
     const appointment = new Appointment({
       date,
       timeSlot,
@@ -65,7 +60,7 @@ router.post('/', async (req, res) => {
 
     const newAppointment = await appointment.save();
 
-    // Notify admins about new appointment
+    // Tell the admins about the new meeting
     try {
       const user = await User.findById(userId);
       const userName = user ? (user.fullName || user.email) : 'A client';
@@ -76,7 +71,7 @@ router.post('/', async (req, res) => {
       );
     } catch (notifError) {
       console.error('Error sending notification:', notifError);
-      // Don't fail the appointment creation if notification fails
+      // If the message fails, save the meeting anyway
     }
 
     res.status(201).json(newAppointment);
@@ -86,7 +81,7 @@ router.post('/', async (req, res) => {
   }
 });
 
-// Get appointments by date
+// Get meetings for a specific day
 router.get('/date/:date', async (req, res) => {
   try {
     const appointments = await Appointment.find({ date: req.params.date });
@@ -96,7 +91,7 @@ router.get('/date/:date', async (req, res) => {
   }
 });
 
-// Delete appointment
+// Delete a meeting
 router.delete('/:id', async (req, res) => {
   try {
     const deleted = await Appointment.findByIdAndDelete(req.params.id);
@@ -109,15 +104,13 @@ router.delete('/:id', async (req, res) => {
 
 // ==================== NEW ROUTES FOR CLIENT APPOINTMENT MANAGEMENT ====================
 
-// Get all appointments for a specific user
+// Get all meetings for one user
 router.get('/user/:userId', clientAppointmentController.getUserAppointments);
 
-// Update/Reschedule an appointment (with ownership validation)
+// Change a meeting (check if user owns it)
 router.put('/:id', clientAppointmentController.updateAppointment);
 
-// Delete appointment with ownership validation (enhanced version)
-// Note: The basic delete route above (line 82) can be used for admin purposes
-// This route validates user ownership before deletion
+// Delete a meeting (check if user owns it)
 router.delete('/user/:id', clientAppointmentController.deleteAppointment);
 
 module.exports = router;

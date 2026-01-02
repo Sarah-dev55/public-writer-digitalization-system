@@ -1,21 +1,17 @@
-/**
- * i18n middleware for Express backend
- * Detects and stores user language preference
- * Usage: app.use(i18nMiddleware);
- */
+// This part helps pick the right language for the user
 
 const i18nMiddleware = (req, res, next) => {
-  // Get language from headers, query parameter, or default to English
-  const language = 
+  // Look for language in the URL or header
+  const language =
     req.query.language ||
     req.headers['accept-language']?.split('-')[0] ||
     'en';
 
-  // Validate language is supported
+  // Make sure we have the language, otherwise use English
   const supportedLanguages = ['en', 'fr'];
   req.language = supportedLanguages.includes(language) ? language : 'en';
 
-  // Add language to response headers
+  // Set the language in the header
   res.setHeader('Content-Language', req.language);
 
   next();

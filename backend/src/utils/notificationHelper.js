@@ -1,18 +1,13 @@
 const Notification = require('../models/Notification');
 const User = require('../models/User');
 
-/**
- * Create notification for all admin users
- * @param {string} title - Notification title
- * @param {string} message - Notification message
- * @param {string} type - Notification type (info, success, warning, error)
- */
+// Send a message to all the admins
 async function notifyAdmins(title, message, type = 'info') {
     try {
-        // Find all admin users
+        // Find all the admins in the system
         const admins = await User.find({ role: 'admin' });
 
-        // Create notifications for each admin
+        // Make a message for each admin
         const notifications = admins.map(admin => ({
             userId: admin._id,
             title,
@@ -32,13 +27,7 @@ async function notifyAdmins(title, message, type = 'info') {
     }
 }
 
-/**
- * Create notification for a specific user
- * @param {string} userId - User ID
- * @param {string} title - Notification title
- * @param {string} message - Notification message
- * @param {string} type - Notification type (info, success, warning, error)
- */
+// Send a message to one specific person
 async function notifyUser(userId, title, message, type = 'info') {
     try {
         const notification = new Notification({

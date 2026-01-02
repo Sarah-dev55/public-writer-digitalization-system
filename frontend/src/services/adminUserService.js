@@ -1,15 +1,8 @@
 import api from './api';
 
-/**
- * Admin User Service
- * Handles all admin-facing user operations
- * Base URL: /api/admin/users
- */
+// This file helps the admin manage people who use the website
 
-/**
- * Get all users
- * @returns {Promise} List of all users
- */
+// Get a list of everyone registered
 export async function getAllUsers() {
     try {
         const res = await api.get('/admin/users');
@@ -20,11 +13,7 @@ export async function getAllUsers() {
     }
 }
 
-/**
- * Get user by ID
- * @param {string} id - User ID
- * @returns {Promise} User details
- */
+// Get info about one person
 export async function getUserById(id) {
     try {
         const res = await api.get(`/admin/users/${id}`);
@@ -35,11 +24,7 @@ export async function getUserById(id) {
     }
 }
 
-/**
- * Create a new user
- * @param {Object} payload - User data (fullName, email, phone, checklistId)
- * @returns {Promise} Created user
- */
+// Add a new person to the website
 export async function createUser(payload) {
     try {
         const res = await api.post('/admin/users', payload);
@@ -50,12 +35,7 @@ export async function createUser(payload) {
     }
 }
 
-/**
- * Update a user
- * @param {string} id - User ID
- * @param {Object} payload - Updated user data
- * @returns {Promise} Updated user
- */
+// Change a person's information
 export async function updateUser(id, payload) {
     try {
         const res = await api.put(`/admin/users/${id}`, payload);
@@ -66,11 +46,7 @@ export async function updateUser(id, payload) {
     }
 }
 
-/**
- * Delete a user
- * @param {string} id - User ID
- * @returns {Promise} Deletion confirmation
- */
+// Remove a person from the website
 export async function deleteUser(id) {
     try {
         const res = await api.delete(`/admin/users/${id}`);

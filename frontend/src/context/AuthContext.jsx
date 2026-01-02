@@ -7,6 +7,7 @@ import { getErrorMessage } from '../utils/errorUtils';
 export const AuthContext = createContext({});
 
 export const AuthProvider = ({ children }) => {
+  // Get the user data from the browser's storage
   const [user, setUser] = useState(() => {
     try {
       const raw = localStorage.getItem('user');
@@ -15,10 +16,14 @@ export const AuthProvider = ({ children }) => {
       return null;
     }
   });
+  // Get the secret login token
   const [token, setToken] = useState(() => localStorage.getItem('token') || null);
+  // Show or hide the login window
   const [loginModalOpen, setLoginModalOpen] = useState(false);
+  // Keep track of what the user wanted to do before logging in
   const [pendingAction, setPendingAction] = useState(null);
 
+  // Save the token to the browser when it changes
   useEffect(() => {
     if (token) {
       localStorage.setItem('token', token);
@@ -27,6 +32,7 @@ export const AuthProvider = ({ children }) => {
     }
   }, [token]);
 
+  // Save the user data to the browser when it changes
   useEffect(() => {
     try {
       if (user) localStorage.setItem('user', JSON.stringify(user));
@@ -34,16 +40,19 @@ export const AuthProvider = ({ children }) => {
     } catch (err) {}
   }, [user]);
 
+  // Open the login window and remember what to do next
   const openLogin = (action) => {
     setPendingAction(() => action || null);
     setLoginModalOpen(true);
   };
 
+  // Close the login window
   const closeLogin = () => {
     setLoginModalOpen(false);
     setPendingAction(null);
   };
 
+  // Try to log in with email and password
   const login = async (credentials) => {
     const res = await authService.login(credentials);
     if (res && res.success) {
@@ -56,6 +65,7 @@ export const AuthProvider = ({ children }) => {
     return res;
   };
 
+  // Try to sign up for a new account
   const signup = async (payload) => {
     const res = await authService.signup(payload);
     if (res && res.success) {
@@ -66,16 +76,15 @@ export const AuthProvider = ({ children }) => {
     return res;
   };
 
+  // Change the user's name or phone number
   const updateProfile = async (data) => {
     try {
       if (!user) return { success: false, message: 'No user logged in' };
       const userId = user._id || user.id;
-      // Use clientUserService for client roles
-      const res = user.role === 'admin' 
-        ? await userService.updateUser(userId, data)
-        : await userService.updateUser(userId, data); // Defaulting to userService for now, will check if need specific client service
+      // Send the new data to the server
+      const res = await userService.updateUser(userId, data);
       
-      // Re-fetch to ensure consistency if needed, but userService returns the updated user.
+      // Update the user data in our app
       if (res) {
         setUser(prev => ({ ...prev, ...res }));
         return { success: true, data: res };
@@ -87,6 +96,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Refresh the user data from the server
   const reloadUser = async () => {
     try {
       if (!user) return;
@@ -100,16 +110,18 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Log out of the account
   const logout = async () => {
     try {
       await authService.logout();
     } catch (err) {
-      // ignore
+      // just ignore if it fails
     }
     setToken(null);
     setUser(null);
   };
 
+  // Check if someone is logged in before doing something
   const requireAuth = (action) => {
     if (token) {
       if (typeof action === 'function') action();

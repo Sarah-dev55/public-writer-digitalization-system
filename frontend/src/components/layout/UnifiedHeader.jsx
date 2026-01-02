@@ -39,12 +39,12 @@ export const UnifiedHeader = ({
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Handle scrolling to hash after navigation
+  // Scroll to a specific part of the page if there is a "#" in the link
   useEffect(() => {
     if (location.hash) {
       const element = document.querySelector(location.hash);
       if (element) {
-        // Small delay to ensure page is rendered
+        // Wait a tiny bit for the page to be ready
         setTimeout(() => {
           element.scrollIntoView({ behavior: "smooth" });
         }, 100);
@@ -52,33 +52,35 @@ export const UnifiedHeader = ({
     }
   }, [location]);
 
+  // Handle when someone clicks a link in the menu
   const handleNavClick = (href) => {
     setMobileMenuOpen(false);
     if (href.startsWith("#")) {
-      // Hash link on current page - scroll to element
+      // If it's a link to a part of the same page
       const element = document.querySelector(href);
       if (element) {
         element.scrollIntoView({ behavior: "smooth" });
       }
     } else if (href.includes("#")) {
-      // Path with hash (e.g., "/#home") - navigate to path with hash
+      // If it's a link to a different page but a specific part
       navigate(href);
     } else if (href.startsWith("/")) {
-      // Regular path - navigate
+      // If it's just a normal link to another page
       navigate(href);
     }
   };
 
+  // Handle when someone clicks the main button
   const handleCtaClick = () => {
     if (isAuthenticated) {
-      // If authenticated, directly execute the action
+      // If they are already logged in
       if (ctaButtonOnClick) {
         ctaButtonOnClick();
       } else {
         window.location.href = "/client/dashboard";
       }
     } else {
-      // If not authenticated, require auth first
+      // If they need to log in first
       if (ctaButtonOnClick) {
         requireAuth(() => ctaButtonOnClick());
       } else {
@@ -87,13 +89,15 @@ export const UnifiedHeader = ({
     }
   };
 
-  // Helper function to get user initials
+  // Get the first letters of the user's name
   const getUserInitials = (name) => {
     if (!name) return "?";
     const nameParts = name.trim().split(/\s+/);
     if (nameParts.length >= 2) {
+      // Use the first letter of the first and last name
       return (nameParts[0].charAt(0) + nameParts[nameParts.length - 1].charAt(0)).toUpperCase();
     }
+    // Use just the first letter if there is only one name
     return name.charAt(0).toUpperCase();
   };
 

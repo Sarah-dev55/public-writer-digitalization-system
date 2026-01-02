@@ -3,20 +3,16 @@ const Appointment = require('../../models/Appointment');
 const Document = require('../../models/Document');
 const { v4: uuidv4 } = require('uuid');
 
-/**
- * Get all notifications for a user
- * ALSO simulates "Appointment Reminder" logic here for demo purposes
- * @route GET /api/client/notifications/:userId
- */
+// Get all the messages for the user
 async function getUserNotifications(req, res) {
     try {
         const { userId } = req.params;
 
-        // 1. Fetch real notifications from DB
+        // 1. Get real messages from the database
         let notifications = await Notification.find({ userId }).sort({ createdAt: -1 });
 
-        // 2. SIMULATE APPOINTMENT REMINDER (Local Logic)
-        // Check if user has appointment tomorrow
+        // 2. Check for upcoming meetings
+        // Check if there is a meeting tomorrow
         const tomorrow = new Date();
         tomorrow.setDate(tomorrow.getDate() + 1);
         const tomorrowStr = tomorrow.toISOString().split('T')[0];
@@ -26,12 +22,10 @@ async function getUserNotifications(req, res) {
             date: tomorrowStr
         });
 
-        // If exists, inject a "virtual" notification if not already in DB
-        // (In a real app, a cron job would create this record permanently. 
-        // Here we just check if we should show it dynamically or if we insert it now)
+        // If there is a meeting, make a reminder message
 
         if (appointmentTomorrow) {
-            // Check if we already created a reminder for this appointment
+            // Check if we already sent a reminder
             const existingReminder = await Notification.findOne({
                 userId,
                 title: 'Appointment Reminder',
@@ -39,7 +33,7 @@ async function getUserNotifications(req, res) {
             });
 
             if (!existingReminder) {
-                // Create it now so it persists
+                // Save a new reminder
                 const reminder = new Notification({
                     userId,
                     title: 'Appointment Reminder',
@@ -48,27 +42,23 @@ async function getUserNotifications(req, res) {
                     createdAt: new Date()
                 });
                 await reminder.save();
-                // Add to list
+                // Add it to our list
                 notifications.unshift(reminder);
             }
         }
 
-        // 3. CHECK FOR DOCUMENT STATUS UPDATES (Lazy Notification Generation)
-        // Find documents that are approved or rejected for this user
+        // 3. Check if documents were approved or rejected
         const statusDocs = await Document.find({
             userId,
             status: { $in: ['approved', 'rejected'] }
         });
 
         for (const doc of statusDocs) {
-            // Check if we already have a notification for THIS specific status update
-            // Logic: Is there a notification for this doc created AFTER the doc was last updated?
-            // We verify by matching the document ID in the list or message context if stored, 
-            // but simplified here by checking title/content + creation time vs doc update time.
+            // Check if we already have a message for this document
 
             const docTitle = doc.status === 'approved' ? 'Document Approved' : 'Document Rejected';
 
-            // Allow a small buffer (e.g., 2 seconds) for execution time differences
+            // Wait a few seconds to be sure
             const bufferTime = new Date(doc.updatedAt.getTime() - 2000);
 
             const existingNotification = await Notification.findOne({
@@ -79,7 +69,7 @@ async function getUserNotifications(req, res) {
             });
 
             if (!existingNotification) {
-                // Determine message based on status
+                // Pick a message based on the status
                 let messageBody = '';
                 let type = 'info';
 
@@ -94,7 +84,7 @@ async function getUserNotifications(req, res) {
                     type = 'error';
                 }
 
-                // Create the notification
+                // Make the message
                 const newStatusNotif = new Notification({
                     userId,
                     title: docTitle,
@@ -108,8 +98,7 @@ async function getUserNotifications(req, res) {
             }
         }
 
-        // 4. CHECK FOR APPOINTMENT STATUS UPDATES (Lazy Notification Generation)
-        // Find appointments that are confirmed or cancelled
+        // 4. Check if meetings were confirmed or cancelled
         const statusAppts = await Appointment.find({
             userId,
             status: { $in: ['confirmed', 'cancelled'] }
@@ -151,7 +140,7 @@ async function getUserNotifications(req, res) {
             }
         }
 
-        // 5. If no notifications at all, create a "Welcome" one (Seed logic)
+        // 5. If there are no messages, show a welcome message
         if (notifications.length === 0) {
             const welcomeNotif = new Notification({
                 userId,
@@ -171,10 +160,7 @@ async function getUserNotifications(req, res) {
     }
 }
 
-/**
- * Mark notification as read
- * @route PUT /api/client/notifications/:id/read
- */
+// Mark one message as read
 async function markAsRead(req, res) {
     try {
         const { id } = req.params;
@@ -190,10 +176,7 @@ async function markAsRead(req, res) {
     }
 }
 
-/**
- * Mark ALL as read
- * @route PUT /api/client/notifications/user/:userId/read-all
- */
+// Mark every message as read
 async function markAllAsRead(req, res) {
     try {
         const { userId } = req.params;

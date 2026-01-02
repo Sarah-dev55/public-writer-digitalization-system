@@ -5,7 +5,7 @@ const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
-// Attach token from localStorage on each request
+// Automatically add the user's secret token to every message we send to the server
 api.interceptors.request.use((config) => {
   try {
     const token = localStorage.getItem('token');

@@ -1,3 +1,4 @@
+// This function turns computer errors into easy English messages
 export const getErrorMessage = (error, fallback = 'An unexpected error occurred. Please try again.') => {
     if (!error) return fallback;
 
@@ -38,6 +39,6 @@ export const getErrorMessage = (error, fallback = 'An unexpected error occurred.
         return 'Network error. Please check your internet connection.';
     }
 
-    // Handle other errors
+    // If there is no special message, use the computer's error message or our own
     return error.message || fallback;
 };

@@ -32,7 +32,7 @@ async function listPending(req, res) {
 
 async function create(req, res) {
 	try {
-		// Expecting file upload handling elsewhere; here we store metadata
+		// We save the document info here
 		const doc = new Document(req.body);
 		await doc.save();
 		res.status(201).json({ success: true, data: doc });
@@ -58,14 +58,14 @@ async function download(req, res) {
 			return res.status(404).json({ success: false, message: 'Document not found' });
 		}
 
-		// Handle both absolute and relative paths
+		// Check the file path
 		let filePath = doc.storagePath;
 		if (!path.isAbsolute(filePath)) {
-			// If it's a relative path, make it absolute
+			// If the path is short, make it full
 			filePath = path.join(process.cwd(), filePath);
 		}
 
-		// Check if file exists
+		// Check if the file is really there
 		try {
 			await fs.access(filePath);
 			res.download(filePath, doc.fileName);
@@ -82,7 +82,7 @@ async function updateStatus(req, res) {
 		const { id } = req.params;
 		const { status, statusNotes } = req.body;
 
-		// Validate status
+		// Make sure the status is okay
 		const validStatuses = ['pending', 'approved', 'rejected', 'needs_correction', 'missing', 'required'];
 		if (!validStatuses.includes(status)) {
 			return res.status(400).json({
@@ -91,7 +91,7 @@ async function updateStatus(req, res) {
 			});
 		}
 
-		// Map status to reviewStatus for client side compatibility
+		// Change the status for the client view
 		const statusToReviewStatus = {
 			'pending': 'pending',
 			'approved': 'approved',
@@ -99,7 +99,7 @@ async function updateStatus(req, res) {
 			'needs_correction': 'pending'
 		};
 
-		// Find and update the document
+		// Update the document in the database
 		const updateData = {
 			status,
 			reviewStatus: statusToReviewStatus[status],

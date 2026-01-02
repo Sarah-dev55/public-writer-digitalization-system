@@ -27,7 +27,7 @@ async function verifyToken(req, res, next) {
     const user = await User.findById(payload.sub);
     if (!user) return res.status(401).json({ success: false, message: 'User not found' });
 
-    // attach minimal user info to request
+    // Put simple user info in the request object
     req.user = {
       id: user._id.toString(),
       role: user.role,
@@ -43,7 +43,7 @@ async function verifyToken(req, res, next) {
 }
 
 function requireRole(...allowedRoles) {
-  // flatten in case array passed
+  // Check if the user has the right role
   const allowed = allowedRoles.flat();
   return (req, res, next) => {
     if (!req.user) return res.status(401).json({ success: false, message: 'Not authenticated' });

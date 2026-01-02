@@ -22,11 +22,11 @@ const Book_model = ({ isOpen, onClose, mode = 'create', appointment = null }) =>
     { value: 'follow-up', label: 'Follow-up (20 minutes)' },
   ];
 
-  // Helper to format date as YYYY-MM-DD
+  // Help change the date into a text format like YYYY-MM-DD
   const formatDate = (d) =>
     `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
-  // Fetch no-work-days from backend
+  // Get the days when the office is closed
   useEffect(() => {
     let mounted = true;
     async function fetchNoWorkDays() {
@@ -44,22 +44,22 @@ const Book_model = ({ isOpen, onClose, mode = 'create', appointment = null }) =>
     return () => { mounted = false; };
   }, []);
 
-  // Pre-fill form when in edit or view mode
+  // Put the meeting info into the boxes if we are editing
   useEffect(() => {
     if (appointment && (mode === 'edit' || mode === 'view') && isOpen) {
-      // Parse date string to Date object
+      // Change the date text back into a date object
       const [year, month, day] = appointment.date.split('-').map(Number);
       const dateObj = new Date(year, month - 1, day);
       
       setSelectedDate(dateObj);
-      setCurrentDate(new Date(year, month - 1, 1)); // Set calendar to appointment month
+      setCurrentDate(new Date(year, month - 1, 1)); // Move the calendar to the right month
       setAppointmentType(appointment.appointmentType);
       setSelectedTimeSlot(appointment.timeSlot);
       setAdditionalNotes(appointment.notes || '');
     }
   }, [appointment, mode, isOpen]);
 
-  // Reset form when modal closes
+  // Clear the boxes when the window is closed
   useEffect(() => {
     if (!isOpen && mode === 'create') {
       setSelectedDate(null);
@@ -70,7 +70,7 @@ const Book_model = ({ isOpen, onClose, mode = 'create', appointment = null }) =>
     }
   }, [isOpen, mode]);
 
-  // Fetch booked slots when date is selected
+  // Find out which times are already taken when a date is picked
   useEffect(() => {
     if (!selectedDate) return;
     
@@ -79,12 +79,10 @@ const Book_model = ({ isOpen, onClose, mode = 'create', appointment = null }) =>
         const formattedDate = formatDate(selectedDate);
         const res = await getAppointmentsByDate(formattedDate);
         
-        // Filter appointments to determine true availability
-        // 1. Filter out cancelled appointments (they don't block slots)
-        // 2. In edit mode, exclude the current appointment (user can keep their own slot)
+        // Find the meetings that are actually happening
         const activeAppointments = (res || []).filter(apt => {
-          if (apt.status === 'cancelled') return false;
-          if (mode === 'edit' && appointment && apt._id === appointment._id) return false;
+          if (apt.status === 'cancelled') return false; // Ignore cancelled ones
+          if (mode === 'edit' && appointment && apt._id === appointment._id) return false; // Ignore the one we are editing
           return true;
         });
 
@@ -98,26 +96,25 @@ const Book_model = ({ isOpen, onClose, mode = 'create', appointment = null }) =>
     fetchBookedSlots();
   }, [selectedDate]);
 
-  // Recompute blocked dates when month or noWorkDays change
+  // Work out which days should be blocked out on the calendar
   useEffect(() => {
     const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
     const today = new Date();
-    today.setHours(0, 0, 0, 0); // Reset time for accurate comparison
+    today.setHours(0, 0, 0, 0); // Ignore the clock time
     const blocked = [];
 
     for (let day = 1; day <= daysInMonth; day++) {
       const d = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
-      d.setHours(0, 0, 0, 0); // Reset time for accurate comparison
+      d.setHours(0, 0, 0, 0); // Ignore the clock time
       const dateStr = formatDate(d);
 
-      // Block past dates (dates before today)
+      // Block days that have already passed
       if (d < today) {
         blocked.push(day);
         continue;
       }
 
-      // Check if this date exists in noWorkDays array
-      // Since your API returns dates as "YYYY-MM-DD" strings, we just check if the date matches
+      // Check if the office is closed on this day
       const isBlocked = noWorkDays.some(nw => nw.date === dateStr);
 
       if (isBlocked) {
@@ -138,6 +135,7 @@ const Book_model = ({ isOpen, onClose, mode = 'create', appointment = null }) =>
     setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
   };
 
+  // Move to the next month on the calendar
   const nextMonth = () => {
     setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
   };
@@ -149,16 +147,17 @@ const Book_model = ({ isOpen, onClose, mode = 'create', appointment = null }) =>
     return `${days[date.getDay()]}, ${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
   };
 
+  // Pick a date from the calendar
   const selectDate = (day) => {
-    // Prevent date selection in view mode
+    // If we are just looking, don't pick anything
     if (mode === 'view') return;
     
-    // Only allow selection if the date is NOT in the notAvailableDates array
+    // Only pick the day if it's not blocked
     if (!notAvailableDates.includes(day)) {
       const newDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
       setSelectedDate(newDate);
       
-      // Only reset other fields in create mode
+      // Clear other boxes if we are making a new meeting
       if (mode === 'create') {
         setAppointmentType('');
         setSelectedTimeSlot('');
@@ -174,6 +173,7 @@ const Book_model = ({ isOpen, onClose, mode = 'create', appointment = null }) =>
            currentDate.getFullYear() === today.getFullYear();
   };
 
+  // When the user clicks the confirm button
   const handleConfirm = async () => {
     if (!selectedDate || !selectedTimeSlot || !appointmentType) return;
 
@@ -194,16 +194,16 @@ const Book_model = ({ isOpen, onClose, mode = 'create', appointment = null }) =>
 
     try {
       if (mode === 'edit') {
-        // Update existing appointment
+        // Change an existing meeting
         await updateAppointment(appointment._id, payload);
         alert('Appointment rescheduled successfully!');
       } else {
-        // Create new appointment
+        // Make a brand new meeting
         await createAppointment(payload);
         alert('Appointment booked successfully!');
       }
       
-      // Reset form
+      // Clear the boxes and close
       setSelectedDate(null);
       setAppointmentType('');
       setSelectedTimeSlot('');

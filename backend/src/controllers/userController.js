@@ -35,7 +35,7 @@ async function update(req, res) {
 		if (!user) return res.status(404).json({ success: false, message: 'Not found' });
 		res.json({ success: true, data: user });
 	} catch (err) {
-		// Handle unique email constraint errors nicely
+		// Show a nice message if the email is already used
 		if (err?.code === 11000) {
 			return res.status(400).json({ success: false, message: 'Email already exists' });
 		}

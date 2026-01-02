@@ -9,10 +9,10 @@ import { getAllAppointments, updateAppointment } from '../../services/adminAppoi
 import { getPendingDocuments, updateDocument } from '../../services/adminDocumentService';
 import { getAllUsers } from '../../services/adminUserService';
 
-// Admin dashboard - overview of users, appointments, and pending documents
+// Admin page - shows users, meetings, and papers to check
 export default function Dashboard() {
   const [documents, setDocuments] = useState([
-    // Initial placeholder data shown while loading
+    // Sample papers to show while we wait for the server
     { id: 'd1', title: 'Passport Scan', clientName: 'A. Johnson', submittedDate: '2 days ago', fileUrl: '' },
     { id: 'd2', title: 'Driver License', clientName: 'B. Williams', submittedDate: '3 days ago', fileUrl: '' },
     { id: 'd3', title: 'Tax Document', clientName: 'C. Brown', submittedDate: '5 days ago', fileUrl: '' }
@@ -23,10 +23,12 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Load all the data when the page starts
   useEffect(() => {
     async function load() {
       setLoading(true);
       try {
+        // Get everything from the server at the same time
         const [apptRes, usersRes, pendingRes] = await Promise.all([
           getAllAppointments(),
           getAllUsers(),
@@ -36,6 +38,7 @@ export default function Dashboard() {
         const apptList = Array.isArray(apptRes?.data) ? apptRes.data : Array.isArray(apptRes) ? apptRes : [];
         const users = Array.isArray(usersRes?.data) ? usersRes.data : Array.isArray(usersRes) ? usersRes : [];
 
+        // Make a list of users to find them easily by their ID
         const userMap = users.reduce((acc, u) => {
           if (u?._id) acc[u._id] = u;
           return acc;
@@ -43,6 +46,7 @@ export default function Dashboard() {
 
         setUsersCount(users.length);
 
+        // Match meetings with the user names
         const mappedAppts = apptList
           .map((a) => {
             const user = userMap[a.userId];
@@ -89,12 +93,15 @@ export default function Dashboard() {
   const pendingCount = useMemo(() => documents.length, [documents]);
   const appointmentsCount = useMemo(() => appointments.length, [appointments]);
 
+  // Open the window to review a paper
   const handleReview = (doc) => {
     setSelectedDocument(doc);
   };
 
+  // Close the review window
   const handleCloseModal = () => setSelectedDocument(null);
 
+  // Accept the paper
   const handleAccept = () => {
     if (!selectedDocument) return;
     (async () => {
@@ -113,6 +120,7 @@ export default function Dashboard() {
     })();
   };
 
+  // Reject the paper
   const handleReject = () => {
     if (!selectedDocument) return;
     (async () => {
@@ -131,7 +139,7 @@ export default function Dashboard() {
     })();
   };
 
-  // quick handlers for inline buttons
+  // Quick buttons to accept or reject without opening the window
   const handleInlineAccept = async (doc) => {
     try {
       const id = doc._id || doc.id;
@@ -156,6 +164,7 @@ export default function Dashboard() {
     }
   };
 
+  // Change the status of a meeting (like "completed" or "cancelled")
   const handleAppointmentStatusUpdate = async (id, status) => {
     try {
       const res = await updateAppointment(id, { status });
@@ -173,7 +182,7 @@ export default function Dashboard() {
     <div className="min-h-screen bg-app-accent">
       <AdminHeader title="Dashboard" breadcrumb={["Homepage","Dashboard"]} />
 
-      <div className="pt-20 lg:pl-64">{/* reserve header height */}
+      <div className="pt-20 lg:pl-64">{/* Space for the top bar and sidebar */}
         <AdminSidebar />
 
         <main className="p-8 max-w-5xl mx-auto flex flex-col items-center gap-8">

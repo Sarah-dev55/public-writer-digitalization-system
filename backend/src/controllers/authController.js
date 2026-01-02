@@ -44,7 +44,7 @@ async function signup(req, res) {
       passwordHash
     });
 
-    // Create default checklist for new user
+    // Make a new checklist for the user
     const checklist = await Checklist.create({
       title: `Checklist - ${user.fullName}`,
       userId: user._id,
@@ -75,7 +75,7 @@ async function signin(req, res) {
       const ok = await bcrypt.compare(String(password), user.passwordHash);
       if (!ok) return res.status(401).json({ success: false, message: 'Invalid credentials' });
     } else {
-      // Allow first login password setup
+      // Let the user set their password the first time
       if (password && String(password).length >= 6) {
         user.passwordHash = await bcrypt.hash(String(password), 10);
         await user.save();
@@ -134,7 +134,7 @@ async function changePassword(req, res) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
 
-    // Verify current password
+    // Check if the current password is correct
     if (user.passwordHash) {
       const isValid = await bcrypt.compare(String(currentPassword), user.passwordHash);
       if (!isValid) {
@@ -142,7 +142,7 @@ async function changePassword(req, res) {
       }
     }
 
-    // Hash and save new password
+    // Hash and save the new password
     user.passwordHash = await bcrypt.hash(String(newPassword), 10);
     await user.save();
 

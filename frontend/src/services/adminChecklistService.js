@@ -1,15 +1,8 @@
 import api from './api';
 
-/**
- * Admin Checklist Service
- * Handles all admin-facing checklist operations
- * Base URL: /api/admin/checklists
- */
+// This file helps the admin manage task lists for clients
 
-/**
- * Get all checklists
- * @returns {Promise} List of all checklists
- */
+// Get all the task lists
 export async function getAllChecklists() {
     try {
         const res = await api.get('/admin/checklists');
@@ -20,11 +13,7 @@ export async function getAllChecklists() {
     }
 }
 
-/**
- * Get checklist by user ID
- * @param {string} userId - User ID
- * @returns {Promise} Checklist for the specified user
- */
+// Get the task list for a specific user
 export async function getChecklistByUser(userId) {
     try {
         const res = await api.get(`/admin/checklists/user/${userId}`);
@@ -50,11 +39,7 @@ export async function getChecklistById(id) {
     }
 }
 
-/**
- * Create a new checklist
- * @param {Object} payload - Checklist data (userId, title, items)
- * @returns {Promise} Created checklist
- */
+// Make a new task list
 export async function createChecklist(payload) {
     try {
         const res = await api.post('/admin/checklists', payload);
@@ -65,12 +50,7 @@ export async function createChecklist(payload) {
     }
 }
 
-/**
- * Update a checklist
- * @param {string} id - Checklist ID
- * @param {Object} payload - Updated checklist data
- * @returns {Promise} Updated checklist
- */
+// Update a task list
 export async function updateChecklist(id, payload) {
     try {
         const res = await api.put(`/admin/checklists/${id}`, payload);
@@ -81,13 +61,7 @@ export async function updateChecklist(id, payload) {
     }
 }
 
-/**
- * Update a checklist item
- * @param {string} checklistId - Checklist ID
- * @param {string} itemId - Item ID
- * @param {Object} payload - Updated item data (isCompleted, etc.)
- * @returns {Promise} Updated checklist
- */
+// Update one item inside a task list
 export async function updateChecklistItem(checklistId, itemId, payload) {
     try {
         const res = await api.put(`/admin/checklists/${checklistId}/items/${itemId}`, payload);
@@ -98,11 +72,7 @@ export async function updateChecklistItem(checklistId, itemId, payload) {
     }
 }
 
-/**
- * Delete a checklist
- * @param {string} id - Checklist ID
- * @returns {Promise} Deletion confirmation
- */
+// Delete a task list
 export async function deleteChecklist(id) {
     try {
         const res = await api.delete(`/admin/checklists/${id}`);

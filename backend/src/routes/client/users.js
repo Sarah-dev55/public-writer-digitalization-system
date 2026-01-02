@@ -8,13 +8,13 @@ const path = require('path');
 const fs = require('fs');
 const { verifyToken } = require('../../middleware/auth');
 
-// Create uploads directory for profiles if it doesn't exist
+// Make a folder for profile pictures
 const profilesDir = path.join(process.cwd(), 'uploads/profiles');
 if (!fs.existsSync(profilesDir)) {
   fs.mkdirSync(profilesDir, { recursive: true });
 }
 
-// Configure multer storage for profile images
+// Setup where to save profile pictures
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, profilesDir);
@@ -35,7 +35,7 @@ const upload = multer({
   }
 });
 
-// Get case status
+// Get the current status of the case
 router.get('/case-status/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
@@ -45,7 +45,7 @@ router.get('/case-status/:userId', async (req, res) => {
     const documents = await Document.find({ userId });
     const appointments = await Appointment.find({ userId });
 
-    // Logic to determine status of each step
+    // List of steps in the process
     const steps = [
       { id: 1, title: 'Initial Consultation', status: 'pending', date: null },
       { id: 2, title: 'Document Preparation', status: 'pending', date: null },
@@ -54,15 +54,12 @@ router.get('/case-status/:userId', async (req, res) => {
       { id: 5, title: 'Final Review', status: 'pending', date: null }
     ];
 
-    // Step 1: Initial Consultation
-    // Logic: 
-    // - If user exists -> 'pending' (default)
-    // - If appointment booked -> 'in-progress'
-    // - If appointment completed -> 'completed'
+    // Step 1: Meeting with the writer
+    // How we check the status
 
-    // Check if any appointment exists
+    // See if there's a meeting
     const anyAppointment = appointments.length > 0;
-    // Check if any appointment is completed (handling 'complete', 'completed', and whitespace)
+    // See if the meeting is finished
     const completedAppointment = appointments.some(a => {
       const s = (a.status || '').toLowerCase().trim();
       return s === 'completed' || s === 'complete';
@@ -83,9 +80,8 @@ router.get('/case-status/:userId', async (req, res) => {
       steps[0].date = user.createdAt.toISOString().split('T')[0];
     }
 
-    // Step 2: Document Preparation
-    // Logic: Complete if at least 1 document uploaded and ALL required docs are approved
-    // Simplified: If > 0 documents and 0 are missing/rejected
+    // Step 2: Getting the papers ready
+    // How we check if the papers are done
     const hasDocuments = documents.length > 0;
     const pendingDocs = documents.some(d => d.status === 'pending');
     const rejectedDocs = documents.some(d => d.status === 'rejected');
@@ -109,7 +105,7 @@ router.get('/case-status/:userId', async (req, res) => {
       steps[1].status = 'in-progress';
     }
 
-    // Step 3: Application Submission
+    // Step 3: Sending the application
     const submissionAppt = appointments.find(a => a.appointmentType === 'submission');
     if (user.currentStats > 2) {
       steps[2].status = 'completed';
@@ -119,7 +115,7 @@ router.get('/case-status/:userId', async (req, res) => {
       steps[2].date = submissionAppt.date;
     }
 
-    // Step 4: Interview Preparation
+    // Step 4: Getting ready for an interview
     const interviewAppt = appointments.find(a => a.appointmentType === 'interview');
     if (user.currentStats > 3) {
       steps[3].status = 'completed';
@@ -129,25 +125,25 @@ router.get('/case-status/:userId', async (req, res) => {
       steps[3].date = interviewAppt.date;
     }
 
-    // Step 5: Final Review
+    // Step 5: Last check
     if (user.currentStats >= 5) {
       steps[4].status = 'completed';
     } else if (steps[3].status === 'completed') {
       steps[4].status = 'in-progress';
     }
 
-    // Calculate detailed percentage
+    // Work out the total progress %
     let completedSteps = steps.filter(s => s.status === 'completed').length;
     let progress = (completedSteps / 5) * 100;
 
-    // Add partial progress for "in-progress" steps (e.g., +10%)
+    // Add a bit of progress if some steps are started
     const inProgressSteps = steps.filter(s => s.status === 'in-progress').length;
     progress += (inProgressSteps * 10);
 
-    // Cap at 100
+    // Don't go over 100%
     progress = Math.min(progress, 100);
 
-    // Determine current phase name
+    // Find the name of the current step
     let currentPhase = steps.find(s => s.status === 'in-progress')?.title || 'Completed';
     if (progress === 100) currentPhase = 'Case Closed';
 
@@ -163,7 +159,7 @@ router.get('/case-status/:userId', async (req, res) => {
   }
 });
 
-// Get all users
+// Get all the people in the system
 router.get('/', async (req, res) => {
   try {
     const users = await User.find();
@@ -173,7 +169,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Update authenticated user's profile (must be before /:id route)
+// Update your own profile
 router.put('/me', verifyToken, async (req, res) => {
   try {
     const userId = req.user?.id;
@@ -194,7 +190,7 @@ router.put('/me', verifyToken, async (req, res) => {
       updates,
       { new: true, runValidators: true }
     ).select('-passwordHash');
-    
+
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
@@ -208,7 +204,7 @@ router.put('/me', verifyToken, async (req, res) => {
   }
 });
 
-// Get user by ID
+// Get one person's info
 router.get('/:id', async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
@@ -219,7 +215,7 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// Create new user
+// Make a new person in the system
 router.post('/', async (req, res) => {
   try {
     const { fullName, email, phone, password } = req.body;
@@ -247,7 +243,7 @@ router.post('/', async (req, res) => {
       role: 'public_writer'
     });
 
-    // Create checklist and link it
+    // Make a checklist and link it to them
     const Checklist = require('../../models/Checklist');
     const checklist = await Checklist.create({
       title: `Checklist - ${user.fullName}`,
@@ -264,7 +260,7 @@ router.post('/', async (req, res) => {
   }
 });
 
-// Update user
+// Change a person's info
 router.put('/:id', async (req, res) => {
   try {
     const user = await User.findByIdAndUpdate(
@@ -279,7 +275,7 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// Upload profile image
+// Put a profile picture up
 router.post('/:id/upload-image', upload.single('image'), async (req, res) => {
   try {
     if (!req.file) {
@@ -306,7 +302,7 @@ router.post('/:id/upload-image', upload.single('image'), async (req, res) => {
   }
 });
 
-// Delete user
+// Remove a person from the system
 router.delete('/:id', async (req, res) => {
   try {
     const user = await User.findByIdAndDelete(req.params.id);

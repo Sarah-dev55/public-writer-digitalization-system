@@ -1,15 +1,8 @@
 import api from './api';
 
-/**
- * Admin Availability Service
- * Handles all admin-facing availability operations
- * Base URL: /api/admin/availability
- */
+// This file helps the admin set when they are free for meetings
 
-/**
- * Get all availability records
- * @returns {Promise} List of availability records
- */
+// Get all the stored schedules
 export async function getAllAvailability() {
     try {
         const res = await api.get('/admin/availability');
@@ -20,11 +13,7 @@ export async function getAllAvailability() {
     }
 }
 
-/**
- * Get availability by ID
- * @param {string} id - Availability ID
- * @returns {Promise} Availability details
- */
+// Get info about a specific schedule
 export async function getAvailabilityById(id) {
     try {
         const res = await api.get(`/admin/availability/${id}`);
@@ -35,11 +24,7 @@ export async function getAvailabilityById(id) {
     }
 }
 
-/**
- * Create a new availability record
- * @param {Object} payload - Availability data (date, timeSlots, etc.)
- * @returns {Promise} Created availability record
- */
+// Save a new schedule
 export async function createAvailability(payload) {
     try {
         const res = await api.post('/admin/availability', payload);
@@ -50,12 +35,7 @@ export async function createAvailability(payload) {
     }
 }
 
-/**
- * Update an availability record
- * @param {string} id - Availability ID
- * @param {Object} payload - Updated availability data
- * @returns {Promise} Updated availability record
- */
+// Change an existing schedule
 export async function updateAvailability(id, payload) {
     try {
         const res = await api.put(`/admin/availability/${id}`, payload);
@@ -66,11 +46,7 @@ export async function updateAvailability(id, payload) {
     }
 }
 
-/**
- * Delete an availability record
- * @param {string} id - Availability ID
- * @returns {Promise} Deletion confirmation
- */
+// Delete a schedule
 export async function deleteAvailability(id) {
     try {
         const res = await api.delete(`/admin/availability/${id}`);

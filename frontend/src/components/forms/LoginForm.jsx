@@ -8,6 +8,7 @@ export default function LoginForm({ onSubmit }) {
 
   const submit = (e) => {
     e.preventDefault();
+    // Send the user info to the login function
     onSubmit?.({ email, password });
   };
 
