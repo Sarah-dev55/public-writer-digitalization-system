@@ -3,13 +3,11 @@ import React, { useState, useMemo } from 'react';
 function normalizeDate(value) {
   if (!value) return null;
 
-  // Accept either 'YYYY-MM-DD' or ISO-ish strings like 'YYYY-MM-DDTHH:mm:ss...'
   if (typeof value === 'string') {
     const m = value.match(/^(\d{4}-\d{2}-\d{2})/);
     return m ? m[1] : null;
   }
 
-  // If someone stored a Date or number, normalize to YYYY-MM-DD
   try {
     const d = new Date(value);
     if (Number.isNaN(d.getTime())) return null;
@@ -20,7 +18,6 @@ function normalizeDate(value) {
 }
 
 export default function AvailabilityCalendar({ availability = [], onToggleDay = () => {} }) {
-  // availability: array of { _id, date: 'YYYY-MM-DD', isRecurring, reason }
   const today = new Date();
   const [year, setYear] = useState(today.getFullYear());
   const [month, setMonth] = useState(today.getMonth()); // 0-indexed
@@ -28,18 +25,15 @@ export default function AvailabilityCalendar({ availability = [], onToggleDay = 
   const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   const daysInMonth = useMemo(() => {
-    // first day of month (weekday)
     const first = new Date(year, month, 1).getDay();
     const total = new Date(year, month + 1, 0).getDate();
-    const prevDays = first; // number of leading slots from prev month
+    const prevDays = first;
     const arr = [];
-    // prev month placeholders
     for (let i = 0; i < prevDays; i++) arr.push({ date: null, prevMonth: true });
     for (let d = 1; d <= total; d++) arr.push({ date: d, prevMonth: false });
     return arr;
   }, [year, month]);
 
-  // map availability dates to a Set of YYYY-MM-DD strings for quick lookup
   const availableSet = useMemo(() => {
     const s = new Set();
     availability.forEach((a) => {
@@ -53,7 +47,6 @@ export default function AvailabilityCalendar({ availability = [], onToggleDay = 
     if (!day) return;
     const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
     const isCurrentlyUnavailable = availableSet.has(dateStr);
-    // Toggle: if unavailable, make available (remove); if available, make unavailable (add)
     onToggleDay(dateStr, !isCurrentlyUnavailable);
   };
 
@@ -86,13 +79,11 @@ export default function AvailabilityCalendar({ availability = [], onToggleDay = 
   return (
     <div className="w-full">
       <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
-        {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-lg font-semibold text-gray-900">Block Unavailable Dates</h3>
           <p className="text-sm text-gray-500">Click dates to toggle availability</p>
         </div>
 
-        {/* Month Navigation */}
         <div className="flex items-center justify-between mb-6">
           <button
             onClick={prevMonth}
@@ -113,7 +104,6 @@ export default function AvailabilityCalendar({ availability = [], onToggleDay = 
           </button>
         </div>
 
-        {/* Day Headers */}
         <div className="grid grid-cols-7 gap-2 mb-2">
           {daysOfWeek.map((d) => (
             <div key={d} className="text-center text-xs font-semibold text-gray-600 py-2">
@@ -122,7 +112,6 @@ export default function AvailabilityCalendar({ availability = [], onToggleDay = 
           ))}
         </div>
 
-        {/* Calendar Grid */}
         <div className="grid grid-cols-7 gap-2 mb-6">
           {daysInMonth.map((slot, idx) => {
             const day = slot.date;
@@ -154,7 +143,6 @@ export default function AvailabilityCalendar({ availability = [], onToggleDay = 
           })}
         </div>
 
-        {/* Legend */}
         <div className="border-t border-gray-200 pt-4 flex items-center gap-6 text-sm">
           <div className="flex items-center gap-2">
             <div className="h-3 w-3 rounded bg-green-50 border border-green-200" />

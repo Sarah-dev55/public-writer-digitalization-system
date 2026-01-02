@@ -3,25 +3,30 @@ import AdminHeader from '../../components/layout/AdminHeader';
 import AdminSidebar from '../../components/layout/AdminSidebar';
 import useAuth from '../../hooks/useAuth';
 import { User, Mail, Phone, Lock, Save } from 'lucide-react';
+import { updateCurrentUserProfile, changePassword } from '../../services/userService';
 
+// Admin settings page - update profile and change password
 export default function Settings() {
-  const { user } = useAuth();
+  const { user, updateProfile } = useAuth();
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState('');
   const [error, setError] = useState('');
 
+  // Profile form data
   const [profileData, setProfileData] = useState({
     fullName: '',
     email: '',
     phone: '',
   });
 
+  // Password change form data
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
     newPassword: '',
     confirmPassword: '',
   });
 
+  // Initialize profile data from current user
   useEffect(() => {
     if (user) {
       setProfileData({
@@ -49,16 +54,19 @@ export default function Settings() {
     setSuccess('');
 
     try {
-      // Simulate API call - replace with actual API endpoint
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const response = await updateCurrentUserProfile(profileData);
       
-      // TODO: Implement actual API call to update profile
-      // const response = await updateUserProfile(user._id, profileData);
-      
-      setSuccess('Profile updated successfully!');
-      setTimeout(() => setSuccess(''), 3000);
+      if (response.success) {
+        if (updateProfile) {
+          await updateProfile(response.data);
+        }
+        setSuccess('Profile updated successfully!');
+        setTimeout(() => setSuccess(''), 3000);
+      } else {
+        setError(response.message || 'Failed to update profile');
+      }
     } catch (err) {
-      setError(err.message || 'Failed to update profile');
+      setError(err.response?.data?.message || err.message || 'Failed to update profile');
     } finally {
       setLoading(false);
     }
@@ -70,7 +78,6 @@ export default function Settings() {
     setError('');
     setSuccess('');
 
-    // Validation
     if (passwordData.newPassword !== passwordData.confirmPassword) {
       setError('New passwords do not match');
       setLoading(false);
@@ -84,21 +91,24 @@ export default function Settings() {
     }
 
     try {
-      // Simulate API call - replace with actual API endpoint
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // TODO: Implement actual API call to change password
-      // const response = await changePassword(user._id, passwordData);
-      
-      setSuccess('Password changed successfully!');
-      setPasswordData({
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: '',
+      const response = await changePassword({
+        currentPassword: passwordData.currentPassword,
+        newPassword: passwordData.newPassword
       });
-      setTimeout(() => setSuccess(''), 3000);
+      
+      if (response.success) {
+        setSuccess('Password changed successfully!');
+        setPasswordData({
+          currentPassword: '',
+          newPassword: '',
+          confirmPassword: '',
+        });
+        setTimeout(() => setSuccess(''), 3000);
+      } else {
+        setError(response.message || 'Failed to change password');
+      }
     } catch (err) {
-      setError(err.message || 'Failed to change password');
+      setError(err.response?.data?.message || err.message || 'Failed to change password');
     } finally {
       setLoading(false);
     }
@@ -117,14 +127,12 @@ export default function Settings() {
             <p className="text-lg text-app-primary/70 mt-2">Manage your account settings and preferences</p>
           </div>
 
-          {/* Success Message */}
           {success && (
             <div className="mb-6 p-4 bg-app-secondary/20 border border-app-secondary rounded-lg">
               <p className="text-app-secondary font-medium">{success}</p>
             </div>
           )}
 
-          {/* Error Message */}
           {error && (
             <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
               <p className="text-red-700 font-medium">{error}</p>
@@ -132,7 +140,6 @@ export default function Settings() {
           )}
 
           <div className="space-y-6">
-            {/* Profile Settings */}
             <div className="bg-white rounded-lg shadow-md border border-app-primary/10 p-6">
               <div className="flex items-center gap-3 mb-6">
                 <div className="p-2 bg-app-secondary/20 rounded-lg">
@@ -204,7 +211,6 @@ export default function Settings() {
               </form>
             </div>
 
-            {/* Password Settings */}
             <div className="bg-white rounded-lg shadow-md border border-app-primary/10 p-6">
               <div className="flex items-center gap-3 mb-6">
                 <div className="p-2 bg-app-secondary/20 rounded-lg">
@@ -276,7 +282,6 @@ export default function Settings() {
               </form>
             </div>
 
-            {/* Account Information */}
             <div className="bg-white rounded-lg shadow-md border border-app-primary/10 p-6">
               <h3 className="text-xl font-semibold text-app-primary mb-4">Account Information</h3>
               <div className="space-y-3">
