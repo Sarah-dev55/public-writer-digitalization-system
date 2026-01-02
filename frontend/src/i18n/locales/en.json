@@ -69,6 +69,7 @@
     "confirmPassword": "Confirm Password",
     "firstName": "First Name",
     "lastName": "Last Name",
+    "fullName": "Full Name",
     "phone": "Phone",
     "address": "Address",
     "loginTitle": "Login to Your Account",
@@ -83,7 +84,12 @@
     "loginError": "Login failed",
     "signupSuccess": "Account created successfully",
     "signupError": "Signup failed",
-    "registrationFormPlaceholder": "Registration form"
+    "loggingIn": "Logging in...",
+    "creatingAccount": "Creating your account...",
+    "loginSubtitle": "Welcome back! Please sign in to your account.",
+    "signupSubtitle": "Join us to get started with our services.",
+    "registrationFormPlaceholder": "Registration form",
+    "backHome": "← Back Home"
   },
   "appointments": {
     "title": "Appointments",

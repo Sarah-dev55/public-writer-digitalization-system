@@ -38,7 +38,7 @@ export default function LoginForm({ onSubmit }) {
         />
       </div>
       <div>
-        <button type="submit" className="w-full bg-app-primary text-white px-4 py-2 rounded hover:bg-app-secondary transition-colors duration-200">{t('navigation.login')}</button>
+        <button type="submit" className="w-full bg-app-primary text-white px-4 py-2 rounded hover:bg-app-secondary transition-colors duration-200">{t('auth.loginTitle')}</button>
       </div>
     </form>
   );

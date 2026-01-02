@@ -70,10 +70,10 @@ export default function Login() {
           {/* Header */}
           <div className="mb-8">
             <h2 className="text-3xl font-bold text-app-primary mb-2">
-              {t('auth.loginTitle') || 'Sign In'}
+              {t('auth.loginTitle')}
             </h2>
             <p className="text-app-primary/80 text-sm">
-              {t('auth.haveAccount') || 'Welcome back! Please sign in to your account.'}
+              {t('auth.loginSubtitle')}
             </p>
           </div>
 
@@ -105,7 +105,7 @@ export default function Login() {
             </div>
             <div className="relative flex justify-center text-sm">
               <span className="px-3 bg-white text-app-primary/80">
-                {t('auth.noAccount') || "Don't have an account?"}
+                {t('auth.noAccount')}
               </span>
             </div>
           </div>
@@ -116,8 +116,7 @@ export default function Login() {
               onClick={() => navigate('/signup')}
               className="w-full py-3 px-4 bg-app-primary hover:bg-app-secondary text-white font-semibold rounded-lg transition duration-200 flex items-center justify-center gap-2"
             >
-              {t('navigation.signup') || 'Create Account'}
-              <span>→</span>
+              {t('navigation.signup')}
             </button>
           </div>
 
@@ -127,7 +126,7 @@ export default function Login() {
               onClick={() => navigate('/')}
               className="text-sm text-app-primary/70 hover:text-app-primary transition"
             >
-              ← Back Home
+              {t('auth.backHome')}
             </button>
           </div>
         </div>

@@ -69,6 +69,7 @@
     "confirmPassword": "Confirmer le mot de passe",
     "firstName": "Prénom",
     "lastName": "Nom de famille",
+    "fullName": "Nom complet",
     "phone": "Téléphone",
     "address": "Adresse",
     "loginTitle": "Connectez-vous à votre compte",
@@ -83,7 +84,12 @@
     "loginError": "Connexion échouée",
     "signupSuccess": "Compte créé avec succès",
     "signupError": "Inscription échouée",
-    "registrationFormPlaceholder": "Formulaire d'enregistrement"
+    "loggingIn": "Connexion en cours...",
+    "creatingAccount": "Création de votre compte...",
+    "loginSubtitle": "Bienvenue! Veuillez vous connecter à votre compte.",
+    "signupSubtitle": "Rejoignez-nous pour commencer avec nos services.",
+    "registrationFormPlaceholder": "Formulaire d'enregistrement",
+    "backHome": "Retour à l'accueil"
   },
   "appointments": {
     "title": "Rendez-vous",

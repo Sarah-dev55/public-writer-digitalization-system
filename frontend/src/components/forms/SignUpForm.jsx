@@ -16,7 +16,7 @@ export default function SignUpForm({ onSubmit }) {
   return (
     <form onSubmit={submit} className="space-y-4 max-w-md">
       <div>
-        <label className="block text-sm font-medium text-app-primary">{t('auth.fullName') || 'Full Name'}</label>
+        <label className="block text-sm font-medium text-app-primary">{t('auth.fullName')}</label>
         <input 
           type="text"
           value={fullName} 
@@ -50,7 +50,7 @@ export default function SignUpForm({ onSubmit }) {
         />
       </div>
       <div>
-        <button type="submit" className="w-full bg-app-primary text-white px-4 py-2 rounded hover:bg-app-secondary transition-colors duration-200">{t('navigation.signup')}</button>
+        <button type="submit" className="w-full bg-app-primary text-white px-4 py-2 rounded hover:bg-app-secondary transition-colors duration-200">{t('auth.signupTitle')}</button>
       </div>
     </form>
   );
