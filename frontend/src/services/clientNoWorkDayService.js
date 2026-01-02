@@ -1,15 +1,5 @@
 import api from './api';
 
-/**
- * Client No Work Day Service
- * Handles all client-facing no work day operations
- * Base URL: /api/client/noworkdays
- */
-
-/**
- * Get all no work days
- * @returns {Promise} List of no work days
- */
 export async function getAllNoWorkDays() {
     try {
         const res = await api.get('/client/noworkdays');
@@ -20,11 +10,6 @@ export async function getAllNoWorkDays() {
     }
 }
 
-/**
- * Get no work day by ID
- * @param {string} id - No work day ID
- * @returns {Promise} No work day details
- */
 export async function getNoWorkDayById(id) {
     try {
         const res = await api.get(`/client/noworkdays/${id}`);
@@ -35,11 +20,6 @@ export async function getNoWorkDayById(id) {
     }
 }
 
-/**
- * Create a new no work day
- * @param {Object} payload - No work day data (date, isRecurring, reason)
- * @returns {Promise} Created no work day
- */
 export async function createNoWorkDay(payload) {
     try {
         const res = await api.post('/client/noworkdays', payload);
@@ -50,11 +30,6 @@ export async function createNoWorkDay(payload) {
     }
 }
 
-/**
- * Delete a no work day
- * @param {string} id - No work day ID
- * @returns {Promise} Deletion confirmation
- */
 export async function deleteNoWorkDay(id) {
     try {
         const res = await api.delete(`/client/noworkdays/${id}`);

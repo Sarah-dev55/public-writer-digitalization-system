@@ -4,14 +4,16 @@ import { getAllUsers } from '../../services/adminUserService';
 import AdminHeader from '../../components/layout/AdminHeader';
 import AdminSidebar from '../../components/layout/AdminSidebar';
 
+// Admin page for managing all client appointments
 export default function Appointments() {
   const [appointments, setAppointments] = useState([]);
-  const [usersById, setUsersById] = useState({});
+  const [usersById, setUsersById] = useState({}); // Map user IDs to user objects for quick lookup
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState({ date: '', timeSlot: '', notes: '', status: 'scheduled' });
 
+  // Load appointments and users on mount
   useEffect(() => {
     let mounted = true;
     async function load() {

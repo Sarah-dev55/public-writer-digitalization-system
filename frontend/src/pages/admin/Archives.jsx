@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { getAllDocuments } from '../../services/adminDocumentService';
 import { getAllUsers } from '../../services/adminUserService';
 
+// Date formatting helper
 function fmtDate(value) {
   if (!value) return '—';
   const d = new Date(value);
@@ -13,17 +14,19 @@ function safeLower(v) {
   return (v ?? '').toString().toLowerCase();
 }
 
+// Admin archives - searchable list of all uploaded documents
 export default function AdminArchives() {
   const [docs, setDocs] = useState([]);
-  const [usersById, setUsersById] = useState({});
+  const [usersById, setUsersById] = useState({}); // User lookup map
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   const [query, setQuery] = useState('');
-  const [searchField, setSearchField] = useState('all'); // all | docName | fileName | userName
+  const [searchField, setSearchField] = useState('all'); // Search scope: all, docName, fileName, userName
 
   const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
 
+  // Load all documents and users on mount
   useEffect(() => {
     let cancelled = false;
     async function load() {
@@ -62,6 +65,7 @@ export default function AdminArchives() {
     };
   }, []);
 
+  // Filter documents based on search query and selected field
   const rows = useMemo(() => {
     const enriched = docs.map((d) => {
       const uploader = usersById[d.userId];

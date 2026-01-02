@@ -1,26 +1,16 @@
-/**
- * Extracts a user-friendly error message from an API error (usually Axios).
- * @param {Error} error - The error object
- * @param {string} fallback - A fallback message if no better message is found
- * @returns {string} A user-friendly error message
- */
 export const getErrorMessage = (error, fallback = 'An unexpected error occurred. Please try again.') => {
     if (!error) return fallback;
 
-    // Handle Axios response error
     if (error.response) {
         const { status, data } = error.response;
 
-        // If backend provided a message, use it if it's not the raw status text
         if (data && (data.message || data.error)) {
             const msg = data.message || data.error;
-            // If it looks like a raw axios error message, translate it
             if (typeof msg === 'string' && !msg.toLowerCase().includes('failed with status code')) {
                 return msg;
             }
         }
 
-        // Default messages by status code
         switch (status) {
             case 400:
                 return 'Please check your information and try again.';
@@ -44,7 +34,6 @@ export const getErrorMessage = (error, fallback = 'An unexpected error occurred.
         }
     }
 
-    // Handle network error (no response)
     if (error.request) {
         return 'Network error. Please check your internet connection.';
     }

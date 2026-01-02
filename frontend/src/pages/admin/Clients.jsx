@@ -3,6 +3,7 @@ import AdminLayout from '../../components/layout/AdminLayout';
 import { deleteUser, getAllUsers, updateUser } from '../../services/adminUserService';
 import { getChecklistByUser, createChecklist, updateChecklist, updateChecklistItem } from '../../services/adminChecklistService';
 
+// Date formatting helper
 function fmtDate(value) {
   if (!value) return '—';
   const d = new Date(value);
@@ -14,13 +15,15 @@ function safeLower(v) {
   return (v ?? '').toString().toLowerCase();
 }
 
+// Admin clients page - manage users, edit profiles, and handle checklists
 export default function AdminClients() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState(''); // Search filter
 
-  const [editing, setEditing] = useState(null); // user object
+  // Edit modal state
+  const [editing, setEditing] = useState(null);
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState('');
 
@@ -239,7 +242,7 @@ export default function AdminClients() {
 
   function Chip({ children }) {
     return (
-      <span className="inline-flex items-center rounded-full border px-2.5 py-1 text-xs text-gray-700 bg-white">
+      <span className="inline-flex items-center rounded-full border border-app-primary/20 px-2.5 py-1 text-xs text-app-primary bg-app-accent/50">
         {children}
       </span>
     );
@@ -250,10 +253,10 @@ export default function AdminClients() {
       'inline-flex items-center justify-center rounded-lg px-3 py-2 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-offset-2';
     const styles =
       variant === 'ghost'
-        ? 'border bg-white hover:bg-gray-50 text-gray-900'
+        ? 'border border-app-primary/20 bg-white hover:bg-app-accent/30 text-app-primary'
         : variant === 'danger'
           ? 'border border-red-200 bg-white text-red-700 hover:bg-red-50 focus:ring-red-600'
-          : 'bg-black text-white hover:opacity-90 focus:ring-black';
+          : 'bg-app-primary text-white hover:bg-app-secondary focus:ring-app-primary';
     return (
       <button
         type="button"
@@ -269,20 +272,20 @@ export default function AdminClients() {
   return (
     <AdminLayout>
       <div className="max-w-6xl mx-auto px-4 py-6 space-y-6">
-        <div className="rounded-2xl border bg-white p-6 shadow-sm space-y-4">
+        <div className="rounded-lg border border-app-primary/10 bg-white p-6 shadow-md space-y-4">
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div>
-              <h1 className="text-3xl font-extrabold tracking-tight">Clients</h1>
-              <p className="text-gray-600">All accounts in the system — search, edit, or remove.</p>
+              <h1 className="text-3xl font-extrabold tracking-tight text-app-primary">Clients</h1>
+              <p className="text-app-primary/70">All accounts in the system — search, edit, or remove.</p>
             </div>
             <div className="w-full md:w-96">
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search name, email, phone, role…"
-                className="border rounded-lg px-3 py-2 text-sm w-full"
+                className="border border-app-primary/20 rounded-lg px-3 py-2 text-sm w-full focus:outline-none focus:ring-2 focus:ring-app-primary/50"
               />
-              <div className="mt-2 text-xs text-gray-500">Try “admin”, “public_writer”, or an email.</div>
+              <div className="mt-2 text-xs text-app-primary/60">Try "admin", "public_writer", or an email.</div>
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -291,18 +294,18 @@ export default function AdminClients() {
           </div>
         </div>
 
-        <div className="rounded-2xl border bg-white shadow-sm">
+        <div className="rounded-lg border border-app-primary/10 bg-white shadow-md">
           <div className="p-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="text-sm text-gray-600">
-              Showing <span className="font-semibold">{pagedRows.length}</span> of{' '}
-              <span className="font-semibold">{rows.length}</span> matching users
+            <div className="text-sm text-app-primary/70">
+              Showing <span className="font-semibold text-app-primary">{pagedRows.length}</span> of{' '}
+              <span className="font-semibold text-app-primary">{rows.length}</span> matching users
             </div>
 
             <div className="flex items-center gap-2">
               <Button variant="ghost" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page <= 1}>
                 Prev
               </Button>
-              <span className="inline-flex items-center rounded-full border px-2.5 py-1 text-xs bg-white text-gray-700">
+              <span className="inline-flex items-center rounded-full border border-app-primary/20 px-2.5 py-1 text-xs bg-app-accent/50 text-app-primary">
                 Page {page} / {totalPages}
               </span>
               <Button variant="ghost" onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page >= totalPages}>
@@ -312,43 +315,43 @@ export default function AdminClients() {
           </div>
 
           <div className="px-5 pb-5">
-            {loading && <div className="text-gray-700">Loading users…</div>}
+            {loading && <div className="text-app-primary/70">Loading users…</div>}
 
             {!loading && error && (
               <div className="border border-red-200 bg-red-50 text-red-800 rounded-xl p-4">{error}</div>
             )}
 
             {!loading && !error && (
-              <div className="overflow-auto rounded-xl border">
+              <div className="overflow-auto rounded-xl border border-app-primary/10">
                 <table className="min-w-full text-sm">
-                  <thead className="bg-gray-50 sticky top-0 z-10">
+                  <thead className="bg-app-accent/40 sticky top-0 z-10">
                     <tr>
-                      <th className="text-left px-4 py-3 font-semibold">Name</th>
-                      <th className="text-left px-4 py-3 font-semibold">Email</th>
-                      <th className="text-left px-4 py-3 font-semibold">Phone</th>
-                      <th className="text-left px-4 py-3 font-semibold">Role</th>
-                      <th className="text-left px-4 py-3 font-semibold">Created</th>
-                      <th className="text-right px-4 py-3 font-semibold">Actions</th>
+                      <th className="text-left px-4 py-3 font-semibold text-app-primary">Name</th>
+                      <th className="text-left px-4 py-3 font-semibold text-app-primary">Email</th>
+                      <th className="text-left px-4 py-3 font-semibold text-app-primary">Phone</th>
+                      <th className="text-left px-4 py-3 font-semibold text-app-primary">Role</th>
+                      <th className="text-left px-4 py-3 font-semibold text-app-primary">Created</th>
+                      <th className="text-right px-4 py-3 font-semibold text-app-primary">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {pagedRows.map((u, idx) => (
                       <tr
                         key={u._id || u.id || `${u.email}-${u.createdAt}`}
-                        className={`border-t ${idx % 2 ? 'bg-white' : 'bg-gray-50/40'}`}
+                        className={`border-t border-app-primary/10 hover:bg-app-accent/30 transition-colors ${idx % 2 ? 'bg-white' : 'bg-app-accent/20'}`}
                       >
                         <td className="px-4 py-3">
-                          <div className="font-semibold text-gray-900">{u.fullName || u.name || '—'}</div>
-                          {u._id ? <div className="text-gray-500 text-xs">{u._id}</div> : null}
+                          <div className="font-semibold text-app-primary">{u.fullName || u.name || '—'}</div>
+                          {u._id ? <div className="text-app-primary/50 text-xs">{u._id}</div> : null}
                         </td>
-                        <td className="px-4 py-3 text-gray-800">{u.email || '—'}</td>
-                        <td className="px-4 py-3 text-gray-800">{u.phone || '—'}</td>
+                        <td className="px-4 py-3 text-app-primary/80">{u.email || '—'}</td>
+                        <td className="px-4 py-3 text-app-primary/80">{u.phone || '—'}</td>
                         <td className="px-4 py-3">
-                          <span className="inline-flex items-center rounded-full border px-2.5 py-1 text-xs bg-white">
+                          <span className="inline-flex items-center rounded-full border border-app-primary/20 px-2.5 py-1 text-xs bg-app-accent/50 text-app-primary">
                             {u.role || '—'}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-gray-700">{fmtDate(u.createdAt)}</td>
+                        <td className="px-4 py-3 text-app-primary/70">{fmtDate(u.createdAt)}</td>
                         <td className="px-4 py-3 text-right">
                           <div className="inline-flex gap-2">
                             <Button variant="ghost" onClick={() => openChecklist(u)}>Checklist</Button>
@@ -367,7 +370,7 @@ export default function AdminClients() {
 
                     {rows.length === 0 && (
                       <tr>
-                        <td className="px-4 py-12 text-center text-gray-600" colSpan={6}>
+                        <td className="px-4 py-12 text-center text-app-primary/60" colSpan={6}>
                           No users match your search.
                         </td>
                       </tr>
@@ -384,8 +387,8 @@ export default function AdminClients() {
             <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg my-8">
               <div className="p-5 border-b flex items-start justify-between gap-4">
                 <div>
-                  <div className="text-lg font-bold">Edit client</div>
-                  <div className="text-xs text-gray-500 break-all mt-1">{editing._id}</div>
+                  <div className="text-lg font-bold text-app-primary">Edit client</div>
+                  <div className="text-xs text-app-primary/60 break-all mt-1">{editing._id}</div>
                 </div>
                 <Button variant="ghost" onClick={closeEdit} disabled={saving}>
                   ✕
@@ -394,55 +397,55 @@ export default function AdminClients() {
 
               <div className="p-5 grid grid-cols-1 gap-3 max-h-[60vh] overflow-y-auto">
                 <label className="text-sm">
-                  <div className="text-gray-700 mb-1">Full name</div>
+                  <div className="text-app-primary/80 mb-1">Full name</div>
                   <input
                     value={form.fullName}
                     onChange={(e) => setForm((f) => ({ ...f, fullName: e.target.value }))}
-                    className="border rounded-lg px-3 py-2 w-full"
+                    className="border border-app-primary/20 rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-app-primary/50"
                     placeholder="Full name"
                   />
                 </label>
 
                 <label className="text-sm">
-                  <div className="text-gray-700 mb-1">Email</div>
+                  <div className="text-app-primary/80 mb-1">Email</div>
                   <input
                     value={form.email}
                     onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
-                    className="border rounded-lg px-3 py-2 w-full"
+                    className="border border-app-primary/20 rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-app-primary/50"
                     placeholder="Email"
                   />
                 </label>
 
                 <label className="text-sm">
-                  <div className="text-gray-700 mb-1">Phone</div>
+                  <div className="text-app-primary/80 mb-1">Phone</div>
                   <input
                     value={form.phone}
                     onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
-                    className="border rounded-lg px-3 py-2 w-full"
+                    className="border border-app-primary/20 rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-app-primary/50"
                     placeholder="Phone"
                   />
                 </label>
 
                 <label className="text-sm">
-                  <div className="text-gray-700 mb-1">Role</div>
+                  <div className="text-app-primary/80 mb-1">Role</div>
                   <select
                     value={form.role}
                     onChange={(e) => setForm((f) => ({ ...f, role: e.target.value }))}
-                    className="border rounded-lg px-3 py-2 w-full bg-white"
+                    className="border border-app-primary/20 rounded-lg px-3 py-2 w-full bg-white focus:outline-none focus:ring-2 focus:ring-app-primary/50"
                   >
                     <option value="public_writer">public_writer</option>
                     <option value="admin">admin</option>
                     <option value="client">client</option>
                   </select>
-                  <div className="text-xs text-gray-500 mt-1">If you have other roles, you can still type them in later.</div>
+                  <div className="text-xs text-app-primary/60 mt-1">If you have other roles, you can still type them in later.</div>
                 </label>
 
                 <label className="text-sm">
-                  <div className="text-gray-700 mb-1">Status</div>
+                  <div className="text-app-primary/80 mb-1">Status</div>
                   <select
                     value={form.currentStats}
                     onChange={(e) => setForm((f) => ({ ...f, currentStats: parseInt(e.target.value) }))}
-                    className="border rounded-lg px-3 py-2 w-full bg-white"
+                    className="border border-app-primary/20 rounded-lg px-3 py-2 w-full bg-white focus:outline-none focus:ring-2 focus:ring-app-primary/50"
                   >
                     <option value={1}>Step 1 - Initial Consultation</option>
                     <option value={2}>Step 2 - Document Collection</option>
@@ -450,7 +453,7 @@ export default function AdminClients() {
                     <option value={4}>Step 4 - Document Preparation</option>
                     <option value={5}>Step 5 - Complete</option>
                   </select>
-                  <div className="text-xs text-gray-500 mt-1">Current status in the digitalization process</div>
+                  <div className="text-xs text-app-primary/60 mt-1">Current status in the digitalization process</div>
                 </label>
               </div>
 
@@ -466,14 +469,13 @@ export default function AdminClients() {
           </div>
         )}
 
-        {/* Checklist Modal */}
         {checklistUser && (
           <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
             <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden max-h-[90vh] flex flex-col">
               <div className="p-5 border-b flex items-start justify-between gap-4">
                 <div>
-                  <div className="text-lg font-bold">Checklist</div>
-                  <div className="text-sm text-gray-600 mt-1">
+                  <div className="text-lg font-bold text-app-primary">Checklist</div>
+                  <div className="text-sm text-app-primary/70 mt-1">
                     {checklistUser.fullName || checklistUser.email}
                   </div>
                 </div>
@@ -483,7 +485,7 @@ export default function AdminClients() {
               </div>
 
               <div className="p-5 flex-1 overflow-auto space-y-4">
-                {checklistLoading && <div className="text-gray-600">Loading…</div>}
+                {checklistLoading && <div className="text-app-primary/70">Loading…</div>}
 
                 {checklistError && (
                   <div className="border border-red-200 bg-red-50 text-red-800 rounded-xl p-3 text-sm">
@@ -493,19 +495,19 @@ export default function AdminClients() {
 
                 {!checklistLoading && !checklist && (
                   <div className="text-center py-6 space-y-3">
-                    <p className="text-gray-600">No checklist exists for this user yet.</p>
+                    <p className="text-app-primary/70">No checklist exists for this user yet.</p>
                     <Button onClick={createNewChecklist}>Create Checklist</Button>
                   </div>
                 )}
 
                 {!checklistLoading && checklist && (
                   <>
-                    <div className="text-sm text-gray-700 font-medium">
+                    <div className="text-sm text-app-primary font-medium">
                       {checklist.title || 'Checklist'}
                     </div>
 
                     {(!checklist.items || checklist.items.length === 0) && (
-                      <div className="text-gray-500 text-sm border border-dashed rounded-lg p-4 text-center">
+                      <div className="text-app-primary/60 text-sm border border-dashed border-app-primary/20 rounded-lg p-4 text-center">
                         No items yet. Add one below.
                       </div>
                     )}
@@ -514,7 +516,7 @@ export default function AdminClients() {
                       {(checklist.items || []).map((item) => (
                         <div
                           key={item._id || item.itemId}
-                          className="flex items-center gap-3 p-3 border rounded-lg bg-gray-50"
+                          className="flex items-center gap-3 p-3 border border-app-primary/10 rounded-lg bg-app-accent/30"
                         >
                           <input
                             type="checkbox"
@@ -523,7 +525,7 @@ export default function AdminClients() {
                             className="w-4 h-4 accent-black"
                           />
                           <div className="flex-1">
-                            <span className={item.isCompleted ? 'line-through text-gray-500' : 'text-gray-900'}>
+                            <span className={item.isCompleted ? 'line-through text-app-primary/50' : 'text-app-primary'}>
                               {item.label}
                             </span>
                             {item.required && (
@@ -542,15 +544,15 @@ export default function AdminClients() {
                     </div>
 
                     <div className="border-t pt-4 space-y-3">
-                      <div className="text-sm font-medium text-gray-700">Add new item</div>
+                      <div className="text-sm font-medium text-app-primary">Add new item</div>
                       <div className="flex gap-2">
                         <input
                           value={newItemLabel}
                           onChange={(e) => setNewItemLabel(e.target.value)}
                           placeholder="Item label…"
-                          className="border rounded-lg px-3 py-2 text-sm flex-1"
+                          className="border border-app-primary/20 rounded-lg px-3 py-2 text-sm flex-1 focus:outline-none focus:ring-2 focus:ring-app-primary/50"
                         />
-                        <label className="flex items-center gap-1 text-sm text-gray-700">
+                        <label className="flex items-center gap-1 text-sm text-app-primary/80">
                           <input
                             type="checkbox"
                             checked={newItemRequired}

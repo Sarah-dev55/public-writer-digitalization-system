@@ -4,12 +4,14 @@ import AdminHeader from '../../components/layout/AdminHeader';
 import AdminSidebar from '../../components/layout/AdminSidebar';
 import AvailabilityCalendar from '../../components/admin/AvailabilityCalendar';
 
+// Admin page for managing calendar availability - block/unblock dates
 export default function Availability() {
   const [availability, setAvailability] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [successMsg, setSuccessMsg] = useState(null);
 
+  // Load blocked dates on mount
   useEffect(() => {
     let mounted = true;
     async function load() {
@@ -27,6 +29,7 @@ export default function Availability() {
     return () => { mounted = false; };
   }, []);
 
+  // Toggle date availability - block or unblock a specific date
   const handleToggleDay = async (dateStr, makeBlocked) => {
     try {
       if (makeBlocked) {

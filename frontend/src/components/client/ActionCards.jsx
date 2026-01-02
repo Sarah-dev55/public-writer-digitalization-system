@@ -7,7 +7,6 @@ export default function ActionCards({ onBookAppointment, onUploadDocuments }) {
   return (
     <div className="container mx-auto my-10 px-10 py-8">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-        {/* Book Appointment Card */}
         <div className="bg-app-primary rounded-4xl p-8 text-app-accent shadow-lg hover:shadow-xl transition-shadow">
           <div className="flex flex-col items-center text-center">
             <div className="w-16 h-16 bg-app-secondary rounded-full flex items-center justify-center mb-4">
@@ -31,7 +30,6 @@ export default function ActionCards({ onBookAppointment, onUploadDocuments }) {
           </div>
         </div>
         
-        {/* Upload Documents Card */}
         <div className="bg-app-primary rounded-4xl p-8 text-app-accent shadow-lg hover:shadow-xl transition-shadow">
           <div className="flex flex-col items-center text-center">
             <div className="w-16 h-16 bg-app-secondary rounded-full flex items-center justify-center mb-4">

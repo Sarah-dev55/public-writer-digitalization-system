@@ -1,7 +1,6 @@
 import api from './api';
 
 export async function getUser(userId) {
-  // Check if it's client or admin context if possible, but for now try /client/users first as it's more common for profile
   try {
     const res = await api.get(`/client/users/${userId}`);
     return res.data;
@@ -27,5 +26,15 @@ export async function uploadProfileImage(userId, file) {
   const res = await api.post(`/client/users/${userId}/upload-image`, formData, {
     headers: { 'Content-Type': 'multipart/form-data' }
   });
+  return res.data;
+}
+
+export async function changePassword(passwordData) {
+  const res = await api.put('/auth/change-password', passwordData);
+  return res.data;
+}
+
+export async function updateCurrentUserProfile(payload) {
+  const res = await api.put('/client/users/me', payload);
   return res.data;
 }
