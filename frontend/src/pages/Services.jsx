@@ -12,92 +12,106 @@ import {
 } from 'lucide-react';
 import { Card, CardContent } from '../components/ui/card';
 import Footer from '../components/layout/Footer';
+import { useTranslate } from '../hooks/useTranslate';
 
 const servicesData = [
   {
     icon: GraduationCapIcon,
-    title: 'International Study Procedure',
-    description: 'Procédure Démarche Etude International',
-    details: [
-      'Complete documentation preparation',
-      'University selection guidance',
-      'Application letter writing',
-      'Document authentication and notarization',
-      'Visa documentation support',
-      'Interview preparation for studies',
+    titleKey: 'services.internationalStudyProcedure',
+    descriptionKey: 'services.internationalStudyProcedureFr',
+    detailsKeys: [
+      'services.completeDocumentationPreparation',
+      'services.universitySelectionGuidance',
+      'services.applicationLetterWriting',
+      'services.documentAuthenticationAndNotarization',
+      'services.visaDocumentationSupport',
+      'services.interviewPreparationForStudies',
     ],
   },
   {
     icon: BookOpenIcon,
-    title: 'Study Visa',
-    description: 'Visa d\'Étude',
-    details: [
-      'Campus France (France)',
-      'Canadian study permit',
-      'Schengen study visa',
-      'Visa application guidance',
-      'Health insurance arrangement',
-      'Accommodation support',
+    titleKey: 'services.studyVisa',
+    descriptionKey: 'services.studyVisaFr',
+    detailsKeys: [
+      'services.campusFrance',
+      'services.canadianStudyPermit',
+      'services.schengenStudyVisa',
+      'services.visaApplicationGuidance',
+      'services.healthInsuranceArrangement',
+      'services.accommodationSupport',
     ],
   },
   {
     icon: Users2Icon,
-    title: 'Family Regrouping',
-    description: 'Regroupement Familial',
-    details: [
-      'Family reunification documentation',
-      'Relationship proof compilation',
-      'Financial capacity demonstration',
-      'Housing requirement verification',
-      'Application submission assistance',
-      'Government consultation support',
+    titleKey: 'services.familyRegrouping',
+    descriptionKey: 'services.familyRegroupingFr',
+    detailsKeys: [
+      'services.familyReunificationDocumentation',
+      'services.relationshipProofCompilation',
+      'services.financialCapacityDemonstration',
+      'services.housingRequirementVerification',
+      'services.applicationSubmissionAssistance',
+      'services.governmentConsultationSupport',
     ],
   },
   {
     icon: BriefcaseIcon,
-    title: 'Work Visa',
-    description: 'Visa de Travail',
-    details: [
-      'Work permit application',
-      'Employment contract verification',
-      'Salary documentation preparation',
-      'Professional qualification assessment',
-      'Work visa interview coaching',
-      'Contract review and negotiation',
+    titleKey: 'services.workVisa',
+    descriptionKey: 'services.workVisaFr',
+    detailsKeys: [
+      'services.workPermitApplication',
+      'services.employmentContractVerification',
+      'services.salaryDocumentationPreparation',
+      'services.professionalQualificationAssessment',
+      'services.workVisaInterviewCoaching',
+      'services.contractReviewAndNegotiation',
     ],
   },
   {
     icon: AwardIcon,
-    title: 'USA Lottery Visa',
-    description: 'Loterie USA (Diversity Visa)',
-    details: [
-      'Eligibility verification',
-      'Application form completion (DV-260)',
-      'Document preparation and organization',
-      'Interview preparation and coaching',
-      'Medical examination guidance',
-      'Police clearance assistance',
+    titleKey: 'services.usaLotteryVisa',
+    descriptionKey: 'services.usaLotteryVisaFr',
+    detailsKeys: [
+      'services.eligibilityVerification',
+      'services.applicationFormCompletion',
+      'services.documentPreparationAndOrganization',
+      'services.interviewPreparationAndCoaching',
+      'services.medicalExaminationGuidance',
+      'services.policeClearanceAssistance',
     ],
   },
   {
     icon: CheckCircle2Icon,
-    title: 'Interview Preparation',
-    description: 'Préparation Entretiens',
-    details: [
-      'Mock interview sessions',
-      'Common questions practice',
-      'Answer strategy development',
-      'Professional presentation coaching',
-      'Document organization',
-      'Confidence building exercises',
+    titleKey: 'services.interviewPreparation',
+    descriptionKey: 'services.interviewPreparationFr',
+    detailsKeys: [
+      'services.mockInterviewSessions',
+      'services.commonQuestionsPreparation',
+      'services.answerStrategyDevelopment',
+      'services.professionalPresentationCoaching',
+      'services.documentOrganization',
+      'services.confidenceBuildingExercises',
     ],
   },
 ];
 
 const completePackage = {
   icon: CheckCircle2Icon,
-  title: 'Complete Dream Realization Package',
-  description: 'Procédure Complète pour un Rêve Réaliser',
+  titleKey: 'services.completeDreamRealizationPackage',
+  descriptionKey: 'services.completeDreamRealizationPackageFr',
+  detailsKeys: [
+    'services.comprehensiveConsultationAssessment',
+    'services.personalizedMigrationRelocationPlan',
+    'services.allDocumentationPreparationReview',
+    'services.multipleVisaApplications',
+    'services.interviewCoachingAndPreparation',
+    'services.postArrivalSupportGuidance',
+    'services.accommodationAssistance',
+    'services.jobSearchPlacementSupport',
+    'services.integrationAssistanceNewCountry',
+    'services.continuousFolowUpSupport',
+  ],
+};
   details: [
     'Comprehensive consultation and assessment',
     'Personalized migration/relocation plan',
@@ -114,6 +128,7 @@ const completePackage = {
 
 export default function Services() {
   const navigate = useNavigate();
+  const { t } = useTranslate();
 
   return (
     <div className="flex flex-col w-full min-h-screen bg-white">
@@ -139,10 +154,10 @@ export default function Services() {
           <div className="mx-auto max-w-6xl">
             <div className="flex flex-col gap-4 text-center">
               <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-app-text-light">
-                Our Services
+                {t('services.pageTitle')}
               </h1>
               <p className="text-lg sm:text-xl text-app-text-muted max-w-2xl mx-auto">
-                Comprehensive solutions for your immigration, education, and career dreams
+                {t('services.pageDescription')}
               </p>
             </div>
           </div>
@@ -167,23 +182,23 @@ export default function Services() {
                       <div className="flex flex-col gap-4 w-full">
                         <div>
                           <h3 className="text-lg sm:text-xl font-bold text-app-text-light">
-                            {service.title}
+                            {t(service.titleKey)}
                           </h3>
                           <p className="text-sm sm:text-base text-app-text-muted italic mt-1">
-                            {service.description}
+                            {t(service.descriptionKey)}
                           </p>
                         </div>
 
                         {/* Items List */}
                         <div className="flex flex-col gap-2">
-                          {service.details.map((detail, detailIndex) => (
+                          {service.detailsKeys.map((detailKey, detailIndex) => (
                             <div
                               key={detailIndex}
                               className="flex gap-3 items-start"
                             >
                               <ArrowRightIcon className="w-4 h-4 text-app-accent flex-shrink-0 mt-1" />
                               <p className="text-sm sm:text-base text-app-text-muted leading-relaxed">
-                                {detail}
+                                {t(detailKey)}
                               </p>
                             </div>
                           ))}
@@ -212,23 +227,23 @@ export default function Services() {
                 {/* Content */}
                 <div className="flex flex-col gap-4 text-center">
                   <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-app-primary">
-                    {completePackage.title}
+                    {t(completePackage.titleKey)}
                   </h2>
                   <p className="text-base sm:text-lg text-app-primary/80 italic">
-                    {completePackage.description}
+                    {t(completePackage.descriptionKey)}
                   </p>
                 </div>
 
                 {/* Items List */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {completePackage.details.map((detail, index) => (
+                  {completePackage.detailsKeys.map((detailKey, index) => (
                     <div
                       key={index}
                       className="flex gap-3 items-start bg-app-primary/5 p-4 rounded-lg"
                     >
                       <CheckCircle2Icon className="w-5 h-5 text-app-primary flex-shrink-0 mt-0.5" />
                       <p className="text-sm sm:text-base text-app-primary leading-relaxed">
-                        {detail}
+                        {t(detailKey)}
                       </p>
                     </div>
                   ))}
@@ -244,28 +259,28 @@ export default function Services() {
           <div className="mx-auto max-w-4xl">
             <div className="bg-app-primary/5 rounded-2xl p-8 sm:p-12 border border-app-primary/10">
               <h3 className="text-xl sm:text-2xl font-bold text-app-primary mb-4">
-                Why Choose Us?
+                {t('services.whyChooseUs')}
               </h3>
               <ul className="space-y-4 text-app-primary/80">
                 <li className="flex gap-3">
                   <span className="text-app-primary font-bold">•</span>
-                  <span>Expert guidance with years of experience in immigration and education</span>
+                  <span>{t('services.whyChooseUsSubtitle1')}</span>
                 </li>
                 <li className="flex gap-3">
                   <span className="text-app-primary font-bold">•</span>
-                  <span>Personalized approach tailored to your specific needs and goals</span>
+                  <span>{t('services.whyChooseUsSubtitle2')}</span>
                 </li>
                 <li className="flex gap-3">
                   <span className="text-app-primary font-bold">•</span>
-                  <span>Complete documentation support from start to finish</span>
+                  <span>{t('services.whyChooseUsSubtitle3')}</span>
                 </li>
                 <li className="flex gap-3">
                   <span className="text-app-primary font-bold">•</span>
-                  <span>Regular follow-up and continuous support throughout your journey</span>
+                  <span>{t('services.whyChooseUsSubtitle4')}</span>
                 </li>
                 <li className="flex gap-3">
                   <span className="text-app-primary font-bold">•</span>
-                  <span>Transparent communication and realistic expectations</span>
+                  <span>{t('services.whyChooseUsSubtitle5')}</span>
                 </li>
               </ul>
             </div>
